@@ -1,0 +1,11 @@
+EE Assessment Suite v7.1.0 — Quick Start
+
+1. Open apps/quiz_builder.html and export the student quiz and teacher key.
+2. Distribute only apps/assessment_player_student.html to students.
+3. Students load the quiz, complete their work, and export submission JSON.
+4. Instructors use apps/assessment_grader.html for class grading or
+   apps/detailed_teacher_grader.html for deep individual review.
+5. Use apps/assessment_player_teacher.html only for instructor testing and
+   demonstrations because it retains full paste functionality.
+
+Keep each HTML file intact. The applications are self-contained.

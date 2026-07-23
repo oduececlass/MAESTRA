@@ -1,0 +1,46 @@
+EE Assessment Suite v7.1.0 — Validation Report
+
+Static validation
+-----------------
+- assessment_player_student.html: inline JavaScript syntax PASS
+- assessment_player_teacher.html: inline JavaScript syntax PASS
+- assessment_player.html: inline JavaScript syntax PASS
+- assessment_grader.html: inline JavaScript syntax PASS
+- detailed_teacher_grader.html: inline JavaScript syntax PASS
+- quiz_builder.html: inline JavaScript syntax PASS
+- ee_canvas.html: inline JavaScript syntax PASS
+
+Student Edition controls
+------------------------
+- Embedded EE Canvas paste button hidden and disabled: PASS
+- Clipboard paste event blocked in capture phase: PASS
+- Ctrl/Cmd+V and Shift+Insert blocked: PASS
+- beforeinput paste/drop insertion blocked: PASS
+- External text/HTML/URI/file drag/drop blocked: PASS
+- Blocked attempts exported without clipboard content: PASS
+
+Teacher Edition controls
+------------------------
+- No Student Edition lock script: PASS
+- Full canvas clipboard and drag/drop code retained: PASS
+
+Other suite components
+----------------------
+- Quiz Builder includes the corrected EE Canvas embedding path.
+- Assessment Grader includes the visual-submission grading correction.
+
+Live provider validation
+------------------------
+No external AI request was made because provider credentials are instructor-
+specific. Test AI grading with a small pilot submission before high-stakes use.
+
+Student Edition tool-interaction correction — v7.1.1
+----------------------------------------------------
+- Removed the broad external drag/drop capture listeners from the Student Edition.
+- Removed the embedded integrity badge from the EE Canvas toolbar.
+- Paste protection now intercepts only paste, insertFromPaste, Ctrl/Cmd+V,
+  Shift+Insert, and the hidden Paste command.
+- No pointer, click, draw, select, drag, drop, text, equation, image, import,
+  undo, redo, zoom, panel, or save event is intercepted.
+- The generic assessment_player.html alias now points to the corrected Student Edition.
+- Inline JavaScript syntax validation passed for Student and Teacher editions.
