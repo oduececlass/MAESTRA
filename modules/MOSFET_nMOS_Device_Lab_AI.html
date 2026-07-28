@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Interactive nMOS Device Lab with AI Tutor</title>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]'], ['$$', '$$']],
+    processEscapes: true,
+    processEnvironments: true
+  },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root{
+  --bg:#071521; --panel:#0f2636; --panel2:#102b3d; --border:#24485e;
+  --text:#f4f8fb; --muted:#9fd4f0; --cyan:#39d4ff; --pink:#ff78a9;
+  --blue:#7ec8ef; --gold:#ffd36d; --purple:#9587ee; --body:#ffd36d;
+  --grid:#244154; --green:#7ce0b7; --ai-panel-width:390px;
+  --chat-user:#123f59; --chat-ai:#102b3d; --input-bg:#071b29; --danger:#ff8798;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#06131d,#081a27);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
+.app{max-width:1900px;margin:0 auto;padding:14px}
+.shell{border:1px solid var(--border);border-radius:18px;background:rgba(15,38,54,.95);box-shadow:0 18px 50px rgba(0,0,0,.35);overflow:hidden}
+header{padding:22px 24px 10px;position:relative}
+header h1{margin:0;font-size:30px;letter-spacing:.2px}
+header p{margin:8px 0 0;color:var(--muted);font-size:16px}
+.model-note{position:absolute;right:24px;top:23px;color:#8fd7ff;font-size:13px}
+.main{display:grid;grid-template-columns:340px minmax(600px,1fr) minmax(320px,var(--ai-panel-width));gap:16px;padding:10px 18px 18px;align-items:start;transition:grid-template-columns .18s ease}
+.panel{background:var(--panel2);border:1px solid var(--border);border-radius:16px}
+.controls{padding:16px}
+.control{margin:8px 0 16px}
+.control-row{display:grid;grid-template-columns:1fr 62px;gap:8px;align-items:center}
+.label{font-weight:700;font-size:13px}.symbol{font-family:Cambria Math,serif;font-style:italic;color:#dceeff;margin-left:10px;font-size:16px}.value{color:var(--cyan);font-weight:800;text-align:right;font-size:13px}
+input[type=range]{width:100%;accent-color:var(--cyan)}
+.buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.btn{border:1px solid #47718a;background:#0a2232;color:#fff;border-radius:12px;padding:11px 14px;font-weight:800;cursor:pointer}.btn.primary{background:linear-gradient(135deg,#43d5ff,#7c5cff);border:none}.btn:hover{filter:brightness(1.1)}
+.workspace{min-width:0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.tab{border:1px solid #3f667e;background:#0b2130;color:#fff;padding:10px 16px;border-radius:13px;font-weight:800;cursor:pointer}.tab.active{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan) inset}
+.stage{height:470px;padding:12px;position:relative;overflow:hidden}.view{display:none;width:100%;height:100%}.view.active{display:block}
+#mosSvg{width:100%;height:100%;display:block}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}.metric{background:#102b3d;border:1px solid var(--border);border-radius:14px;padding:12px}.metric small{display:block;color:#8dc9e9;letter-spacing:.6px;font-size:10px;font-weight:800}.metric strong{display:block;font-size:18px;margin-top:6px}
+.note{margin-top:10px;background:#102b3d;border:1px solid var(--border);border-radius:14px;padding:14px;line-height:1.5;color:#eaf7ff}.note b{color:#fff}
+.eqbox{position:absolute;left:18px;bottom:14px;background:rgba(5,21,33,.88);border:1px solid #365d74;border-radius:12px;padding:9px 12px;color:#dff5ff;font-family:Cambria Math,serif;font-size:14px;backdrop-filter:blur(4px)}
+.canvas-wrap{height:100%;border-radius:12px;overflow:hidden;background:#0a1e2c}.canvas-wrap canvas{width:100%;height:100%;display:block}
+.legend{position:absolute;right:20px;top:18px;background:rgba(8,27,40,.88);border:1px solid #31566d;border-radius:10px;padding:8px 10px;font-size:12px}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+@media(max-width:1000px){.main{grid-template-columns:1fr}.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:0 16px}.buttons{grid-column:1/-1}.model-note{position:static;margin-top:8px}.metrics{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.controls{display:block}.metrics{grid-template-columns:1fr}.stage{height:420px}.tab{padding:9px 11px;font-size:13px}}
+
+/* ======================== AI tutor ======================== */
+.ai-panel{position:sticky;top:14px;height:calc(100vh - 28px);min-height:690px;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.ai-resize-handle{position:absolute;left:0;top:0;bottom:0;width:13px;border:0;border-radius:0;background:transparent;cursor:col-resize;z-index:12;padding:0}
+.ai-resize-handle::after{content:"";position:absolute;left:3px;top:37%;width:3px;height:26%;border-radius:4px;background:rgba(57,212,255,.45);transition:.15s ease}
+.ai-resize-handle:hover::after,.ai-resize-handle:focus-visible::after,body.resizing-ai .ai-resize-handle::after{background:var(--cyan);width:4px}
+.ai-resize-handle:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px}
+body.resizing-ai{cursor:col-resize;user-select:none}
+.ai-head{padding:14px 14px 13px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;background:#0c2231}
+.ai-head-title{font-size:18px;font-weight:900;color:#fff}.ai-head-sub{font-size:11px;color:#8dc9e9;margin-top:2px}
+.ai-head-actions{display:flex;gap:6px}.ai-icon-btn{width:36px;height:36px;padding:0;border:1px solid #3f667e;border-radius:10px;background:#091f2e;color:#fff;cursor:pointer;font-size:17px}
+.ai-icon-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.ai-state{padding:10px 14px;border-bottom:1px solid var(--border);background:#0c2231;color:#9fd4f0;font-size:12px;line-height:1.48}.ai-state strong{color:#fff}
+.ai-chips{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.chip,.ai-btn,.modal-btn{border:1px solid #3f667e;border-radius:10px;background:#0a2232;color:#fff;font:inherit;font-weight:800;cursor:pointer}
+.chip{min-height:37px;padding:7px 8px;font-size:12px}.chip:hover,.ai-btn:hover,.modal-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.chat-messages{flex:1;min-height:250px;overflow-y:auto;padding:12px;background:#081c29;display:flex;flex-direction:column;gap:10px}
+.msg{border:1px solid var(--border);border-radius:12px;padding:11px 12px;font-size:13.5px;line-height:1.5;overflow-wrap:anywhere;color:#eaf7ff}
+.msg .role{display:block;text-transform:uppercase;font-size:10px;font-weight:900;color:#8dc9e9;margin-bottom:5px;letter-spacing:.06em}
+.msg.user{background:var(--chat-user);align-self:flex-end;width:91%}.msg.assistant{background:var(--chat-ai);align-self:flex-start;width:96%;box-shadow:0 2px 7px rgba(0,0,0,.22)}.msg.error{background:#4b1d29;color:#ffd7dd;align-self:stretch}
+.msg p{margin:.45em 0}.msg h1,.msg h2,.msg h3{margin:.55em 0 .25em;line-height:1.2}.msg h1{font-size:1.16em}.msg h2{font-size:1.09em}.msg h3{font-size:1.03em}
+.msg code{background:#071521;padding:.1em .3em;border-radius:4px}.msg pre{background:#050f17;color:#f8fafc;padding:9px;border-radius:7px;overflow:auto}
+/* Prevent the device SVG rule from enlarging MathJax output. */
+.msg mjx-container{font-size:100%!important;max-width:100%;overflow-x:auto;overflow-y:hidden;color:inherit!important}
+.msg mjx-container[display="true"]{display:block!important;margin:.55em 0!important;text-align:center!important;font-size:103%!important}
+.msg mjx-container svg{width:auto!important;height:auto!important;max-width:100%!important;display:inline-block!important;vertical-align:middle!important;background:transparent!important}
+.msg mjx-container[display="true"] svg{display:block!important;margin:0 auto!important}
+.mathBlock{overflow-x:auto;overflow-y:hidden;margin:.5em 0}
+.chat-composer{padding:11px 12px;background:#0b2130;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.chat-composer textarea{width:100%;min-height:92px;resize:vertical;border:1px solid #3f667e;border-radius:9px;background:var(--input-bg);color:#fff;padding:9px 10px;font:inherit;font-size:13px;line-height:1.42}
+.chat-composer textarea:focus,.modal-card input:focus,.modal-card select:focus,.modal-card textarea:focus{outline:3px solid rgba(57,212,255,.22);border-color:var(--cyan)}
+.chat-actions{display:flex;justify-content:space-between;align-items:center;gap:8px}.attach-label{display:flex;align-items:center;gap:5px;font-size:11px;color:#9fd4f0;cursor:pointer}.send-btn{min-width:92px;padding:9px 13px;background:linear-gradient(135deg,#43d5ff,#7c5cff);border:0;color:#07131c}.send-btn:hover{color:#07131c;filter:brightness(1.06)}.send-btn:disabled{opacity:.55;cursor:wait}
+.thinking-wrapper{display:flex;align-items:center;height:18px;padding:4px 0}.dot-flashing{position:relative;width:7px;height:7px;border-radius:50%;background:var(--cyan);animation:dotFlash 1s infinite linear alternate;animation-delay:.5s;margin-left:14px}.dot-flashing::before,.dot-flashing::after{content:"";position:absolute;top:0;width:7px;height:7px;border-radius:50%;background:var(--cyan);animation:dotFlash 1s infinite alternate}.dot-flashing::before{left:-14px;animation-delay:0s}.dot-flashing::after{left:14px;animation-delay:1s}@keyframes dotFlash{0%{opacity:1}50%,100%{opacity:.18}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.68);display:flex;align-items:center;justify-content:center;padding:18px;z-index:1000}.modal.hidden{display:none}.modal-card{width:540px;max-width:96vw;max-height:92vh;overflow:auto;background:#0f2636;color:#f4f8fb;border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.5)}
+.modal-card h2{margin:0 0 6px}.modal-note{margin:0 0 14px;color:#9fd4f0;font-size:12px;line-height:1.45}.modal-card label{display:block;margin:12px 0 5px;font-size:13px;font-weight:800}.modal-card input[type=text],.modal-card input[type=password],.modal-card input[type=number],.modal-card textarea,.modal-card select{width:100%;border:1px solid #3f667e;border-radius:8px;background:var(--input-bg);color:#fff;padding:9px;font:inherit;font-size:13px}.modal-card textarea{min-height:150px;resize:vertical;line-height:1.42}.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.modal-btn{min-height:40px;padding:8px 12px}.modal-btn.primary{background:linear-gradient(135deg,#43d5ff,#7c5cff);border:0;color:#07131c}.field-hint{font-size:11px;color:#9fd4f0;line-height:1.4;margin-top:5px}.check-line{display:flex!important;align-items:flex-start;gap:7px;font-weight:500!important}.hidden{display:none!important}.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);padding:9px 14px;border-radius:9px;background:rgba(5,15,23,.96);border:1px solid #365d74;color:#fff;font-size:13px;opacity:0;pointer-events:none;transition:opacity .18s;z-index:1500;max-width:75vw;text-align:center}.toast.show{opacity:1}
+@media(max-width:1450px){.main{grid-template-columns:340px minmax(0,1fr)}.ai-panel{grid-column:1/-1;position:relative;top:auto;height:720px;min-height:620px}.ai-resize-handle{display:none}}
+@media(max-width:1000px){.ai-panel{grid-column:auto;height:720px}.ai-resize-handle{display:none}}
+@media(max-width:620px){.ai-chips{grid-template-columns:1fr}.modal-row,.modal-actions{grid-template-columns:1fr}.chat-actions{align-items:flex-end}.attach-label{max-width:160px}}
+
+</style>
+
+<style id="hubMainMenuStyle">
+.hubMainMenuButton{position:fixed;right:18px;top:72px;z-index:999999;display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border-radius:999px;border:1px solid rgba(56,215,255,.7);background:linear-gradient(135deg,#38d7ff,#7f7cff);color:#06131d!important;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:14px;font-weight:950;text-decoration:none!important;box-shadow:0 12px 30px rgba(0,0,0,.30);transition:transform .15s ease,filter .15s ease}.hubMainMenuButton:hover{transform:translateY(-1px);filter:brightness(1.07)}@media(max-width:760px){.hubMainMenuButton{top:auto;right:14px;bottom:14px;font-size:13px;padding:10px 13px}}@media print{.hubMainMenuButton{display:none!important}}
+</style>
+</head>
+<body>
+<div class="app"><div class="shell">
+<header>
+  <h1>Interactive nMOS Device Lab</h1>
+  <p>Explore channel formation, output curves, transfer behavior, channel potential, body effect, and small-signal quantities.</p>
+  <div class="model-note">Long-channel square-law model with subthreshold extension</div>
+</header>
+<div class="main">
+  <aside class="panel controls" id="controls"></aside>
+  <section class="workspace">
+    <div class="tabs">
+      <button class="tab active" data-tab="channel">Channel</button>
+      <button class="tab" data-tab="output">Output family</button>
+      <button class="tab" data-tab="transfer">Transfer</button>
+      <button class="tab" data-tab="profiles">Channel profiles</button>
+    </div>
+    <div class="panel stage">
+      <div class="view active" id="channelView">
+        <svg id="mosSvg" viewBox="0 0 1000 500" aria-label="Interactive nMOS structure">
+          <defs>
+            <pattern id="hatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="12" height="12" fill="#3c3c3c"/><rect width="5" height="12" fill="#1e1e1e"/>
+            </pattern>
+            <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe59a"/><stop offset="0.52" stop-color="#ffd36d"/><stop offset="1" stop-color="#f2b84b"/></linearGradient>
+            <linearGradient id="deplGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff7c9" stop-opacity="0.72"/><stop offset="1" stop-color="#ffdc74" stop-opacity="0.12"/></linearGradient>
+            <linearGradient id="channelGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#39d4ff"/><stop offset="0.78" stop-color="#39d4ff"/><stop offset="1" stop-color="#a9f4ff"/></linearGradient>
+            <linearGradient id="sdGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ad7f7"/><stop offset="1" stop-color="#5cb6e3"/></linearGradient>
+            <marker id="arrowC" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#39d4ff"/></marker>
+            <marker id="arrowP" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#ff78a9"/></marker>
+          </defs>
+          <rect x="100" y="210" width="800" height="220" rx="2" fill="url(#bodyGrad)" stroke="#0d1115" stroke-width="4"/>
+          <path id="sourceRegion" d="M100 210 H310 V285 Q310 320 275 320 H140 Q100 320 100 280 Z" fill="url(#sdGrad)" stroke="#111" stroke-width="4"/>
+          <path id="drainRegion" d="M690 210 H900 V280 Q900 320 860 320 H725 Q690 320 690 285 Z" fill="url(#sdGrad)" stroke="#111" stroke-width="4"/>
+          <rect id="oxideRect" x="310" y="190" width="380" height="18" fill="#a86bd3" stroke="#111" stroke-width="3"/>
+          <rect id="gateRect" x="340" y="105" width="320" height="85" rx="4" fill="url(#hatch)" stroke="#111" stroke-width="5"/>
+          <line id="gateLead" x1="500" y1="105" x2="500" y2="45" stroke="#111" stroke-width="7"/><circle cx="500" cy="37" r="14" fill="#111"/>
+          <line id="sourceLead" x1="205" y1="210" x2="205" y2="70" stroke="#111" stroke-width="7"/><circle id="sourceDot" cx="205" cy="62" r="14" fill="#111"/>
+          <line id="drainLead" x1="795" y1="210" x2="795" y2="70" stroke="#111" stroke-width="7"/><circle id="drainDot" cx="795" cy="62" r="14" fill="#111"/>
+          <line x1="500" y1="430" x2="500" y2="475" stroke="#111" stroke-width="7"/><circle cx="500" cy="483" r="14" fill="#111"/>
+          <text x="500" y="28" text-anchor="middle" fill="#a6172b" font-size="46" font-family="Georgia">G</text>
+          <text id="sourceTerminalText" x="160" y="90" fill="#a6172b" font-size="42" font-family="Georgia">S</text>
+          <text id="drainTerminalText" x="830" y="90" fill="#a6172b" font-size="42" font-family="Georgia">D</text>
+          <text x="530" y="493" fill="#a6172b" font-size="42" font-family="Georgia">B</text>
+          <text x="500" y="153" text-anchor="middle" fill="#fff" font-size="21" font-weight="800">Gate</text>
+          <text id="sourceNText" x="205" y="267" text-anchor="middle" fill="#111" font-size="44" font-family="Georgia">n+</text>
+          <text id="drainNText" x="795" y="267" text-anchor="middle" fill="#111" font-size="44" font-family="Georgia">n+</text>
+          <text x="500" y="394" text-anchor="middle" fill="#111" font-size="27" font-weight="800">p-type body</text>
+          <text id="sourceLabel" x="205" y="195" text-anchor="middle" fill="#fff" font-size="18" font-weight="800">Source</text>
+          <text id="drainLabel" x="795" y="195" text-anchor="middle" fill="#fff" font-size="18" font-weight="800">Drain</text>
+          <path id="depletionRegion" d="M310 210 L690 210 L690 235 Q650 255 610 250 Q500 238 390 250 Q350 255 310 235 Z" fill="url(#deplGrad)" stroke="#8f7b3d" stroke-width="1.5" stroke-dasharray="5 5" opacity="0"/>
+          <path id="channelBand" d="M310 205 L690 205 L690 218 L310 218 Z" fill="url(#channelGrad)" opacity="0"/>
+          <g id="electrons"></g>
+          <line id="electronArrow" x1="330" y1="292" x2="665" y2="292" stroke="#39d4ff" stroke-width="3" marker-end="url(#arrowC)" opacity="0"/>
+          <text id="electronLabel" x="500" y="282" text-anchor="middle" fill="#39d4ff" font-weight="800" opacity="0">electron flow</text>
+          <line id="currentArrow" x1="665" y1="330" x2="330" y2="330" stroke="#ff78a9" stroke-width="3" marker-end="url(#arrowP)" opacity="0"/>
+          <text id="currentLabel" x="500" y="352" text-anchor="middle" fill="#ff78a9" font-weight="800" opacity="0">conventional I<tspan dy="4" font-size="12">D</tspan></text>
+          <rect id="statusBox" x="318" y="52" width="364" height="42" rx="10" fill="#102b3d" stroke="#55738a" style="display:none"/>
+          <text id="biasText" x="500" y="79" text-anchor="middle" fill="#fff" font-size="17" font-weight="800" style="display:none"></text>
+        </svg>
+        <div class="eqbox" id="channelEq" style="display:none">I<sub>D</sub>=μ<sub>n</sub>C<sub>ox</sub>(W/L)[(V<sub>GS</sub>−V<sub>T</sub>)V<sub>DS</sub>−V<sub>DS</sub><sup>2</sup>/2]</div>
+      </div>
+      <div class="view" id="outputView"><div class="canvas-wrap"><canvas id="outputCanvas"></canvas></div><div class="legend"><span class="dot" style="background:#39d4ff"></span>I<sub>D</sub>–V<sub>DS</sub> family</div></div>
+      <div class="view" id="transferView"><div class="canvas-wrap"><canvas id="transferCanvas"></canvas></div><div class="legend"><span class="dot" style="background:#ff78a9"></span>I<sub>D</sub>–V<sub>GS</sub></div></div>
+      <div class="view" id="profilesView"><div class="canvas-wrap"><canvas id="profilesCanvas"></canvas></div><div class="legend"><span class="dot" style="background:#ffd36d"></span>V(x) &nbsp; <span class="dot" style="background:#39d4ff"></span>|Q<sub>inv</sub>(x)|</div></div>
+    </div>
+    <div class="metrics" id="metrics"></div>
+    <div class="note" id="note"></div>
+  </section>
+
+    <aside class="panel ai-panel" aria-label="nMOS AI Tutor">
+      <button id="aiResizeHandle" class="ai-resize-handle" type="button" aria-label="Resize AI Tutor panel" title="Drag to resize AI Tutor panel"></button>
+      <div class="ai-head">
+        <div><div class="ai-head-title">AI Tutor</div><div id="chatStatusText" class="ai-head-sub">Ready — configure a provider to begin</div></div>
+        <div class="ai-head-actions">
+          <button id="clearChatBtn" class="ai-icon-btn" type="button" title="Clear conversation">↺</button>
+          <button id="openChatSettingsBtn" class="ai-icon-btn" type="button" title="AI Tutor settings">⚙</button>
+        </div>
+      </div>
+      <div id="aiStateSummary" class="ai-state"><strong>Attached state:</strong> waiting for the device model.</div>
+      <div class="ai-chips">
+        <button class="chip prompt-chip" type="button" data-prompt="Explain the current nMOS operating point physically. Connect VGS, VT, VDS, inversion charge, channel shape, and drain current using the attached numerical state.">Explain state</button>
+        <button class="chip prompt-chip" type="button" data-prompt="Derive the drain-current equation appropriate for the current operating region, substitute the attached values, and explain every approximation.">Derive ID</button>
+        <button class="chip prompt-chip" type="button" data-prompt="Explain how body bias, substrate doping, oxide thickness, and gate work-function difference determine threshold voltage in the current simulation.">Explain VT</button>
+        <button class="chip prompt-chip" type="button" data-prompt="Ask me one conceptual prediction question about the current nMOS state. Do not reveal the answer until I respond; include a brief grading criterion.">Quiz me</button>
+      </div>
+      <div id="chatMessages" class="chat-messages">
+        <div class="msg assistant"><span class="role">AI Tutor</span><p>I can explain the current channel, derive the region equation, interpret the plots, analyze body effect, or quiz you.</p><p>Keep <strong>Attach Sim State</strong> checked so the response uses the current voltages, geometry, threshold, current, and active view.</p></div>
+      </div>
+      <div class="chat-composer">
+        <textarea id="chatInput" rows="4" placeholder="Ask about the current nMOS state… (Ctrl+Enter to send)"></textarea>
+        <div class="chat-actions">
+          <label class="attach-label"><input id="attachContextCheck" type="checkbox" checked> 📎 Attach Sim State</label>
+          <button id="chatSendBtn" class="ai-btn send-btn" type="button">Send</button>
+        </div>
+      </div>
+    </aside>
+</div></div></div>
+
+<div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <div class="modal-card">
+    <h2 id="settingsTitle">AI Tutor Configuration</h2>
+    <p class="modal-note">The key and preferences are stored only in this browser. Remove the key after using a shared classroom computer.</p>
+    <label for="chatProvider">Provider</label>
+    <select id="chatProvider"><option value="google">Google AI Studio (Gemini)</option><option value="lmstudio">LM Studio / OpenAI-compatible local server</option></select>
+    <label for="chatApiKey">API key</label><input id="chatApiKey" type="password" placeholder="Paste the provider API key…">
+    <p class="field-hint">A local LM Studio endpoint normally does not require a key.</p>
+    <div id="lmUrlGroup" class="hidden"><label for="chatLmUrl">Local server base URL</label><input id="chatLmUrl" type="text" value="http://localhost:1234/v1"></div>
+    <label for="chatModel">Model name</label><input id="chatModel" type="text" value="gemini-2.5-flash">
+    <div class="modal-row"><div><label for="chatTemp">Temperature (<span id="chatTempVal">0.4</span>)</label><input id="chatTemp" type="range" min="0" max="1.5" step="0.1" value="0.4"></div><div><label for="chatMaxTokens">Max response tokens</label><input id="chatMaxTokens" type="number" min="256" max="16384" step="256" value="8192"></div></div>
+    <label for="chatDetail">Response detail</label><select id="chatDetail"><option value="concise">Concise</option><option value="balanced" selected>Balanced</option><option value="indepth">In-depth derivation</option></select>
+    <label class="check-line"><input id="chatFollowUp" type="checkbox"><span>End explanations with one Socratic follow-up question</span></label>
+    <label for="chatSysPrompt">System prompt</label><textarea id="chatSysPrompt" rows="7"></textarea>
+    <button id="useDefaultPromptBtn" class="modal-btn" type="button">Use nMOS default prompt</button>
+    <div class="modal-actions"><button id="cancelSettingsBtn" class="modal-btn" type="button">Cancel</button><button id="saveSettingsBtn" class="modal-btn primary" type="button">Save Configuration</button></div>
+  </div>
+</div>
+<div id="toast" class="toast" role="status"></div>
+<script>
+const params = {
+  VGS:{label:'Gate-source',symbol:'V<sub>GS</sub>',min:0,max:3,step:.01,value:1.8,unit:'V'},
+  VDS:{label:'Drain-source',symbol:'V<sub>DS</sub>',min:0,max:3,step:.01,value:1.2,unit:'V'},
+  VSB:{label:'Body bias',symbol:'V<sub>SB</sub>',min:0,max:2,step:.01,value:0,unit:'V'},
+  W:{label:'Width',symbol:'W',min:2,max:100,step:1,value:20,unit:'µm'},
+  L:{label:'Length',symbol:'L',min:.25,max:5,step:.05,value:1,unit:'µm'},
+  mu:{label:'Mobility',symbol:'μ<sub>n</sub>',min:100,max:1000,step:10,value:450,unit:'cm²/V·s'},
+  lambda:{label:'Channel modulation',symbol:'λ',min:0,max:.12,step:.001,value:.036,unit:'V⁻¹'},
+  tox:{label:'Oxide thickness',symbol:'t<sub>ox</sub>',min:2,max:30,step:.5,value:8,unit:'nm'},
+  NA:{label:'Acceptors',symbol:'N<sub>A</sub>',min:14,max:18,step:.05,value:16,unit:'cm⁻³',format:v=>'10^'+v.toFixed(2)},
+  phims:{label:'Φ<sub>ms</sub>',symbol:'Φ<sub>ms</sub>',min:-1,max:1,step:.01,value:-.35,unit:'V'}
+};
+const defaults = Object.fromEntries(Object.entries(params).map(([k,p])=>[k,p.value]));
+const controls=document.getElementById('controls');
+for(const [key,p] of Object.entries(params)){
+  const div=document.createElement('div'); div.className='control';
+  div.innerHTML=`<div class="control-row"><div><span class="label">${p.label}</span><span class="symbol">${p.symbol}</span></div><span class="value" id="val-${key}"></span></div><input id="${key}" type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.value}">`;
+  controls.appendChild(div);
+}
+controls.insertAdjacentHTML('beforeend','<div class="buttons"><button class="btn primary" id="resetBtn">Reset</button><button class="btn" id="exportBtn">⇩ Export I-V CSV</button></div>');
+function values(){const o={};for(const k in params)o[k]=+document.getElementById(k).value;return o}
+function displayValue(k,v){const p=params[k]; if(p.format)return `${p.format(v)} ${p.unit}`; let d=p.step<.01?3:p.step<.1?2:p.step<1?1:0; return `${v.toFixed(d)} ${p.unit}`}
+function model(v){
+ const eps0=8.854e-14, epsSi=11.7*eps0, epsOx=3.9*eps0, q=1.602e-19, ni=1e10;
+ const toxcm=v.tox*1e-7, Cox=epsOx/toxcm, NA=Math.pow(10,v.NA), phiF=.02585*Math.log(NA/ni);
+ const gamma=Math.sqrt(2*q*epsSi*NA)/Cox;
+ const VFB=v.phims; const VT0=VFB+2*phiF+gamma*Math.sqrt(Math.max(2*phiF,1e-9));
+ const VT=VT0+gamma*(Math.sqrt(Math.max(2*phiF+v.VSB,1e-9))-Math.sqrt(Math.max(2*phiF,1e-9)));
+ const beta=(v.mu*Cox)*(v.W*1e-4)/(v.L*1e-4); const Vov=v.VGS-VT; const n=1.45; const Vth=.02585;
+ let Id=0,region='Cutoff',gm=0,gds=0;
+ if(Vov<=0){
+   // Weak inversion: exponential in Vov. Labelled Cutoff once current is negligible (~4 nVth below VT).
+   const pref=1e-10*(v.W/v.L)*Math.exp(Vov/(n*Vth));
+   Id=pref*(1-Math.exp(-v.VDS/Vth));
+   region=Vov>-0.15?'Subthreshold':'Cutoff';
+   gm=Id/(n*Vth);
+   gds=pref*Math.exp(-v.VDS/Vth)/Vth+v.lambda*Id; // analytic dId/dVDS + CLM-like floor
+ }
+ else if(v.VDS<Vov){
+   // Triode: textbook square law, no channel-length modulation.
+   Id=beta*(Vov*v.VDS-.5*v.VDS*v.VDS);region='Linear';
+   gm=beta*v.VDS;gds=beta*(Vov-v.VDS);
+ }
+ else{
+   // Saturation: CLM referenced to (VDS-Vov) so ID and gm stay continuous at the knee.
+   const clm=1+v.lambda*(v.VDS-Vov);
+   Id=.5*beta*Vov*Vov*clm;region='Saturation';
+   gm=beta*Vov*clm;gds=.5*beta*Vov*Vov*v.lambda;
+ }
+ return {Cox,phiF,gamma,VT,Vov,beta,Id,region,gm,gds,ro:gds>0?1/gds:Infinity,NA};
+}
+function fmtCurrent(a){const x=Math.abs(a);if(x>=1e-3)return (a*1e3).toFixed(3)+' mA';if(x>=1e-6)return (a*1e6).toFixed(3)+' µA';if(x>=1e-9)return (a*1e9).toFixed(3)+' nA';return a.toExponential(2)+' A'}
+function fmtCond(a){return a>=1e-3?(a*1e3).toFixed(3)+' mS':a>=1e-6?(a*1e6).toFixed(3)+' µS':(a*1e9).toFixed(3)+' nS'}
+function fmtR(r){if(!isFinite(r))return '∞';if(r>=1e6)return (r/1e6).toFixed(3)+' MΩ';if(r>=1e3)return (r/1e3).toFixed(3)+' kΩ';return r.toFixed(2)+' Ω'}
+function deviceGeometry(v){
+ const cx=500;
+ // L is represented by the lateral source-to-drain spacing. The visual range is
+ // intentionally expanded so the change is obvious while keeping the device readable.
+ const channelW=220+300*(v.L-.25)/(5-.25);
+ const xL=cx-channelW/2, xR=cx+channelW/2;
+ const sourceOuter=100, drainOuter=900;
+ const sourceCenter=(sourceOuter+xL)/2, drainCenter=(xR+drainOuter)/2;
+ const oxideH=10+24*(v.tox-2)/(30-2);
+ const oxideTop=208-oxideH;
+ const gateW=Math.max(170,channelW*.84), gateX=cx-gateW/2;
+ const gateH=80, gateY=oxideTop-gateH;
+ return {cx,channelW,xL,xR,sourceOuter,drainOuter,sourceCenter,drainCenter,oxideH,oxideTop,gateW,gateX,gateH,gateY};
+}
+function channelPhysics(v,m,g){
+ const inv=Math.max(m.Vov,0), vd=Math.max(v.VDS,0);
+ const sat=inv>0 && vd>=inv;
+ const qS=inv, qD=Math.max(inv-vd,0);
+ const baseY=208;
+ // Deliberately enlarged inversion layer for teaching visibility.
+ const sourceT=inv>0 ? Math.min(58,12+18*Math.tanh(inv*.9)) : 0;
+ const drainRatio=inv>0 ? Math.max(0,qD/inv) : 0;
+ const drainT=sat ? 1.5 : Math.max(3,sourceT*(.08+.92*drainRatio));
+ const excess=sat?(vd-inv)/Math.max(inv,.18):0;
+ const pinchRetreat=sat?Math.min(g.channelW*.30,g.channelW*(.06+.19*Math.tanh(excess))):0;
+ const pinchX=g.xR-pinchRetreat;
+ return {inv,vd,sat,qS,qD,sourceT,drainT,pinchX,baseY};
+}
+function setAttr(id,name,val){document.getElementById(id).setAttribute(name,val)}
+function update(){
+ const v=values(),m=model(v),g=deviceGeometry(v),cp=channelPhysics(v,m,g);
+ for(const k in params)document.getElementById('val-'+k).textContent=displayValue(k,v[k]);
+ const sub=(base,s,rest)=>`${base}<tspan dy="4" font-size="11">${s}</tspan><tspan dy="-4" font-size="17">${rest}</tspan>`;
+ document.getElementById('biasText').innerHTML=
+   sub('V','GS',`=${v.VGS.toFixed(2)} V &#160;&#160; `)+
+   sub('V','T',`=${m.VT.toFixed(2)} V &#160;&#160; `)+
+   sub('V','DS',`=${v.VDS.toFixed(2)} V &#160;&#160; L=${v.L.toFixed(2)} µm`);
+
+ // Geometry: L changes the physical channel spacing; tox changes oxide thickness.
+ setAttr('sourceRegion','d',`M100 210 H${g.xL} V285 Q${g.xL} 320 ${g.xL-35} 320 H140 Q100 320 100 280 Z`);
+ setAttr('drainRegion','d',`M${g.xR} 210 H900 V280 Q900 320 860 320 H${g.xR+35} Q${g.xR} 320 ${g.xR} 285 Z`);
+ setAttr('oxideRect','x',g.xL); setAttr('oxideRect','y',g.oxideTop); setAttr('oxideRect','width',g.channelW); setAttr('oxideRect','height',g.oxideH);
+ setAttr('gateRect','x',g.gateX); setAttr('gateRect','y',g.gateY); setAttr('gateRect','width',g.gateW); setAttr('gateRect','height',g.gateH);
+ setAttr('gateLead','y1',g.gateY); setAttr('sourceLead','x1',g.sourceCenter); setAttr('sourceLead','x2',g.sourceCenter); setAttr('sourceDot','cx',g.sourceCenter);
+ setAttr('drainLead','x1',g.drainCenter); setAttr('drainLead','x2',g.drainCenter); setAttr('drainDot','cx',g.drainCenter);
+ setAttr('sourceNText','x',g.sourceCenter); setAttr('drainNText','x',g.drainCenter); setAttr('sourceLabel','x',g.sourceCenter); setAttr('drainLabel','x',g.drainCenter);
+ setAttr('sourceTerminalText','x',g.sourceCenter-45); setAttr('drainTerminalText','x',g.drainCenter+35);
+
+ const formed=cp.inv>0, opacity=formed?Math.min(.45+.55*Math.tanh(cp.inv*1.2),1):0;
+ const band=document.getElementById('channelBand');
+ if(!formed){band.style.opacity=0;band.setAttribute('d',`M${g.xL} 208 L${g.xR} 208 Z`)}
+ else if(cp.sat){
+   const yS=cp.baseY+cp.sourceT,xP=cp.pinchX;
+   band.setAttribute('d',`M${g.xL} ${cp.baseY} L${xP} ${cp.baseY} Q${xP+Math.max(12,(g.xR-xP)*.45)} ${cp.baseY+1} ${g.xR} ${cp.baseY+2} L${g.xR} ${cp.baseY+4} Q${xP+Math.max(8,(g.xR-xP)*.30)} ${cp.baseY+7} ${xP} ${cp.baseY+2} Q${(g.xL+xP)/2} ${cp.baseY+cp.sourceT*.72} ${g.xL} ${yS} Z`);
+   band.style.opacity=opacity;
+ }else{
+   const yS=cp.baseY+cp.sourceT,yD=cp.baseY+cp.drainT;
+   band.setAttribute('d',`M${g.xL} ${cp.baseY} L${g.xR} ${cp.baseY} L${g.xR} ${yD} Q${g.cx} ${(yS+yD)/2} ${g.xL} ${yS} Z`);
+   band.style.opacity=opacity;
+ }
+
+ const dep=document.getElementById('depletionRegion');
+ const depDepth=Math.min(82,22+10*Math.sqrt(Math.max(v.VSB,0)+.05)+5*(v.NA-14));
+ const edge=20+10*Math.sqrt(Math.max(v.VSB,0)+.05);
+ dep.setAttribute('d',`M${g.xL} 210 L${g.xR} 210 L${g.xR} ${210+edge} Q${g.xR-g.channelW*.10} ${210+depDepth} ${g.xR-g.channelW*.20} ${210+depDepth-3} Q${g.cx} ${220+depDepth*.62} ${g.xL+g.channelW*.20} ${210+depDepth-3} Q${g.xL+g.channelW*.10} ${210+depDepth} ${g.xL} ${210+edge} Z`);
+ dep.style.opacity=Math.min(.78,.18+.17*v.VSB+.08*(v.NA-14));
+
+ const eg=document.getElementById('electrons');eg.innerHTML='';
+ if(formed){
+   const densityScale=Math.min(1,cp.inv/2.3);const n=Math.max(8,Math.min(42,Math.round(10+cp.inv*12)));
+   for(let i=0;i<n;i++){
+     const t=n===1?0:i/(n-1),x=g.xL+8+t*(g.channelW-16);
+     let localQ=Math.max(cp.inv-v.VDS*t,0);
+     if(cp.sat&&x>cp.pinchX)localQ*=Math.max(0,(g.xR-x)/Math.max(g.xR-cp.pinchX,1));
+     const norm=localQ/Math.max(cp.inv,.001);
+     // Local band half-thickness at this x, matching the channelBand path so dots stay inside the visible band
+     // instead of drifting toward the substrate as the channel thins near the drain / pinch-off.
+     let thick;
+     if(cp.sat){
+       thick = x<=cp.pinchX
+         ? cp.sourceT+(cp.drainT-cp.sourceT)*((x-g.xL)/Math.max(cp.pinchX-g.xL,1))
+         : cp.drainT*Math.max(0,(g.xR-x)/Math.max(g.xR-cp.pinchX,1));
+     }else{
+       thick = cp.sourceT+(cp.drainT-cp.sourceT)*t;
+     }
+     const cap=Math.max(thick-2,1.5);
+     const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+     c.setAttribute('cx',x);c.setAttribute('cy',Math.min(cp.baseY+2+Math.min(cap,3+(1-norm)*cap*.7),cp.baseY+thick+1));
+     c.setAttribute('r',2.2+2.5*Math.sqrt(norm)*(.65+.35*densityScale));c.setAttribute('fill','#fff');c.setAttribute('opacity',.25+.75*norm);eg.appendChild(c);
+   }
+ }
+ const arrowY=Math.min(345,cp.baseY+Math.max(cp.sourceT,28)+38);
+ ['electronArrow','currentArrow'].forEach(id=>{setAttr(id,'x1',id==='electronArrow'?g.xL+22:g.xR-22);setAttr(id,'x2',id==='electronArrow'?g.xR-22:g.xL+22)});
+ setAttr('electronArrow','y1',arrowY);setAttr('electronArrow','y2',arrowY);setAttr('currentArrow','y1',arrowY+38);setAttr('currentArrow','y2',arrowY+38);
+ setAttr('electronLabel','x',g.cx);setAttr('electronLabel','y',arrowY-10);setAttr('currentLabel','x',g.cx);setAttr('currentLabel','y',arrowY+60);
+ ['electronArrow','electronLabel','currentArrow','currentLabel'].forEach(id=>document.getElementById(id).style.opacity=formed&&v.VDS>.02?1:0);
+
+ const metrics=[['REGION',m.region],['THRESHOLD',m.VT.toFixed(3)+' V'],['OVERDRIVE',m.Vov.toFixed(3)+' V'],['DRAIN CURRENT',fmtCurrent(m.Id)],['TRANSCONDUCTANCE',fmtCond(m.gm)],['OUTPUT RESISTANCE',fmtR(m.ro)],['COX',(m.Cox*1e9).toFixed(1)+' nF/cm²'],['BODY COEFFICIENT Γ',m.gamma.toFixed(3)+' V½']];
+ document.getElementById('metrics').innerHTML=metrics.map(x=>`<div class="metric"><small>${x[0]}</small><strong>${x[1]}</strong></div>`).join('');
+ const bodyShift=m.VT-model({...v,VSB:0}).VT;
+ const notes={Cutoff:'The gate voltage is below threshold. No strong inversion channel is present; only depletion charge may remain beneath the oxide.',Subthreshold:'A weak inversion layer forms. Carrier concentration and drain current rise exponentially with gate voltage.',Linear:'A continuous inversion channel connects source and drain. Its charge is largest at the source and decreases toward the drain as VDS rises.',Saturation:'The inversion charge reaches zero before the drain and a visible pinch-off region forms. Additional VDS moves the pinch-off point toward the source and produces channel-length modulation.'};
+ document.getElementById('note').innerHTML=`<b>${m.region}:</b> ${notes[m.region]} The displayed source–drain spacing tracks L=${v.L.toFixed(2)} µm. Body bias shifts threshold by ${bodyShift.toFixed(3)} V. W scales current because it extends perpendicular to this cross-section; mobility changes current but not channel geometry.`;
+ if(typeof updateAiStateSummary==='function') updateAiStateSummary();
+ document.getElementById('channelEq').innerHTML=m.region==='Saturation'?'I<sub>D</sub>=½μ<sub>n</sub>C<sub>ox</sub>(W/L)(V<sub>GS</sub>−V<sub>T</sub>)²(1+λV<sub>DS</sub>)':m.region==='Linear'?'I<sub>D</sub>=μ<sub>n</sub>C<sub>ox</sub>(W/L)[(V<sub>GS</sub>−V<sub>T</sub>)V<sub>DS</sub>−V<sub>DS</sub>²/2]':'I<sub>D</sub>≈I<sub>0</sub>e<sup>(VGS−VT)/(nVth)</sup>[1−e<sup>−VDS/Vth</sup>]';
+ drawAll(v,m);
+}
+function prepCanvas(canvas){const r=canvas.getBoundingClientRect(),dpr=devicePixelRatio||1;canvas.width=r.width*dpr;canvas.height=r.height*dpr;const c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);return {c,w:r.width,h:r.height}}
+function axes(c,w,h,xlab,ylab){c.clearRect(0,0,w,h);c.fillStyle='#0a1e2c';c.fillRect(0,0,w,h);const L=72,R=24,T=26,B=58;c.strokeStyle='#29465a';c.lineWidth=1;for(let i=0;i<=5;i++){let x=L+(w-L-R)*i/5;c.beginPath();c.moveTo(x,T);c.lineTo(x,h-B);c.stroke();let y=T+(h-T-B)*i/5;c.beginPath();c.moveTo(L,y);c.lineTo(w-R,y);c.stroke()}c.strokeStyle='#d8eef9';c.lineWidth=1.5;c.beginPath();c.moveTo(L,T);c.lineTo(L,h-B);c.lineTo(w-R,h-B);c.stroke();c.fillStyle='#dceef7';c.font='14px Segoe UI';c.textAlign='center';c.fillText(xlab,(L+w-R)/2,h-18);c.save();c.translate(18,(T+h-B)/2);c.rotate(-Math.PI/2);c.fillText(ylab,0,0);c.restore();return {L,R,T,B,pw:w-L-R,ph:h-T-B}}
+function plotLine(c,pts,box,xmax,ymax,color,width=2){c.beginPath();pts.forEach((p,i)=>{const x=box.L+box.pw*p[0]/xmax,y=box.T+box.ph*(1-p[1]/ymax);i?c.lineTo(x,y):c.moveTo(x,y)});c.strokeStyle=color;c.lineWidth=width;c.stroke()}
+function drawPoint(c,p,box,xmax,ymax,fill,r=4,stroke='#062336',sw=2){const x=box.L+box.pw*p[0]/xmax,y=box.T+box.ph*(1-p[1]/ymax);c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fillStyle=fill;c.fill();if(sw>0){c.strokeStyle=stroke;c.lineWidth=sw;c.stroke();}}
+function drawOutput(){const v=values(),{c,w,h}=prepCanvas(document.getElementById('outputCanvas')),b=axes(c,w,h,'VDS (V)','ID (mA)');const gs=[.5,1,1.5,2,2.5,3];let curves=[],ymax=.01;for(const vg of gs){let pts=[];for(let i=0;i<=120;i++){let vd=3*i/120;let mm=model({...v,VGS:vg,VDS:vd});ymax=Math.max(ymax,mm.Id*1e3);pts.push([vd,mm.Id*1e3])}curves.push({vg,pts})}ymax*=1.12;const cols=['#6fb1ff','#55c9ff','#39d4ff','#7ce0b7','#ffd36d','#ff78a9'];curves.forEach((curve,i)=>plotLine(c,curve.pts,b,3,ymax,cols[i],2));
+  c.save();c.setLineDash([6,6]);c.strokeStyle='rgba(255,255,255,0.22)';c.lineWidth=1.5;const gx=b.L+b.pw*v.VDS/3;c.beginPath();c.moveTo(gx,b.T);c.lineTo(gx,b.T+b.ph);c.stroke();c.restore();
+  curves.forEach((curve,i)=>{const mm=model({...v,VGS:curve.vg,VDS:v.VDS});drawPoint(c,[v.VDS,Math.max(0,mm.Id*1e3)],b,3,ymax,cols[i],4,'#07283b',2)});
+  const active=model(v);drawPoint(c,[v.VDS,Math.max(0,active.Id*1e3)],b,3,ymax,'#ffffff',6,'#07283b',2.5)}
+function drawTransfer(){const v=values(),{c,w,h}=prepCanvas(document.getElementById('transferCanvas')),b=axes(c,w,h,'VGS (V)','ID (mA)');let pts=[],ymax=.01;for(let i=0;i<=160;i++){let vg=3*i/160,m=model({...v,VGS:vg});ymax=Math.max(ymax,m.Id*1e3);pts.push([vg,m.Id*1e3])}ymax*=1.12;plotLine(c,pts,b,3,ymax,'#ff78a9',3);const m=model(v);plotLine(c,[[v.VGS,Math.max(0,m.Id*1e3)]],b,3,ymax,'#fff',7);c.strokeStyle='#ffd36d';c.setLineDash([6,6]);let x=b.L+b.pw*m.VT/3;c.beginPath();c.moveTo(x,b.T);c.lineTo(x,h-b.B);c.stroke();c.setLineDash([])}
+function drawProfiles(){const v=values(),m=model(v),{c,w,h}=prepCanvas(document.getElementById('profilesCanvas')),b=axes(c,w,h,'Normalized channel position x/L','Normalized magnitude');let vp=[],qp=[];for(let i=0;i<=160;i++){let x=i/160;let potential=m.Vov>0&&v.VDS>m.Vov ? (x<.88?Math.min(v.VDS*x/.88,m.Vov):m.Vov+(v.VDS-m.Vov)*(x-.88)/.12) : v.VDS*x;let q=Math.max(m.Vov-Math.min(potential,m.Vov),0)/Math.max(m.Vov,.001);vp.push([x,v.VDS?potential/v.VDS:0]);qp.push([x,q])}plotLine(c,vp,b,1,1.05,'#ffd36d',3);plotLine(c,qp,b,1,1.05,'#39d4ff',3)}
+function drawAll(){drawOutput();drawTransfer();drawProfiles()}
+for(const k in params)document.getElementById(k).addEventListener('input',update);
+document.getElementById('resetBtn').onclick=()=>{for(const k in defaults)document.getElementById(k).value=defaults[k];update()};
+document.getElementById('exportBtn').onclick=()=>{const v=values();let s='VGS_V,VDS_V,ID_A,Region\n';for(let vg=0;vg<=3.0001;vg+=.1)for(let vd=0;vd<=3.0001;vd+=.1){const m=model({...v,VGS:vg,VDS:vd});s+=`${vg.toFixed(2)},${vd.toFixed(2)},${m.Id},${m.region}\n`}const blob=new Blob([s],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nmos_iv_data.csv';a.click();URL.revokeObjectURL(a.href)};
+document.querySelectorAll('.tab').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(btn.dataset.tab+'View').classList.add('active');setTimeout(update,20)});
+window.addEventListener('resize',()=>setTimeout(update,50));
+
+
+// =====================================================================
+// AI TUTOR, LIVE CONTEXT, CONFIGURATION, AND RESIZABLE COLUMN
+// =====================================================================
+const AI_CONFIG_KEY='nmosDeviceAiTutorConfig';
+const AI_WIDTH_KEY='nmosDeviceAiPanelWidth';
+const AI_DEFAULT_WIDTH=390, AI_MIN_WIDTH=320, AI_MAX_WIDTH=760;
+const AI_PROMPT_VERSION=1;
+const DEFAULT_SYSTEM_PROMPT=`You are an undergraduate semiconductor-device tutor embedded in an interactive long-channel nMOS device lab. The body is p-type. Explain cutoff, subthreshold, linear/triode operation, saturation, pinch-off, channel-length modulation, body effect, oxide capacitance, threshold voltage, inversion charge, output characteristics, transfer characteristics, channel-potential profiles, transconductance, output conductance, and output resistance. Use the attached numerical simulation state whenever present. The simulator uses a long-channel square-law model with a subthreshold extension; distinguish its teaching approximations from a self-consistent device solution. Correct misconceptions explicitly. Relate equations to the visible channel shape and plotted operating point. Show intermediate algebra and units.
+
+Style rules: Answer directly in the first sentence. Use compact paragraphs and short bold run-in headings. Put inline mathematics only inside \\(...\\) and display mathematics only inside \\[...\\]. Never place LaTeX inside backticks or fenced code blocks. Keep equations at normal reading size. Do not add filler or praise.`;
+const DETAIL_SUFFIX={concise:'\n\nLength: a few sentences and at most one central equation.',balanced:'\n\nLength: a few compact paragraphs with the essential reasoning and equations.',indepth:'\n\nLength: derive the result step by step, substitute the attached values, check units, and discuss limiting cases.'};
+const FOLLOWUP_SUFFIX={on:'\n\nEnd with exactly one brief Socratic follow-up question.',off:'\n\nDo not append a follow-up question unless the student asks for a quiz.'};
+const aiState={provider:'google',apiKey:'',lmUrl:'http://localhost:1234/v1',model:'gemini-2.5-flash',temperature:.4,maxTokens:8192,detail:'balanced',askFollowUp:false,sysPrompt:DEFAULT_SYSTEM_PROMPT,history:[],busy:false,lastTruncated:false};
+const byId=id=>document.getElementById(id);
+
+function activeLabView(){const tab=document.querySelector('.tab.active');return tab?tab.dataset.tab:'channel';}
+function simulationContext(){
+  const v=values(),m=model(v),bodyShift=m.VT-model({...v,VSB:0}).VT;
+  return [
+    'Simulator: interactive long-channel nMOS device lab with subthreshold extension.',
+    `Active view: ${activeLabView()}.`,
+    `Biases: VGS=${v.VGS.toFixed(3)} V, VDS=${v.VDS.toFixed(3)} V, VSB=${v.VSB.toFixed(3)} V.`,
+    `Geometry/material controls: W=${v.W.toFixed(2)} um, L=${v.L.toFixed(2)} um, mobility=${v.mu.toFixed(1)} cm^2/(V s), lambda=${v.lambda.toFixed(4)} 1/V, tox=${v.tox.toFixed(2)} nm, NA=10^${v.NA.toFixed(2)} cm^-3, phi_ms=${v.phims.toFixed(3)} V.`,
+    `Calculated electrostatics: Cox=${(m.Cox*1e9).toFixed(3)} nF/cm^2, phi_F=${m.phiF.toFixed(4)} V, gamma=${m.gamma.toFixed(4)} V^0.5, VT=${m.VT.toFixed(4)} V, body-effect threshold shift=${bodyShift.toFixed(4)} V.`,
+    `Operating state: region=${m.region}, overdrive VOV=${m.Vov.toFixed(4)} V, beta=${m.beta.toExponential(4)} A/V^2.`,
+    `Small-signal/DC results: ID=${m.Id.toExponential(6)} A (${fmtCurrent(m.Id)}), gm=${m.gm.toExponential(6)} S, gds=${m.gds.toExponential(6)} S, ro=${isFinite(m.ro)?m.ro.toExponential(6)+' ohm':'infinity'}.`,
+    'Important limitations: square-law long-channel model, illustrative subthreshold expression, no velocity saturation, DIBL, mobility degradation, quantum confinement, or self-consistent Poisson/continuity solution.'
+  ].join('\n');
+}
+function updateAiStateSummary(){
+  const el=byId('aiStateSummary'); if(!el) return;
+  const v=values(),m=model(v);
+  el.innerHTML=`<strong>Attached state:</strong> ${m.region} · V<sub>GS</sub> ${v.VGS.toFixed(2)} V · V<sub>DS</sub> ${v.VDS.toFixed(2)} V · V<sub>T</sub> ${m.VT.toFixed(2)} V · I<sub>D</sub> ${fmtCurrent(m.Id)} · ${activeLabView()} view`;
+}
+function effectiveSystemPrompt(){return (aiState.sysPrompt||DEFAULT_SYSTEM_PROMPT)+(DETAIL_SUFFIX[aiState.detail]||DETAIL_SUFFIX.balanced)+(aiState.askFollowUp?FOLLOWUP_SUFFIX.on:FOLLOWUP_SUFFIX.off);}
+function loadAiSettings(){
+  try{const s=JSON.parse(localStorage.getItem(AI_CONFIG_KEY)||'{}');Object.assign(aiState,{provider:s.provider||'google',apiKey:s.apiKey||'',lmUrl:s.lmUrl||'http://localhost:1234/v1',model:s.model||'gemini-2.5-flash',temperature:s.temperature!==undefined?Number(s.temperature):.4,maxTokens:Number.isFinite(s.maxTokens)?s.maxTokens:8192,detail:s.detail||'balanced',askFollowUp:s.askFollowUp===true,sysPrompt:typeof s.sysPrompt==='string'&&s.sysPrompt.trim()?s.sysPrompt:DEFAULT_SYSTEM_PROMPT});}catch(_){aiState.sysPrompt=DEFAULT_SYSTEM_PROMPT;}
+  byId('chatStatusText').textContent=aiState.apiKey||aiState.provider==='lmstudio'?`Ready · ${aiState.model}`:'Ready — configure a provider to begin';
+}
+function openAiSettings(){
+  byId('chatProvider').value=aiState.provider;byId('chatApiKey').value=aiState.apiKey;byId('chatLmUrl').value=aiState.lmUrl;byId('chatModel').value=aiState.model;byId('chatTemp').value=aiState.temperature;byId('chatTempVal').textContent=Number(aiState.temperature).toFixed(1);byId('chatMaxTokens').value=aiState.maxTokens;byId('chatDetail').value=aiState.detail;byId('chatFollowUp').checked=aiState.askFollowUp;byId('chatSysPrompt').value=aiState.sysPrompt;byId('lmUrlGroup').classList.toggle('hidden',aiState.provider!=='lmstudio');byId('settingsModal').classList.remove('hidden');
+}
+function closeAiSettings(){byId('settingsModal').classList.add('hidden');}
+function saveAiSettings(){
+  aiState.provider=byId('chatProvider').value;aiState.apiKey=byId('chatApiKey').value.trim();aiState.lmUrl=byId('chatLmUrl').value.trim()||'http://localhost:1234/v1';aiState.model=byId('chatModel').value.trim()||(aiState.provider==='google'?'gemini-2.5-flash':'local-model');aiState.temperature=Number(byId('chatTemp').value);aiState.maxTokens=Math.min(16384,Math.max(256,Math.round(Number(byId('chatMaxTokens').value)||8192)));aiState.detail=byId('chatDetail').value;aiState.askFollowUp=byId('chatFollowUp').checked;aiState.sysPrompt=byId('chatSysPrompt').value.trim()||DEFAULT_SYSTEM_PROMPT;
+  try{localStorage.setItem(AI_CONFIG_KEY,JSON.stringify({provider:aiState.provider,apiKey:aiState.apiKey,lmUrl:aiState.lmUrl,model:aiState.model,temperature:aiState.temperature,maxTokens:aiState.maxTokens,detail:aiState.detail,askFollowUp:aiState.askFollowUp,sysPrompt:aiState.sysPrompt,promptVersion:AI_PROMPT_VERSION}));}catch(_){ }
+  byId('chatStatusText').textContent=`Ready · ${aiState.model}`;closeAiSettings();showToast('AI Tutor configuration saved.');
+}
+function clearConversation(){aiState.history=[];byId('chatMessages').innerHTML='<div class="msg assistant"><span class="role">AI Tutor</span><p>Conversation cleared. The live simulator state can still be attached to the next question.</p></div>';byId('chatStatusText').textContent=aiState.apiKey||aiState.provider==='lmstudio'?`Ready · ${aiState.model}`:'Ready — configure a provider to begin';}
+function showToast(message){const t=byId('toast');t.textContent=message;t.classList.add('show');clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>t.classList.remove('show'),2300);}
+function escapeHtml(value){return String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function normalizeAiMath(text){
+  let out=String(text??'').replace(/\r\n?/g,'\n');
+  out=out.replace(/```(?:latex|tex|math)\s*\n([\s\S]*?)```/gi,(_,body)=>`\\[\n${body.trim()}\n\\]`);
+  out=out.replace(/\\begin\{(?:equation\*?|displaymath)\}([\s\S]*?)\\end\{(?:equation\*?|displaymath)\}/g,(_,body)=>`\\[\n${body.trim()}\n\\]`);
+  const displays=[];out=out.replace(/\$\$([\s\S]*?)\$\$/g,(_,body)=>`@@NMOS_DISPLAY_${displays.push(body)-1}@@`);out=out.replace(/(^|[^\\$])\$([^$\n]+?)\$/gm,(_,prefix,body)=>`${prefix}\\(${body.trim()}\\)`);out=out.replace(/@@NMOS_DISPLAY_(\d+)@@/g,(_,i)=>`\\[\n${displays[Number(i)].trim()}\n\\]`);return out;
+}
+function inlineFormat(s){return s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>');}
+function renderMarkdown(text){
+  const lines=escapeHtml(normalizeAiMath(text)).split('\n');let html='',inMath=false,math=[],inCode=false,code=[],list=null;
+  const closeList=()=>{if(list){html+=`</${list}>`;list=null;}};
+  for(const line of lines){const t=line.trim();
+    if(inMath){math.push(line);if(t.endsWith('\\]')){closeList();html+=`<div class="mathBlock">${math.join('\n')}</div>`;inMath=false;math=[];}continue;}
+    if(t.startsWith('\\[')){closeList();if(t.endsWith('\\]')&&t.length>4)html+=`<div class="mathBlock">${line}</div>`;else{inMath=true;math=[line];}continue;}
+    if(t.startsWith('```')){closeList();if(inCode){html+=`<pre><code>${code.join('\n')}</code></pre>`;inCode=false;code=[];}else inCode=true;continue;}if(inCode){code.push(line);continue;}
+    if(!t){closeList();continue;}
+    const h=t.match(/^(#{1,3})\s+(.+)$/);if(h){closeList();html+=`<h${h[1].length}>${inlineFormat(h[2])}</h${h[1].length}>`;continue;}
+    const ul=t.match(/^[-*]\s+(.+)$/),ol=t.match(/^\d+\.\s+(.+)$/);if(ul||ol){const kind=ul?'ul':'ol';if(list!==kind){closeList();html+=`<${kind}>`;list=kind;}html+=`<li>${inlineFormat((ul||ol)[1])}</li>`;continue;}
+    closeList();html+=`<p>${inlineFormat(t)}</p>`;
+  }closeList();if(inMath)html+=`<div class="mathBlock">${math.join('\n')}</div>`;if(inCode)html+=`<pre><code>${code.join('\n')}</code></pre>`;return html;
+}
+function typesetMath(node){if(window.MathJax?.typesetClear)MathJax.typesetClear([node]);if(window.MathJax?.typesetPromise)MathJax.typesetPromise([node]).catch(()=>{});}
+function appendChatMessage(role,text){const div=document.createElement('div');div.className=`msg ${role}`;const label=role==='user'?'You':role==='assistant'?'AI Tutor':'Error';div.innerHTML=`<span class="role">${label}</span>${role==='error'?`<p>${escapeHtml(text)}</p>`:renderMarkdown(text)}`;byId('chatMessages').appendChild(div);byId('chatMessages').scrollTop=byId('chatMessages').scrollHeight;if(role!=='error')typesetMath(div);}
+async function fetchGoogleAi(){
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(aiState.model)}:generateContent`;const contents=aiState.history.map(m=>({role:m.role==='model'?'model':'user',parts:[{text:m.content}]}));const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':aiState.apiKey},body:JSON.stringify({contents,generationConfig:{temperature:aiState.temperature,maxOutputTokens:aiState.maxTokens},systemInstruction:{parts:[{text:effectiveSystemPrompt()}]}})});const data=await res.json();if(!res.ok)throw new Error(data?.error?.message||`HTTP ${res.status}`);const c=data?.candidates?.[0];const answer=c?.content?.parts?.map(p=>p.text||'').join('')||'';if(!answer)throw new Error(`The model returned no text (${c?.finishReason||data?.promptFeedback?.blockReason||'empty response'}).`);if(c?.finishReason==='MAX_TOKENS')aiState.lastTruncated=true;return answer;
+}
+async function fetchLocalAi(){
+  const url=`${aiState.lmUrl.replace(/\/$/,'')}/chat/completions`;const messages=[{role:'system',content:effectiveSystemPrompt()},...aiState.history.map(m=>({role:m.role==='model'?'assistant':'user',content:m.content}))];const headers={'Content-Type':'application/json'};if(aiState.apiKey)headers.Authorization=`Bearer ${aiState.apiKey}`;const res=await fetch(url,{method:'POST',headers,body:JSON.stringify({model:aiState.model,messages,temperature:aiState.temperature,max_tokens:aiState.maxTokens})});const data=await res.json();if(!res.ok)throw new Error(data?.error?.message||`HTTP ${res.status}`);const choice=data?.choices?.[0],answer=choice?.message?.content||'';if(!answer)throw new Error('The local model returned no text. Verify the server URL and loaded model.');if(choice?.finish_reason==='length')aiState.lastTruncated=true;return answer;
+}
+async function handleChatSend(){
+  if(aiState.busy)return;const raw=byId('chatInput').value.trim();if(!raw)return;if(aiState.provider==='google'&&!aiState.apiKey){showToast('Configure a Google AI Studio API key first.');openAiSettings();return;}let request=raw;if(byId('attachContextCheck').checked)request=`[Simulation Context]\n${simulationContext()}\n\n[Student Question]\n${raw}`;byId('chatInput').value='';appendChatMessage('user',raw);aiState.history.push({role:'user',content:request});aiState.busy=true;aiState.lastTruncated=false;byId('chatStatusText').textContent='AI is thinking…';byId('chatSendBtn').disabled=true;const loading=document.createElement('div');loading.className='msg assistant';loading.innerHTML='<span class="role">AI Tutor</span><div class="thinking-wrapper"><div class="dot-flashing"></div></div>';byId('chatMessages').appendChild(loading);byId('chatMessages').scrollTop=byId('chatMessages').scrollHeight;
+  try{const answer=aiState.provider==='google'?await fetchGoogleAi():await fetchLocalAi();loading.remove();appendChatMessage('assistant',answer);aiState.history.push({role:'model',content:answer});byId('chatStatusText').textContent=aiState.lastTruncated?'Ready — answer reached token limit':`Ready · ${aiState.model}`;}catch(err){loading.remove();aiState.history.pop();appendChatMessage('error',String(err?.message||err));byId('chatStatusText').textContent='AI request error';}finally{aiState.busy=false;byId('chatSendBtn').disabled=false;}
+}
+function availableAiMax(){const app=document.querySelector('.app');const width=app?app.clientWidth:window.innerWidth;return Math.max(AI_MIN_WIDTH,Math.min(AI_MAX_WIDTH,width-340-600-70));}
+function applyAiWidth(width){const safe=Math.min(availableAiMax(),Math.max(AI_MIN_WIDTH,Number(width)||AI_DEFAULT_WIDTH));document.documentElement.style.setProperty('--ai-panel-width',`${safe}px`);return safe;}
+function saveAiWidth(width){try{localStorage.setItem(AI_WIDTH_KEY,String(Math.round(width)));}catch(_){ }}
+function loadAiWidth(){let width=AI_DEFAULT_WIDTH;try{const s=localStorage.getItem(AI_WIDTH_KEY);if(s)width=Number(s);}catch(_){ }return applyAiWidth(width);}
+function initAiResize(){
+  const handle=byId('aiResizeHandle'),panel=document.querySelector('.ai-panel');if(!handle||!panel)return;loadAiWidth();let dragging=false,startX=0,startW=0;
+  const move=e=>{if(!dragging)return;saveAiWidth(applyAiWidth(startW+(startX-e.clientX)));};const stop=()=>{if(!dragging)return;dragging=false;document.body.classList.remove('resizing-ai');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',stop);window.removeEventListener('pointercancel',stop);};
+  handle.addEventListener('pointerdown',e=>{if(window.innerWidth<=1450)return;dragging=true;startX=e.clientX;startW=panel.getBoundingClientRect().width;document.body.classList.add('resizing-ai');handle.setPointerCapture?.(e.pointerId);window.addEventListener('pointermove',move);window.addEventListener('pointerup',stop);window.addEventListener('pointercancel',stop);e.preventDefault();});
+  handle.addEventListener('dblclick',()=>{saveAiWidth(applyAiWidth(AI_DEFAULT_WIDTH));showToast('AI Tutor width reset.');});
+  handle.addEventListener('keydown',e=>{const current=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ai-panel-width'))||AI_DEFAULT_WIDTH,step=e.shiftKey?48:16;if(e.key==='ArrowLeft'){saveAiWidth(applyAiWidth(current-step));e.preventDefault();}else if(e.key==='ArrowRight'){saveAiWidth(applyAiWidth(current+step));e.preventDefault();}else if(e.key==='Home'){saveAiWidth(applyAiWidth(AI_MIN_WIDTH));e.preventDefault();}else if(e.key==='End'){saveAiWidth(applyAiWidth(AI_MAX_WIDTH));e.preventDefault();}});
+  window.addEventListener('resize',()=>{if(window.innerWidth>1450)loadAiWidth();});
+}
+function bindAiUi(){
+  byId('openChatSettingsBtn').addEventListener('click',openAiSettings);byId('cancelSettingsBtn').addEventListener('click',closeAiSettings);byId('saveSettingsBtn').addEventListener('click',saveAiSettings);byId('useDefaultPromptBtn').addEventListener('click',()=>{byId('chatSysPrompt').value=DEFAULT_SYSTEM_PROMPT;showToast('Default nMOS tutor prompt loaded.');});byId('clearChatBtn').addEventListener('click',clearConversation);byId('chatSendBtn').addEventListener('click',handleChatSend);byId('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();handleChatSend();}});byId('chatProvider').addEventListener('change',()=>{const p=byId('chatProvider').value;byId('lmUrlGroup').classList.toggle('hidden',p!=='lmstudio');const current=byId('chatModel').value.trim();if(p==='google'&&(!current||current==='local-model'))byId('chatModel').value='gemini-2.5-flash';if(p==='lmstudio'&&(!current||current==='gemini-2.5-flash'))byId('chatModel').value='local-model';});byId('chatTemp').addEventListener('input',()=>byId('chatTempVal').textContent=Number(byId('chatTemp').value).toFixed(1));byId('settingsModal').addEventListener('click',e=>{if(e.target===byId('settingsModal'))closeAiSettings();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!byId('settingsModal').classList.contains('hidden'))closeAiSettings();});document.querySelectorAll('.prompt-chip').forEach(btn=>btn.addEventListener('click',()=>{byId('chatInput').value=btn.dataset.prompt||'';byId('attachContextCheck').checked=true;byId('chatInput').focus();}));document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>setTimeout(updateAiStateSummary,25)));
+}
+function initAiTutor(){loadAiSettings();bindAiUi();initAiResize();updateAiStateSummary();}
+initAiTutor();
+
+update();
+</script>
+
+<a class="hubMainMenuButton" href="../index.html" title="Back to Semiconductor Learning Hub">← Main Menu</a>
+
+<!-- maestra-integration-v4 -->
+<link rel="stylesheet" href="../shared/maestra-toolbar.css">
+<script defer src="../shared/theme-sync-v2.js"></script>
+<script defer src="../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="mosfet" data-maestra-module-title="MOS Capacitor and MOSFET" data-maestra-topic-title="Mosfet Nmos Device Lab Ai" data-maestra-canvas-template="mos-device"></script>
+</body>
+</html>

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metal-Semiconductor Contact Simulator</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --panel-bg: #161b22;
+            --border-color: #30363d;
+            --soft-bg: #1f242c;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-soft: rgba(88, 166, 255, 0.1);
+            --value: #79c0ff;
+            --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-display: "Georgia", serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: var(--font-ui);
+            background: var(--bg-color);
+            color: var(--text-main);
+            padding: 16px;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- Header --- */
+        .header {
+            width: 100%;
+            max-width: 1100px;
+            text-align: left;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .header h1 {
+            color: var(--accent);
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* --- Layout Grid --- */
+        .dashboard {
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .panel-header {
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        /* --- Ultra-Compact Input Controls --- */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px 24px;
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: 175px 1fr 70px;
+            align-items: center;
+            gap: 12px;
+            background: var(--soft-bg);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .control-group:hover {
+            border-color: var(--border-color);
+        }
+
+        .control-name {
+            font-size: 0.82rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .control-value {
+            background: var(--accent-soft);
+            color: var(--accent);
+            padding: 3px 0;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-family: monospace;
+            border: 1px solid rgba(88, 166, 255, 0.2);
+            text-align: center;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 4px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .control-group select,
+        .control-group input[type="text"] {
+            width: 100%;
+            padding: 2px 6px;
+            background: var(--bg-color);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            outline: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .control-group input[type="text"] {
+            cursor: text;
+        }
+
+        /* --- Compact Results --- */
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .result-box {
+            background: var(--soft-bg);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .result-box .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .result-box .value {
+            color: var(--value);
+            font-family: monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .constant-note {
+            margin-top: 12px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: right;
+        }
+
+        /* --- Canvas Area --- */
+        .visuals {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .canvas-wrap {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            background: #ffffff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            max-width: 1080px;
+            height: auto;
+        }
+
+        @media (max-width: 900px) {
+            .controls { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; align-items: flex-start; }
+            .result-grid { grid-template-columns: repeat(2, 1fr); }
+            .control-group { grid-template-columns: 140px 1fr 65px; gap: 8px; }
+            .control-name { font-size: 0.75rem; }
+        }
+    </style>
+
+<style id="mesfet-main-menu-style">
+.mesfet-mainmenu-wrap{position:sticky;top:0;z-index:9999;display:flex;justify-content:flex-end;padding:12px 14px 0;pointer-events:none;}
+.mesfet-mainmenu-btn{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;padding:12px 20px;border-radius:999px;text-decoration:none;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:800;font-size:16px;letter-spacing:-0.01em;color:#06233a;background:linear-gradient(135deg,#3fd0ff,#8e82ff);box-shadow:0 10px 24px rgba(38,104,187,.25);border:1px solid rgba(255,255,255,.65);}
+.mesfet-mainmenu-btn:hover{filter:brightness(1.03);transform:translateY(-1px);}
+@media print{.mesfet-mainmenu-wrap{display:none!important;}}
+</style>
+
+</head>
+<body>
+<div class="mesfet-mainmenu-wrap"><a class="mesfet-mainmenu-btn" href="../../../index.html" title="Return to main menu">&#8592; Main Menu</a></div>
+
+
+    <header class="header">
+        <div>
+            <h1>Schottky Contact Simulator</h1>
+            <p>Interactive energy-band diagrams at thermal equilibrium</p>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <!-- Parameters Panel -->
+        <section class="panel">
+            <div class="panel-header">Device Parameters</div>
+            <div class="controls">
+                
+                <div class="control-group">
+                    <span class="control-name">Semiconductor Type</span>
+                    <select id="in-type" aria-label="Semiconductor type">
+                        <option value="n" selected>n-type semiconductor</option>
+                        <option value="p">p-type semiconductor</option>
+                    </select>
+                    <span class="control-value" id="val-type">n-type</span>
+                </div>
+
+                <div class="control-group">
+                    <span class="control-name">Work Function (&Phi;<sub>m</sub>)</span>
+                    <input type="range" id="in-phim" min="3.5" max="5.5" step="0.05" value="4.85">
+                    <span class="control-value" id="val-phim">4.85 eV</span>
+                </div>
+
+                <div class="control-group">
+                    <span class="control-name">Bandgap (E<sub>g</sub>)</span>
+                    <input type="range" id="in-eg" min="0.5" max="2.5" step="0.05" value="1.10">
+                    <span class="control-value" id="val-eg">1.10 eV</span>
+                </div>
+
+                <div class="control-group">
+                    <span class="control-name">Affinity (&chi;)</span>
+                    <input type="range" id="in-chi" min="3.0" max="5.0" step="0.05" value="3.45">
+                    <span class="control-value" id="val-chi">3.45 eV</span>
+                </div>
+
+                <!-- Doping has been updated to standard (linear/scientific notation) input -->
+                <div class="control-group">
+                    <span class="control-name" id="label-doping">Doping (cm<sup>&minus;3</sup>)</span>
+                    <input type="text" id="in-dop" value="1e16" placeholder="e.g. 1e16">
+                    <span class="control-value" id="val-dop">1.0e16</span>
+                </div>
+
+                <div class="control-group">
+                    <span class="control-name">Temperature (T)</span>
+                    <input type="range" id="in-t" min="100" max="500" step="10" value="220">
+                    <span class="control-value" id="val-t">220 K</span>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Calculated Values Panel -->
+        <section class="panel">
+            <div class="panel-header">Calculated State</div>
+            <div class="result-grid">
+                <div class="result-box">
+                    <div class="label">Electron Barrier (&Phi;<sub>Bn</sub>)</div>
+                    <div class="value" id="out-phibn">0.000</div>
+                </div>
+                <div class="result-box">
+                    <div class="label">Hole Barrier (&Phi;<sub>Bp</sub>)</div>
+                    <div class="value" id="out-phibp">0.000</div>
+                </div>
+                <div class="result-box">
+                    <div class="label" id="label-spacing">Spacing (V<sub>n</sub>)</div>
+                    <div class="value" id="out-spacing">0.000</div>
+                </div>
+                <div class="result-box">
+                    <div class="label">Built-in Pot. (V<sub>bi</sub>)</div>
+                    <div class="value" id="out-vbi">0.000</div>
+                </div>
+                <div class="result-box">
+                    <div class="label">Thermal Volt. (V<sub>T</sub>)</div>
+                    <div class="value" id="out-vt">0.0000</div>
+                </div>
+                <div class="result-box">
+                    <div class="label">Work Func. (&Phi;<sub>s</sub>)</div>
+                    <div class="value" id="out-phis">0.000</div>
+                </div>
+            </div>
+            <div class="constant-note" id="constant-note">Assumed constants: N<sub>C</sub> = 2.8&times;10<sup>19</sup>, N<sub>V</sub> = 1.04&times;10<sup>19</sup> cm<sup>&minus;3</sup></div>
+        </section>
+
+        <!-- Visuals Panel -->
+        <section class="panel visuals">
+            <div class="canvas-wrap">
+                <canvas id="simCanvas" width="1080" height="490"></canvas>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const k = 8.617333262e-5;
+        const Nc = 2.8e19;
+        const Nv = 1.04e19;
+
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const inputs = {
+            type: document.getElementById('in-type'),
+            phim: document.getElementById('in-phim'),
+            chi: document.getElementById('in-chi'),
+            eg: document.getElementById('in-eg'),
+            dop: document.getElementById('in-dop'),
+            t: document.getElementById('in-t')
+        };
+
+        const displays = {
+            type: document.getElementById('val-type'),
+            phim: document.getElementById('val-phim'),
+            chi: document.getElementById('val-chi'),
+            eg: document.getElementById('val-eg'),
+            dop: document.getElementById('val-dop'),
+            t: document.getElementById('val-t')
+        };
+
+        const outputs = {
+            phibn: document.getElementById('out-phibn'),
+            phibp: document.getElementById('out-phibp'),
+            spacing: document.getElementById('out-spacing'),
+            vbi: document.getElementById('out-vbi'),
+            vt: document.getElementById('out-vt'),
+            phis: document.getElementById('out-phis')
+        };
+
+        const labelDoping = document.getElementById('label-doping');
+        const labelSpacing = document.getElementById('label-spacing');
+
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', updateSimulation);
+        });
+
+        function drawSubscriptLabel(mainText, subText, x, y) {
+            ctx.fillStyle = '#111';
+            ctx.font = '15px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(mainText, x, y);
+            const mainWidth = ctx.measureText(mainText).width;
+            ctx.font = '11px Arial';
+            ctx.fillText(subText, x + mainWidth + 1, y + 5);
+        }
+
+        function drawArrow(x1, y1, x2, y2, label, labelOffsetX = 9, doubleHeaded = true) {
+            const headLength = 7;
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+
+            ctx.save();
+            ctx.strokeStyle = '#333';
+            ctx.fillStyle = '#333';
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            const distance = Math.hypot(x2 - x1, y2 - y1);
+            if (distance > 15) {
+                ctx.beginPath();
+                ctx.moveTo(x2, y2);
+                ctx.lineTo(x2 - headLength * Math.cos(angle - Math.PI / 6), y2 - headLength * Math.sin(angle - Math.PI / 6));
+                ctx.lineTo(x2 - headLength * Math.cos(angle + Math.PI / 6), y2 - headLength * Math.sin(angle + Math.PI / 6));
+                ctx.closePath();
+                ctx.fill();
+
+                if (doubleHeaded) {
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x1 + headLength * Math.cos(angle - Math.PI / 6), y1 + headLength * Math.sin(angle - Math.PI / 6));
+                    ctx.lineTo(x1 + headLength * Math.cos(angle + Math.PI / 6), y1 + headLength * Math.sin(angle + Math.PI / 6));
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+
+            if (label) {
+                ctx.font = 'italic 15px "Times New Roman"';
+                const textWidth = ctx.measureText(label).width;
+                const textHeight = 17;
+                const textX = x1 + labelOffsetX;
+                const textY = (y1 + y2) / 2;
+
+                ctx.fillStyle = 'rgba(255,255,255,0.94)';
+                ctx.fillRect(textX - 3, textY - textHeight / 2 - 1, textWidth + 6, textHeight + 2);
+                ctx.fillStyle = '#111';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(label, textX, textY);
+            }
+            ctx.restore();
+        }
+
+        function drawCaption(x, width, text) {
+            ctx.save();
+            ctx.fillStyle = '#f1f4f7';
+            ctx.fillRect(x, 8, width, 42);
+            ctx.strokeStyle = '#d6dde4';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x, 50);
+            ctx.lineTo(x + width, 50);
+            ctx.stroke();
+            ctx.fillStyle = '#111';
+            ctx.font = '600 16px Georgia';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, x + width / 2, 29);
+            ctx.restore();
+        }
+
+        function strokePath(color, width, dashed = false) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.setLineDash(dashed ? [7, 5] : []);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function updateSimulation() {
+            const type = inputs.type.value;
+            const isP = type === 'p';
+            const phim = parseFloat(inputs.phim.value);
+            const chi = parseFloat(inputs.chi.value);
+            const eg = parseFloat(inputs.eg.value);
+            const temperature = parseFloat(inputs.t.value);
+            
+            // Parse linear doping, default to 1e16 if empty or invalid
+            const doping = parseFloat(inputs.dop.value) || 1e16; 
+
+            displays.type.textContent = isP ? 'p-type' : 'n-type';
+            displays.phim.textContent = `${phim.toFixed(2)} eV`;
+            displays.chi.textContent = `${chi.toFixed(2)} eV`;
+            displays.eg.textContent = `${eg.toFixed(2)} eV`;
+            displays.dop.textContent = doping.toExponential(1).replace('e+', 'e');
+            displays.t.textContent = `${temperature.toFixed(0)} K`;
+
+            labelDoping.innerHTML = isP
+                ? 'Doping N<sub>A</sub> (cm<sup>&minus;3</sup>)'
+                : 'Doping N<sub>D</sub> (cm<sup>&minus;3</sup>)';
+
+            labelSpacing.innerHTML = isP
+                ? 'Spacing (V<sub>p</sub>)'
+                : 'Spacing (V<sub>n</sub>)';
+
+            const vt = k * temperature;
+            const spacing = Math.max(0, vt * Math.log((isP ? Nv : Nc) / doping));
+            const phibn = phim - chi;
+            const phibp = eg - phibn;
+            const phis = isP ? (chi + eg - spacing) : (chi + spacing);
+            const vbi = isP ? (phibp - spacing) : (phibn - spacing);
+
+            outputs.vt.textContent = `${vt.toFixed(4)} V`;
+            outputs.spacing.textContent = `${spacing.toFixed(3)} eV`;
+            outputs.phis.textContent = `${phis.toFixed(3)} eV`;
+            outputs.phibn.textContent = `${phibn.toFixed(3)} eV`;
+            outputs.phibp.textContent = `${phibp.toFixed(3)} eV`;
+            outputs.vbi.textContent = `${vbi.toFixed(3)} V`;
+
+            drawCanvas({ type, phim, chi, eg, spacing, phibn, phibp, vbi });
+        }
+
+        function drawCanvas(data) {
+            const { type, phim, chi, eg, spacing, phibn, phibp, vbi } = data;
+            const isP = type === 'p';
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const eVtoPx = 45;
+            const egVisualPx = eg * eVtoPx + 12;
+            const bandWidth = 3.0;
+            const fermiWidth = 3.0;
+            const vacuumWidth = 2.3;
+
+            drawCaption(14, 506, `Isolated metal + ${isP ? 'p-type' : 'n-type'} semiconductor`);
+            drawCaption(560, 506, `Metal-${isP ? 'p' : 'n'} semiconductor contact`);
+
+            ctx.beginPath();
+            ctx.moveTo(540, 58);
+            ctx.lineTo(540, 468);
+            strokePath('#d8dee4', 1.4);
+
+            const baseX1 = 36;
+            const baseVacY1 = 108;
+
+            ctx.beginPath();
+            ctx.moveTo(baseX1, baseVacY1);
+            ctx.lineTo(baseX1 + 465, baseVacY1);
+            strokePath('#4da6ff', vacuumWidth, true);
+
+            ctx.fillStyle = '#222';
+            ctx.font = '14px Georgia';
+            ctx.textAlign = 'center';
+            ctx.fillText('Vacuum level', baseX1 + 232, baseVacY1 - 13);
+
+            const mX1 = baseX1 + 28;
+            const mX2 = baseX1 + 128;
+            const mEf1 = baseVacY1 + phim * eVtoPx;
+
+            ctx.fillStyle = '#cfd8dc';
+            ctx.fillRect(mX1, mEf1, mX2 - mX1, 76);
+
+            ctx.beginPath();
+            ctx.moveTo(mX1, mEf1);
+            ctx.lineTo(mX2, mEf1);
+            strokePath('#1e88e5', fermiWidth);
+            drawSubscriptLabel('E', 'F', mX1 - 23, mEf1);
+
+            ctx.fillStyle = '#222';
+            ctx.font = '16px Georgia';
+            ctx.textAlign = 'center';
+            ctx.fillText('Metal', (mX1 + mX2) / 2, 446);
+            drawArrow((mX1 + mX2) / 2, baseVacY1, (mX1 + mX2) / 2, mEf1, 'qΦm', 8);
+
+            const sX1 = baseX1 + 235;
+            const sX2 = baseX1 + 440;
+            const sEc1 = baseVacY1 + chi * eVtoPx;
+            const sEv1 = sEc1 + egVisualPx;
+            const sEf1 = isP ? (sEv1 - spacing * eVtoPx) : (sEc1 + spacing * eVtoPx);
+
+            ctx.beginPath();
+            ctx.moveTo(sX1, sEc1);
+            ctx.lineTo(sX2, sEc1);
+            ctx.moveTo(sX1, sEv1);
+            ctx.lineTo(sX2, sEv1);
+            strokePath('#111', bandWidth);
+
+            ctx.beginPath();
+            ctx.moveTo(sX1, sEf1);
+            ctx.lineTo(sX2, sEf1);
+            strokePath('#1e88e5', 2.4, true);
+
+            drawSubscriptLabel('E', 'C', sX2 + 10, sEc1 - 8);
+            drawSubscriptLabel('E', 'F', sX2 + 10, sEf1);
+            drawSubscriptLabel('E', 'V', sX2 + 10, sEv1);
+
+            ctx.fillStyle = '#222';
+            ctx.font = '16px Georgia';
+            ctx.textAlign = 'center';
+            ctx.fillText('Semiconductor', (sX1 + sX2) / 2, 446);
+
+            drawArrow(sX1 + 42, baseVacY1, sX1 + 42, sEc1, 'qχ', 8);
+            drawArrow(sX1 + 127, baseVacY1, sX1 + 127, sEf1, 'qΦs', 8);
+
+            const baseX2 = 566;
+            const eqEfY = 312;
+
+            ctx.beginPath();
+            ctx.moveTo(baseX2, eqEfY);
+            ctx.lineTo(baseX2 + 480, eqEfY);
+            strokePath('#1e88e5', fermiWidth);
+            drawSubscriptLabel('E', 'F', baseX2 - 23, eqEfY);
+
+            const cmX1 = baseX2 + 18;
+            const cmX2 = baseX2 + 126;
+            const cmVac = eqEfY - phim * eVtoPx;
+
+            ctx.fillStyle = '#cfd8dc';
+            ctx.fillRect(cmX1, eqEfY, cmX2 - cmX1, 112);
+
+            ctx.beginPath();
+            ctx.moveTo(cmX1, cmVac);
+            ctx.lineTo(cmX2, cmVac);
+            strokePath('#4da6ff', vacuumWidth, true);
+
+            ctx.fillStyle = '#222';
+            ctx.font = '16px Georgia';
+            ctx.textAlign = 'center';
+            ctx.fillText('Metal', (cmX1 + cmX2) / 2, 450);
+
+            const csXInt = cmX2;
+            const csXBulk = baseX2 + 340;
+            const csXEnd = baseX2 + 480;
+
+            let cEcBulk, cEvBulk, cEcInt, cEvInt, cVacBulk, cVacInt;
+            if (isP) {
+                cEvBulk = eqEfY + spacing * eVtoPx;
+                cEcBulk = cEvBulk - egVisualPx;
+                cEvInt = eqEfY + phibp * eVtoPx;
+                cEcInt = cEvInt - egVisualPx;
+            } else {
+                cEcBulk = eqEfY - spacing * eVtoPx;
+                cEvBulk = cEcBulk + egVisualPx;
+                cEcInt = eqEfY - phibn * eVtoPx;
+                cEvInt = cEcInt + egVisualPx;
+            }
+            cVacBulk = cEcBulk - chi * eVtoPx;
+            cVacInt = cEcInt - chi * eVtoPx;
+
+            ctx.beginPath();
+            ctx.moveTo(csXBulk, cEcBulk);
+            ctx.lineTo(csXEnd, cEcBulk);
+            ctx.moveTo(csXBulk, cEvBulk);
+            ctx.lineTo(csXEnd, cEvBulk);
+            strokePath('#111', bandWidth);
+
+            ctx.beginPath();
+            ctx.moveTo(csXBulk, cVacBulk);
+            ctx.lineTo(csXEnd, cVacBulk);
+            strokePath('#4da6ff', vacuumWidth, true);
+
+            ctx.fillStyle = '#222';
+            ctx.font = '14px Georgia';
+            ctx.textAlign = 'center';
+            ctx.fillText('Vacuum level', csXBulk + 54, cVacBulk - 13);
+
+            const ctrlX = (csXInt + csXBulk) / 2;
+            ctx.beginPath();
+            ctx.moveTo(csXInt, cEcInt);
+            ctx.quadraticCurveTo(ctrlX, cEcBulk, csXBulk, cEcBulk);
+            ctx.moveTo(csXInt, cEvInt);
+            ctx.quadraticCurveTo(ctrlX, cEvBulk, csXBulk, cEvBulk);
+            strokePath('#111', bandWidth);
+
+            ctx.beginPath();
+            ctx.moveTo(csXInt, cVacInt);
+            ctx.quadraticCurveTo(ctrlX, cVacBulk, csXBulk, cVacBulk);
+            strokePath('#4da6ff', vacuumWidth, true);
+
+            drawSubscriptLabel('E', 'C', csXEnd + 10, cEcBulk - 8);
+            drawSubscriptLabel('E', 'F', csXEnd + 10, eqEfY);
+            drawSubscriptLabel('E', 'V', csXEnd + 10, cEvBulk);
+
+            ctx.fillStyle = '#222';
+            ctx.font = '16px Georgia';
+            ctx.textAlign = 'center';
+            ctx.fillText('Semiconductor', (csXBulk + csXEnd) / 2, 450);
+
+            ctx.beginPath();
+            ctx.moveTo(csXInt, Math.min(cmVac, cVacInt) - 7);
+            ctx.lineTo(csXInt, eqEfY + 112);
+            strokePath('#222', 2.0);
+
+            drawArrow((cmX1 + cmX2) / 2, cmVac, (cmX1 + cmX2) / 2, eqEfY, 'qΦm', 8);
+            drawArrow(csXInt + 20, cVacInt, csXInt + 20, cEcInt, 'qχ', 8);
+
+            if (isP) {
+                drawArrow(csXInt + 73, eqEfY, csXInt + 73, cEvInt, 'qΦBp', 8);
+                drawArrow(csXBulk + 25, eqEfY, csXBulk + 25, cEvBulk, 'qVp', 8);
+                drawArrow(csXBulk + 98, cVacBulk, csXBulk + 98, eqEfY, 'qΦs', 8);
+
+                if (Math.abs(vbi) > 0.01) {
+                    const arrX = csXInt + 150;
+                    drawArrow(arrX, cEvBulk, arrX, cEvInt, 'qVbi', 8);
+
+                    ctx.beginPath();
+                    ctx.moveTo(csXInt, cEvInt);
+                    ctx.lineTo(arrX + 14, cEvInt);
+                    ctx.moveTo(csXBulk - 54, cEvBulk);
+                    ctx.lineTo(arrX + 14, cEvBulk);
+                    strokePath('#666', 1.4, true);
+                }
+            } else {
+                drawArrow(csXInt + 73, cEcInt, csXInt + 73, eqEfY, 'qΦBn', 8);
+                drawArrow(csXBulk + 25, eqEfY, csXBulk + 25, cEcBulk, 'qVn', 8);
+                drawArrow(csXBulk + 98, cVacBulk, csXBulk + 98, eqEfY, 'qΦs', 8);
+
+                if (Math.abs(vbi) > 0.01) {
+                    const arrX = csXInt + 150;
+                    drawArrow(arrX, cEcBulk, arrX, cEcInt, 'qVbi', 8);
+
+                    ctx.beginPath();
+                    ctx.moveTo(csXInt, cEcInt);
+                    ctx.lineTo(arrX + 14, cEcInt);
+                    ctx.moveTo(csXBulk - 54, cEcBulk);
+                    ctx.lineTo(arrX + 14, cEcBulk);
+                    strokePath('#666', 1.4, true);
+                }
+            }
+        }
+
+        updateSimulation();
+    </script>
+
+<!-- maestra-integration-v4 -->
+<link rel="stylesheet" href="../../../shared/maestra-toolbar.css">
+<script defer src="../../../shared/theme-sync-v2.js"></script>
+<script defer src="../../../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="mesfet" data-maestra-module-title="MESFET and Schottky Devices" data-maestra-topic-title="03 Schottky Contact Simulator" data-maestra-canvas-template="mesfet-device"></script>
+</body>
+</html>

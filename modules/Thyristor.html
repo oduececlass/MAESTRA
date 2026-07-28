@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Thyristor Interactive Chapter - Coming Soon</title>
+<style>
+:root{--bg:#07131d;--panel:#102537;--body:#b9d5ea;--text:#f4fbff;--accent:#38d7ff;--stroke:#2b5069}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 30% -20%,#14334a,#07131d 55%,#040b11);color:var(--body);font-family:Inter,Arial,sans-serif;line-height:1.6}
+main{max-width:960px;margin:0 auto;padding:56px 22px}
+.card{border:1px solid var(--stroke);background:linear-gradient(180deg,var(--panel),#0d2030);border-radius:28px;padding:34px;box-shadow:0 24px 70px rgba(0,0,0,.35)}
+.badge{display:inline-block;border:1px solid var(--accent);color:var(--accent);border-radius:999px;padding:7px 12px;font-weight:900;font-size:13px;margin-bottom:16px}
+h1{color:var(--text);font-size:44px;line-height:1.05;margin:0 0 14px}
+p,li{font-size:18px}
+a{display:inline-block;margin-top:18px;color:#06131d;background:var(--accent);font-weight:900;text-decoration:none;border-radius:14px;padding:12px 18px}
+</style>
+
+<style id="hubMainMenuStyle">
+.hubMainMenuButton{
+  position:fixed;
+  right:18px;
+  top:76px;
+  z-index:999999;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:11px 15px;
+  border-radius:999px;
+  border:1px solid rgba(56,215,255,.65);
+  background:linear-gradient(135deg,#38d7ff,#7f7cff);
+  color:#06131d !important;
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  font-size:14px;
+  font-weight:950;
+  text-decoration:none !important;
+  box-shadow:0 14px 34px rgba(0,0,0,.34);
+}
+.hubMainMenuButton:hover{
+  transform:translateY(-1px);
+  filter:brightness(1.06);
+}
+@media(max-width:760px){
+  .hubMainMenuButton{
+    top:auto;
+    right:14px;
+    bottom:14px;
+    font-size:13px;
+    padding:10px 13px;
+  }
+}
+@media print{
+  .hubMainMenuButton{display:none!important;}
+}
+</style>
+
+</head>
+<body>
+<main>
+  <section class="card">
+    <span class="badge">NSF-Supported Module</span>
+    <h1>Thyristor Interactive Chapter</h1>
+    <p>This placeholder is ready for the future thyristor / PNPN power-device learning module.</p>
+    <p>Suggested topics:</p>
+    <ul>
+      <li>PNPN structure and two-transistor analogy</li>
+      <li>Forward blocking, triggering, latching, and holding current</li>
+      <li>SCR I–V characteristics and gate control</li>
+      <li>Applications in power switching and rectification</li>
+      <li>Comparison with PN diode, BJT, MOSFET, and IGBT operation</li>
+    </ul>
+    <a href="../index.html">← Back to Learning Hub</a>
+  </section>
+</main>
+<a class="hubMainMenuButton" href="../index.html" title="Back to Semiconductor Learning Hub">← Main Menu</a>
+
+<!-- maestra-integration-v4 -->
+<link rel="stylesheet" href="../shared/maestra-toolbar.css">
+<script defer src="../shared/theme-sync-v2.js"></script>
+<script defer src="../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="bjt" data-maestra-module-title="Bipolar Junction Transistors" data-maestra-topic-title="Thyristor" data-maestra-canvas-template="bjt-structure"></script>
+</body>
+</html>

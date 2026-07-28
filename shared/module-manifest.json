@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "course": {
+    "id": "solid-state-electronics",
+    "title": "Solid-State Electronics"
+  },
+  "modules": [
+    {
+      "id": "semiconductor-foundations",
+      "title": "Semiconductor Foundations",
+      "href": "modules/Basic_Semiconductor_Enhanced.html",
+      "canvasTemplate": "semiconductor-foundations"
+    },
+    {
+      "id": "pn-diode",
+      "title": "PN Diode",
+      "href": "modules/PNDiode_Chapter_Enhanced.html",
+      "canvasTemplate": "pn-junction"
+    },
+    {
+      "id": "bjt",
+      "title": "Bipolar Junction Transistors",
+      "href": "modules/Bipolar_Transistors_Related_Devices.html",
+      "canvasTemplate": "bjt-structure"
+    },
+    {
+      "id": "mosfet",
+      "title": "MOS Capacitor and MOSFET",
+      "href": "modules/MOSFET.html",
+      "canvasTemplate": "mos-device"
+    },
+    {
+      "id": "mesfet",
+      "title": "MESFET and Schottky Devices",
+      "href": "modules/MESFET/index.html",
+      "canvasTemplate": "mesfet-device"
+    },
+    {
+      "id": "solar-cells",
+      "title": "Solar Cells",
+      "href": "modules/Solar_Cells/index.html",
+      "canvasTemplate": "solar-cell"
+    }
+  ],
+  "tools": {
+    "canvas": "maestra/ee_canvas.html",
+    "student": "maestra/ee_problem_solving_workspace_student.html",
+    "builder": "maestra/ee_problem_set_builder.html",
+    "instructor": "maestra/ee_problem_solving_workspace_instructor.html",
+    "grader": "maestra/assessment_grader.html"
+  }
+}

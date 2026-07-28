@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOS Metaphor Lab — the Water Table Under the Gate with AI Tutor</title>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]'], ['$$', '$$']],
+    processEscapes: true,
+    processEnvironments: true
+  },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root{
+  --ink:#0A1620;
+  --ink-2:#0F1F2B;
+  --panel:#132534;
+  --panel-2:#182F41;
+  --line:#25455B;
+  --line-soft:#1C3548;
+  --text:#E4EFF4;
+  --muted:#8CA7B8;
+  --dim:#5F7B8D;
+
+  --water:#31C2D6;
+  --water-lo:#1B7C8C;
+  --water-hi:#8FF0FA;
+  --bubble:#F0A24B;
+  --bubble-lo:#A0632A;
+  --rock-1:#3A3020;
+  --rock-2:#4A3D28;
+  --rock-3:#2E2718;
+  --acceptor:#5FA8FF;
+  --oxide:#9583D6;
+  --metal:#9FB6C6;
+  --warn:#E4655B;
+  --ok:#5FD39A;
+  --ai-panel-width:390px;
+
+  --display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1200px 700px at 70% -10%, #16344700, #0A1620 70%),
+    var(--ink);
+  color:var(--text);
+  font-family:var(--body);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1920px;margin:0 auto;padding:28px 20px 64px}
+
+/* ---------- header ---------- */
+header{border-bottom:1px solid var(--line-soft);padding-bottom:18px;margin-bottom:22px}
+.eyebrow{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--water);margin:0 0 8px
+}
+h1{
+  font-family:var(--display);font-weight:400;font-size:clamp(30px,4.6vw,46px);
+  line-height:1.05;margin:0 0 10px;letter-spacing:-.01em
+}
+h1 em{font-style:italic;color:var(--water-hi)}
+.lede{max-width:64ch;color:var(--muted);margin:0}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:296px minmax(620px,1fr) minmax(320px,var(--ai-panel-width));gap:22px;align-items:start}
+.cols>div,.cols>.ai-panel{min-width:0}
+@media (max-width:1340px){.cols{grid-template-columns:296px minmax(0,1fr)}.ai-panel{grid-column:1/-1;position:relative!important;top:auto!important;height:720px!important;min-height:620px!important}.ai-resize-handle{display:none}}
+@media (max-width:940px){.cols{grid-template-columns:1fr}.ai-panel{grid-column:auto;height:720px!important}.ai-resize-handle{display:none}}
+
+.panel{
+  background:linear-gradient(180deg,var(--panel),var(--ink-2));
+  border:1px solid var(--line-soft);border-radius:10px;padding:16px 16px 18px
+}
+.panel + .panel{margin-top:16px}
+.panel h2{
+  font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);margin:0 0 14px;font-weight:600
+}
+
+/* ---------- controls ---------- */
+.ctl{margin-bottom:16px}
+.ctl:last-child{margin-bottom:0}
+.ctl-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px}
+.ctl-name{font-size:13px;color:var(--text)}
+.ctl-val{font-family:var(--mono);font-size:12.5px;color:var(--water-hi)}
+.ctl-hint{font-size:11.5px;color:var(--dim);margin-top:4px;line-height:1.35}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;margin:0
+}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--line);border-radius:2px}
+input[type=range]::-moz-range-track{height:3px;background:var(--line);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--water);
+  border:2px solid var(--ink);margin-top:-6px;box-shadow:0 0 0 1px var(--water-lo)
+}
+input[type=range]::-moz-range-thumb{
+  width:15px;height:15px;border-radius:50%;background:var(--water);border:2px solid var(--ink)
+}
+input[type=range]:focus-visible{outline:2px solid var(--water-hi);outline-offset:4px;border-radius:4px}
+
+.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{
+  flex:1;background:transparent;border:0;color:var(--muted);font-family:var(--body);font-size:12.5px;
+  padding:7px 4px;cursor:pointer
+}
+.seg button + button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--panel-2);color:var(--water-hi)}
+.seg button:focus-visible{outline:2px solid var(--water-hi);outline-offset:-2px}
+
+.btn{
+  width:100%;background:transparent;border:1px solid var(--line);color:var(--muted);
+  border-radius:7px;padding:8px;font-size:12.5px;cursor:pointer;font-family:var(--body)
+}
+.btn:hover{border-color:var(--water-lo);color:var(--text)}
+
+/* ---------- stage ---------- */
+.stage{border:1px solid var(--line-soft);border-radius:10px;background:var(--ink-2);overflow:hidden}
+.tabs{display:flex;border-bottom:1px solid var(--line-soft);background:var(--panel)}
+.tabs button{
+  background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  padding:11px 18px;font-family:var(--body);font-size:13.5px;cursor:pointer
+}
+.tabs button[aria-selected=true]{color:var(--text);border-bottom-color:var(--water)}
+.tabs button:focus-visible{outline:2px solid var(--water-hi);outline-offset:-3px}
+canvas{display:block;width:100%}
+#cave{height:470px}
+#chan{height:600px}
+#charge,#cv{height:230px}
+#caveWrap{min-height:470px}
+#chanWrap{min-height:600px}
+#caveWrap{padding:0}
+.hidden{display:none !important}
+
+/* ---------- regime banner ---------- */
+.banner{
+  display:flex;flex-wrap:wrap;gap:14px;align-items:center;
+  padding:12px 16px;border-top:1px solid var(--line-soft);background:var(--panel)
+}
+.tag{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  padding:5px 10px;border-radius:5px;background:var(--panel-2);border:1px solid var(--line);color:var(--water-hi)
+}
+.banner p{margin:0;font-size:13.5px;color:var(--muted);flex:1;min-width:260px}
+
+/* ---------- readouts ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:1px;background:var(--line-soft)}
+.cell{background:var(--ink-2);padding:11px 13px}
+.cell .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.cell .v{font-family:var(--mono);font-size:16px;color:var(--text);margin-top:3px}
+.cell .u{font-size:11px;color:var(--muted)}
+
+.plots{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media (max-width:760px){.plots{grid-template-columns:1fr}}
+
+.note{margin-top:16px}
+.note h3{font-family:var(--display);font-weight:400;font-size:19px;margin:0 0 8px}
+.note p{margin:0 0 10px;color:var(--muted);font-size:14px}
+.note p:last-child{margin-bottom:0}
+.note b{color:var(--text);font-weight:600}
+.key{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:12px;color:var(--muted)}
+.key span{display:flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:2px;display:inline-block}
+footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line-soft);color:var(--dim);font-size:12px}
+
+
+/* ============================================================
+   AI TUTOR + RESIZABLE COLUMN
+   ============================================================ */
+.ai-panel{padding:0;position:sticky;top:14px;height:calc(100vh - 28px);min-height:690px;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.ai-resize-handle{position:absolute;left:0;top:0;bottom:0;width:13px;border:0;border-radius:0;background:transparent;cursor:col-resize;z-index:12;padding:0}
+.ai-resize-handle::after{content:"";position:absolute;left:3px;top:37%;width:3px;height:26%;border-radius:4px;background:rgba(49,194,214,.42);transition:.15s ease}
+.ai-resize-handle:hover::after,.ai-resize-handle:focus-visible::after,body.resizing-ai .ai-resize-handle::after{background:var(--water-hi);width:4px}
+.ai-resize-handle:focus-visible{outline:2px solid var(--water-hi);outline-offset:-2px}
+body.resizing-ai{cursor:col-resize;user-select:none}
+.ai-head{padding:14px 14px 13px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--panel)}
+.ai-head-title{font-size:18px;font-weight:800;color:var(--text)}.ai-head-sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:2px}
+.ai-head-actions{display:flex;gap:6px}.ai-icon-btn{width:36px;height:36px;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--ink-2);color:var(--text);cursor:pointer;font-size:17px}
+.ai-icon-btn:hover{border-color:var(--water);color:var(--water-hi)}
+.ai-state{padding:10px 14px;border-bottom:1px solid var(--line);background:var(--ink-2);color:var(--muted);font-size:12px;line-height:1.48}.ai-state strong{color:var(--text)}
+.ai-chips{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.chip,.ai-btn,.modal-btn{border:1px solid var(--line);border-radius:8px;background:var(--ink-2);color:var(--text);font:inherit;font-weight:700;cursor:pointer}
+.chip{min-height:37px;padding:7px 8px;font-size:12px}.chip:hover,.ai-btn:hover,.modal-btn:hover{border-color:var(--water);color:var(--water-hi)}
+.chat-messages{flex:1;min-height:250px;overflow-y:auto;padding:12px;background:#091722;display:flex;flex-direction:column;gap:10px}
+.msg{border:1px solid var(--line-soft);border-radius:10px;padding:11px 12px;font-size:13.5px;line-height:1.5;overflow-wrap:anywhere;color:var(--text)}
+.msg .role{display:block;text-transform:uppercase;font-family:var(--mono);font-size:9.5px;font-weight:800;color:var(--muted);margin-bottom:5px;letter-spacing:.08em}
+.msg.user{background:#113a4a;align-self:flex-end;width:91%}.msg.assistant{background:var(--panel-2);align-self:flex-start;width:96%;box-shadow:0 2px 7px rgba(0,0,0,.22)}.msg.error{background:#4b1d29;color:#ffd7dd;align-self:stretch}
+.msg p{margin:.45em 0}.msg ul,.msg ol{margin:.35em 0 .35em 1.2em;padding:0}.msg li{margin:.2em 0}.msg h1,.msg h2,.msg h3{margin:.55em 0 .25em;line-height:1.2}.msg h1{font-size:1.16em}.msg h2{font-size:1.09em}.msg h3{font-size:1.03em}
+.msg code{background:#07131c;padding:.1em .3em;border-radius:4px}.msg pre{background:#050f17;color:#f8fafc;padding:9px;border-radius:7px;overflow:auto}
+.msg mjx-container{font-size:100%!important;max-width:100%;overflow-x:auto;overflow-y:hidden;color:inherit!important}
+.msg mjx-container[display="true"]{display:block!important;margin:.55em 0!important;text-align:center!important;font-size:103%!important}
+.msg mjx-container svg{width:auto!important;height:auto!important;max-width:100%!important;display:inline-block!important;vertical-align:middle!important;background:transparent!important}
+.msg mjx-container[display="true"] svg{display:block!important;margin:0 auto!important}
+.mathBlock{overflow-x:auto;overflow-y:hidden;margin:.5em 0}
+.chat-composer{padding:11px 12px;background:var(--panel);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.chat-composer textarea{width:100%;min-height:92px;resize:vertical;border:1px solid var(--line);border-radius:8px;background:#091722;color:var(--text);padding:9px 10px;font:inherit;font-size:13px;line-height:1.42}
+.chat-composer textarea:focus,.modal-card input:focus,.modal-card select:focus,.modal-card textarea:focus{outline:3px solid rgba(49,194,214,.2);border-color:var(--water)}
+.chat-actions{display:flex;justify-content:space-between;align-items:center;gap:8px}.attach-label{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);cursor:pointer}.send-btn{min-width:92px;padding:9px 13px;background:linear-gradient(135deg,var(--water),var(--oxide));border:0;color:#07131c}.send-btn:hover{color:#07131c;filter:brightness(1.06)}.send-btn:disabled{opacity:.55;cursor:wait}
+.thinking-wrapper{display:flex;align-items:center;height:18px;padding:4px 0}.dot-flashing{position:relative;width:7px;height:7px;border-radius:50%;background:var(--water);animation:dotFlash 1s infinite linear alternate;animation-delay:.5s;margin-left:14px}.dot-flashing::before,.dot-flashing::after{content:"";position:absolute;top:0;width:7px;height:7px;border-radius:50%;background:var(--water);animation:dotFlash 1s infinite alternate}.dot-flashing::before{left:-14px;animation-delay:0s}.dot-flashing::after{left:14px;animation-delay:1s}@keyframes dotFlash{0%{opacity:1}50%,100%{opacity:.18}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:18px;z-index:1000}.modal.hidden{display:none}.modal-card{width:540px;max-width:96vw;max-height:92vh;overflow:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.5)}
+.modal-card h2{margin:0 0 6px;font-family:var(--display);font-weight:500}.modal-note{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.45}.modal-card label{display:block;font-size:13px;font-weight:700;margin:12px 0 5px}.modal-card input[type=text],.modal-card input[type=password],.modal-card input[type=number],.modal-card select,.modal-card textarea{width:100%;border:1px solid var(--line);border-radius:8px;background:#091722;color:var(--text);padding:9px;font:inherit}.modal-card textarea{min-height:130px;resize:vertical;line-height:1.42}.field-hint{color:var(--dim);font-size:11px;margin:4px 0 0}.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}.check-line{display:flex!important;gap:8px;align-items:flex-start}.check-line input{margin-top:3px}.modal-btn{min-height:39px;padding:8px 12px}.modal-btn.primary{background:linear-gradient(135deg,var(--water),var(--oxide));border:0;color:#07131c}.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(4,13,20,.94);color:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 14px;font-size:12px;opacity:0;pointer-events:none;transition:.18s;z-index:2000}.toast.show{opacity:1}
+@media(max-width:620px){.ai-chips{grid-template-columns:1fr}.modal-row,.modal-actions{grid-template-columns:1fr}.chat-actions{align-items:flex-end}}
+
+</style>
+
+<style id="hubMainMenuStyle">
+.hubMainMenuButton{position:fixed;right:18px;top:72px;z-index:999999;display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border-radius:999px;border:1px solid rgba(56,215,255,.7);background:linear-gradient(135deg,#38d7ff,#7f7cff);color:#06131d!important;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:14px;font-weight:950;text-decoration:none!important;box-shadow:0 12px 30px rgba(0,0,0,.30);transition:transform .15s ease,filter .15s ease}.hubMainMenuButton:hover{transform:translateY(-1px);filter:brightness(1.07)}@media(max-width:760px){.hubMainMenuButton{top:auto;right:14px;bottom:14px;font-size:13px;padding:10px 13px}}@media print{.hubMainMenuButton{display:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">MOS Metaphor Lab · 01</p>
+  <h1>The gate presses the ground.<br><em>Watch the water find it.</em></h1>
+  <p class="lede">Energy bands are terrain. The Fermi level is a water table that never moves. Everything the gate
+  does — accumulate, deplete, invert — is the same single act: pressing the ground near the surface up or down until
+  the carriers rearrange themselves around a fixed waterline.</p>
+</header>
+
+<div class="cols">
+
+  <!-- ============ CONTROLS ============ -->
+  <div>
+    <div class="panel">
+      <h2>Gate &amp; bias</h2>
+
+      <div class="ctl">
+        <div class="ctl-top"><span class="ctl-name">Gate voltage V<sub>G</sub></span><span class="ctl-val" id="vgOut">0.00 V</span></div>
+        <input type="range" id="vg" min="-3" max="3" step="0.01" value="0">
+        <div class="ctl-hint">The hand on the terrain. Push down to make a basin, lift to make a ridge.</div>
+      </div>
+
+      <div class="ctl" id="vdsCtl">
+        <div class="ctl-top"><span class="ctl-name">Drain voltage V<sub>DS</sub></span><span class="ctl-val" id="vdsOut">0.50 V</span></div>
+        <input type="range" id="vds" min="0" max="3" step="0.01" value="0.5">
+        <div class="ctl-hint">Channel view only. Tilts the channel floor from source to drain.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Device</h2>
+
+      <div class="ctl">
+        <div class="ctl-top"><span class="ctl-name">Substrate doping N<sub>A</sub></span><span class="ctl-val" id="naOut">1e16 cm⁻³</span></div>
+        <input type="range" id="na" min="14.7" max="18" step="0.01" value="16">
+        <div class="ctl-hint">Deeper doping lowers the water table relative to the ceiling and stiffens the ground.</div>
+      </div>
+
+      <div class="ctl">
+        <div class="ctl-top"><span class="ctl-name">Oxide thickness t<sub>ox</sub></span><span class="ctl-val" id="toxOut">5.0 nm</span></div>
+        <input type="range" id="tox" min="1" max="30" step="0.1" value="5">
+        <div class="ctl-hint">The spring between hand and ground. A thick spring absorbs the push before the ground feels it.</div>
+      </div>
+
+      <div class="ctl">
+        <div class="ctl-top"><span class="ctl-name">Gate material</span></div>
+        <div class="seg" id="gateSeg">
+          <button data-gate="ideal" aria-pressed="true">Ideal (V<sub>FB</sub>=0)</button>
+          <button data-gate="npoly" aria-pressed="false">n⁺ poly</button>
+        </div>
+        <div class="ctl-hint">Sets the flat-band voltage — where the hand rests with the ground untouched.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>View</h2>
+      <div class="ctl">
+        <div class="ctl-top"><span class="ctl-name">Overlay</span></div>
+        <div class="seg" id="modeSeg">
+          <button data-mode="metaphor" aria-pressed="true">Metaphor</button>
+          <button data-mode="physics" aria-pressed="false">Band labels</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <div class="ctl-top"><span class="ctl-name">C–V measurement</span></div>
+        <div class="seg" id="cvSeg">
+          <button data-cv="hf" aria-pressed="true">High-f</button>
+          <button data-cv="lf" aria-pressed="false">Low-f</button>
+        </div>
+      </div>
+      <button class="btn" id="sweepBtn">Sweep V<sub>G</sub> once</button>
+    </div>
+  </div>
+
+  <!-- ============ STAGE ============ -->
+  <div>
+    <div class="stage">
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tabCave" aria-selected="true" aria-controls="caveWrap">Cave view — MOS capacitor</button>
+        <button role="tab" id="tabChan" aria-selected="false" aria-controls="chanWrap">Channel view — MOSFET</button>
+      </div>
+
+      <div id="caveWrap"><canvas id="cave" height="470"></canvas></div>
+      <div id="chanWrap" class="hidden"><canvas id="chan" height="600"></canvas></div>
+
+      <div class="banner">
+        <span class="tag" id="regimeTag">flat band</span>
+        <p id="regimeText">Move the gate voltage and watch which chamber fills.</p>
+      </div>
+
+      <div class="grid" id="readout"></div>
+    </div>
+
+    <div class="plots">
+      <div class="panel">
+        <h2 id="plotATitle">Charge budget — where the coulombs sit</h2>
+        <canvas id="charge" height="230"></canvas>
+      </div>
+      <div class="panel">
+        <h2 id="plotBTitle">C–V curve</h2>
+        <canvas id="cv" height="230"></canvas>
+      </div>
+    </div>
+
+    <div class="panel note">
+      <h3 id="noteTitle">Reading the picture</h3>
+      <div id="noteBody">
+        <p>The upper surface is the <b>conduction-band floor</b> — the ground electrons walk on. The lower surface is
+        the <b>valence-band ceiling</b> — the roof holes cling to. Between them is bedrock: the band gap, where nothing
+        can sit. The dashed horizontal line is the <b>Fermi level</b>, and it is the one thing in this picture that never
+        moves.</p>
+        <p>Water depth is plotted on a log scale, so a puddle that looks twice as deep is orders of magnitude more
+        carriers. That is the whole trick of a MOSFET: a small push on the ground buys an enormous change in how much
+        water is standing on it.</p>
+      </div>
+      <div class="key">
+        <span><i class="sw" style="background:var(--water)"></i>electrons (water)</span>
+        <span><i class="sw" style="background:var(--bubble)"></i>holes (bubbles)</span>
+        <span><i class="sw" style="background:var(--acceptor)"></i>ionized acceptors (fixed)</span>
+        <span><i class="sw" style="background:var(--oxide)"></i>oxide (spring)</span>
+        <span><i class="sw" style="background:var(--metal)"></i>gate metal</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ AI TUTOR ============ -->
+  <aside class="panel ai-panel" aria-label="MOS Metaphor AI Tutor">
+    <button id="aiResizeHandle" class="ai-resize-handle" type="button" aria-label="Resize AI Tutor panel" title="Drag to resize AI Tutor panel"></button>
+    <div class="ai-head">
+      <div><div class="ai-head-title">AI Tutor</div><div id="chatStatusText" class="ai-head-sub">Ready — configure a provider to begin</div></div>
+      <div class="ai-head-actions">
+        <button id="clearChatBtn" class="ai-icon-btn" type="button" title="Clear conversation">↺</button>
+        <button id="openChatSettingsBtn" class="ai-icon-btn" type="button" title="AI Tutor settings">⚙</button>
+      </div>
+    </div>
+    <div id="aiStateSummary" class="ai-state"><strong>Attached state:</strong> waiting for the MOS model.</div>
+    <div class="ai-chips">
+      <button class="chip prompt-chip" type="button" data-prompt="Explain the current MOS state using both the water-table metaphor and the semiconductor physics. Use the attached numerical values and identify where the metaphor is accurate and where it is limited.">Explain state</button>
+      <button class="chip prompt-chip" type="button" data-prompt="Derive the surface-potential, depletion-width, and charge relationships relevant to the current operating regime. Substitute the attached numerical values and connect them to the displayed terrain.">Derive electrostatics</button>
+      <button class="chip prompt-chip" type="button" data-prompt="Explain the current C-V response, including why high-frequency and low-frequency inversion differ. Use the attached gate voltage, capacitance, threshold, and charge state.">Explain C–V</button>
+      <button class="chip prompt-chip" type="button" data-prompt="Ask me one conceptual prediction question about the current MOS metaphor state. Do not reveal the answer until I respond; include a brief grading criterion.">Quiz me</button>
+    </div>
+    <div id="chatMessages" class="chat-messages">
+      <div class="msg assistant"><span class="role">AI Tutor</span><p>I can translate the water-table metaphor into MOS electrostatics, explain accumulation through inversion, derive the active equations, interpret the C–V or I–V plot, and quiz you.</p><p>Keep <strong>Attach Sim State</strong> checked so the answer uses the current gate bias, device parameters, charge, capacitance, and selected view.</p></div>
+    </div>
+    <div class="chat-composer">
+      <textarea id="chatInput" rows="4" placeholder="Ask about the current MOS state… (Ctrl+Enter to send)"></textarea>
+      <div class="chat-actions">
+        <label class="attach-label"><input id="attachContextCheck" type="checkbox" checked> 📎 Attach Sim State</label>
+        <button id="chatSendBtn" class="ai-btn send-btn" type="button">Send</button>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<footer>Single-file teaching simulator · pure Canvas 2D, no external assets · p-type substrate, n-channel MOS ·
+Model: depletion approximation with Boltzmann carrier statistics; square-law channel current.</footer>
+</div>
+
+<div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <div class="modal-card">
+    <h2 id="settingsTitle">AI Tutor Configuration</h2>
+    <p class="modal-note">The key and preferences are stored only in this browser. Remove the key after using a shared classroom computer.</p>
+    <label for="chatProvider">Provider</label>
+    <select id="chatProvider"><option value="google">Google AI Studio (Gemini)</option><option value="lmstudio">LM Studio / OpenAI-compatible local server</option></select>
+    <label for="chatApiKey">API key</label><input id="chatApiKey" type="password" placeholder="Paste the provider API key…">
+    <p class="field-hint">A local LM Studio endpoint normally does not require a key.</p>
+    <div id="lmUrlGroup" class="hidden"><label for="chatLmUrl">Local server base URL</label><input id="chatLmUrl" type="text" value="http://localhost:1234/v1"></div>
+    <label for="chatModel">Model name</label><input id="chatModel" type="text" value="gemini-2.5-flash">
+    <div class="modal-row"><div><label for="chatTemp">Temperature (<span id="chatTempVal">0.4</span>)</label><input id="chatTemp" type="range" min="0" max="1.5" step="0.1" value="0.4"></div><div><label for="chatMaxTokens">Max response tokens</label><input id="chatMaxTokens" type="number" min="256" max="16384" step="256" value="8192"></div></div>
+    <label for="chatDetail">Response detail</label><select id="chatDetail"><option value="concise">Concise</option><option value="balanced" selected>Balanced</option><option value="indepth">In-depth derivation</option></select>
+    <label class="check-line"><input id="chatFollowUp" type="checkbox"><span>End explanations with one Socratic follow-up question</span></label>
+    <label for="chatSysPrompt">System prompt</label><textarea id="chatSysPrompt" rows="7"></textarea>
+    <button id="useDefaultPromptBtn" class="modal-btn" type="button">Use MOS-metaphor default prompt</button>
+    <div class="modal-actions"><button id="cancelSettingsBtn" class="modal-btn" type="button">Cancel</button><button id="saveSettingsBtn" class="modal-btn primary" type="button">Save Configuration</button></div>
+  </div>
+</div>
+<div id="toast" class="toast" role="status"></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   CONSTANTS (SI)
+   ============================================================ */
+const Q     = 1.602176634e-19;
+const KB    = 1.380649e-23;
+const EPS0  = 8.8541878128e-12;
+const TEMP  = 300;
+const VT    = KB * TEMP / Q;          // 0.02585 V
+const NI    = 1.0e16;                 // m^-3  (1e10 cm^-3)
+const EPS_S = 11.7 * EPS0;
+const EPS_OX= 3.9  * EPS0;
+const EG    = 1.12;                   // eV
+const MU_N  = 0.045;                  // m^2/Vs, effective channel mobility
+const WL    = 10;                     // channel width/length ratio
+
+const state = {
+  vg: 0, vds: 0.5, naExp: 16, tox: 5,
+  gate: "ideal", mode: "metaphor", cvMode: "hf", tab: "cave",
+  t: 0, sweep: null
+};
+
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ============================================================
+   PHYSICS
+   ============================================================ */
+function physics(vg, naExp, toxNm, gateType){
+  const NA  = Math.pow(10, naExp) * 1e6;      // m^-3
+  const tox = toxNm * 1e-9;
+  const Cox = EPS_OX / tox;                    // F/m^2
+  const phiF = VT * Math.log(NA / NI);
+  const VFB  = (gateType === "npoly") ? -(EG/2 + phiF) : 0;
+  const gamma = Math.sqrt(2*Q*EPS_S*NA) / Cox;
+  const VT_th = VFB + 2*phiF + gamma*Math.sqrt(2*phiF);
+  const Vp = vg - VFB;
+  const Q0 = Math.sqrt(2*Q*EPS_S*NA*VT);       // characteristic sheet charge
+
+  let psis, regime;
+  if (Vp <= 0){
+    psis = -2*VT*Math.log(1 + Cox*(-Vp)/Q0);
+    regime = (Vp > -0.02) ? "flatband" : "accumulation";
+  } else if (vg < VT_th){
+    const r = (-gamma + Math.sqrt(gamma*gamma + 4*Vp)) / 2;
+    psis = r*r;
+    regime = (psis < phiF) ? "depletion" : "weakinv";
+  } else {
+    const Qi = Cox*(vg - VT_th);
+    psis = 2*phiF + 2*VT*Math.log(1 + Qi/Q0);
+    regime = "inversion";
+  }
+
+  const W    = psis > 0 ? Math.sqrt(2*EPS_S*psis/(Q*NA)) : 0;
+  const Wmax = Math.sqrt(2*EPS_S*(2*phiF)/(Q*NA));
+  const LD   = Math.sqrt(EPS_S*VT/(Q*NA));
+
+  const Qdep = -Q*NA*W;                                   // C/m^2 (negative)
+  const Qinv = (vg > VT_th) ? -Cox*(vg - VT_th) : 0;       // C/m^2 (negative)
+  const Qacc = (Vp < 0) ? Cox*(-Vp) : 0;                   // C/m^2 (positive)
+  const Vox  = vg - VFB - psis;
+
+  // capacitance
+  let Cval;
+  if (Vp <= 0) Cval = Cox;
+  else if (vg < VT_th){ const Cd = EPS_S/Math.max(W,1e-12); Cval = Cox*Cd/(Cox+Cd); }
+  else {
+    if (state.cvMode === "lf") Cval = Cox;
+    else { const Cd = EPS_S/Wmax; Cval = Cox*Cd/(Cox+Cd); }
+  }
+
+  // channel current (square law, source at 0 V)
+  const vov = vg - VT_th;
+  const kp  = MU_N * Cox * WL;
+  let Id = 0, sat = false;
+  if (vov > 0){
+    if (state.vds < vov) Id = kp*(vov*state.vds - 0.5*state.vds*state.vds);
+    else { Id = 0.5*kp*vov*vov; sat = true; }
+  }
+
+  return {NA, tox, Cox, phiF, VFB, gamma, VT_th, psis, regime, W, Wmax, LD,
+          Qdep, Qinv, Qacc, Vox, Cval, Id, sat, vov, vg};
+}
+
+// potential vs depth
+function psiAt(x, p){
+  if (p.psis > 0) return (x < p.W) ? p.psis*Math.pow(1 - x/p.W, 2) : 0;
+  return p.psis * Math.exp(-x / p.LD);
+}
+const clampExp = e => Math.exp(Math.max(-45, Math.min(45, e)));
+
+/* ============================================================
+   CANVAS PLUMBING
+   ============================================================ */
+/* Canvas heights live here, in JS. They must NOT be read back off the
+   element: assigning canvas.height reflects into the height attribute,
+   so re-reading it and multiplying by dpr again compounds every frame
+   (470 -> 940 -> 1880 ...). That was the runaway growth.
+   Width is likewise never taken as a bare fallback: a hidden tab or a
+   mid-drag layout reports 0, and snapping to 800 is the sudden shrink. */
+const CANVAS_H = {cave:470, chan:600, charge:230, cv:230};
+const lastGoodW = new Map();
+
+function fit(cv){
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const h   = CANVAS_H[cv.id] || 300;
+
+  let w = Math.round(cv.getBoundingClientRect().width);
+  if (w < 2){
+    const box = cv.parentElement ? Math.round(cv.parentElement.getBoundingClientRect().width) : 0;
+    w = box > 2 ? box : (lastGoodW.get(cv.id) || 0);
+  }
+  if (w < 2) return null;              // genuinely not laid out yet — skip this frame
+  lastGoodW.set(cv.id, w);
+
+  const pw = Math.round(w*dpr), ph = Math.round(h*dpr);
+  if (cv.width !== pw)  cv.width  = pw;   // only reallocate when it really changed
+  if (cv.height !== ph) cv.height = ph;
+  if (cv.style.height !== h + "px") cv.style.height = h + "px";
+
+  const g = cv.getContext("2d");
+  g.setTransform(dpr,0,0,dpr,0,0);
+  g.clearRect(0,0,w,h);
+  return {g, w, h};
+}
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function roundRect(g,x,y,w,h,r){
+  g.beginPath();
+  g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r);
+  g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath();
+}
+
+/* ============================================================
+   CAVE VIEW  (the signature element)
+   ============================================================ */
+function drawCave(p){
+  const cv = document.getElementById("cave");
+  const _f = fit(cv);
+  if(!_f) return;
+  const {g,w,h} = _f;
+  g.clearRect(0,0,w,h);
+
+  const padT=26, padB=34;
+  const gateX0=14, gateW=42;
+  const oxX0=gateX0+gateW, oxW=Math.max(16, Math.min(46, p.tox*1e9*1.7));
+  const semX0=oxX0+oxW, semX1=w-16;
+  const semW=semX1-semX0;
+
+  // energy axis (eV, E_F = 0)
+  const Ec0 = EG/2 + p.phiF;
+  const Ev0 = Ec0 - EG;
+  const bend = Math.max(0.35, Math.abs(p.psis)+0.28);
+  const Etop = Ec0 + bend, Ebot = Ev0 - bend;
+  const yFor = E => padT + (Etop - E) * (h-padT-padB) / (Etop-Ebot);
+
+  // Depth window: wide enough for full depletion, tight enough that the
+  // ~10 nm accumulation layer near the surface is still visible.
+  const Xmax = Math.max(2.2*p.Wmax, 12*p.LD, 6e-8);
+  const xFor = d => semX0 + (d/Xmax)*semW;
+
+  // ---- sky ----
+  const sky = g.createLinearGradient(0,0,0,h);
+  sky.addColorStop(0,"#0C1E2B"); sky.addColorStop(1,"#0A1620");
+  g.fillStyle = sky; g.fillRect(0,0,w,h);
+
+  // ---- sample band curves ----
+  const N=180, ec=[], ev=[], ps=[];
+  for(let i=0;i<=N;i++){
+    const d = Xmax*i/N, ψ = psiAt(d,p);
+    ps.push(ψ); ec.push(Ec0-ψ); ev.push(Ev0-ψ);
+  }
+
+  // ---- bedrock (band gap) with strata ----
+  g.save();
+  g.beginPath();
+  g.moveTo(semX0, yFor(ec[0]));
+  for(let i=0;i<=N;i++) g.lineTo(xFor(Xmax*i/N), yFor(ec[i]));
+  for(let i=N;i>=0;i--) g.lineTo(xFor(Xmax*i/N), yFor(ev[i]));
+  g.closePath(); g.clip();
+  const rockTop=yFor(Ec0+bend), rockBot=yFor(Ebot);
+  const rk=g.createLinearGradient(0,rockTop,0,rockBot);
+  rk.addColorStop(0,css("--rock-2")); rk.addColorStop(.55,css("--rock-1")); rk.addColorStop(1,css("--rock-3"));
+  g.fillStyle=rk; g.fillRect(semX0,0,semW,h);
+  g.strokeStyle="rgba(0,0,0,.20)"; g.lineWidth=1;
+  // strata lines follow the bending
+  for(let s=1;s<=5;s++){
+    const f=s/6;
+    g.beginPath();
+    for(let i=0;i<=N;i++){
+      const E = ec[i] + (ev[i]-ec[i])*f;
+      const X = xFor(Xmax*i/N), Y = yFor(E);
+      i? g.lineTo(X,Y) : g.moveTo(X,Y);
+    }
+    g.strokeStyle = s%2 ? "rgba(0,0,0,.22)" : "rgba(255,255,255,.05)";
+    g.lineWidth = s%2 ? 1.4 : 1;
+    g.stroke();
+  }
+
+  // ---- ionized acceptors inside depletion region ----
+  if (p.W > 0){
+    g.fillStyle = css("--acceptor");
+    const cols = Math.max(2, Math.round((p.W/Xmax)*semW/13));
+    for(let c=0;c<cols;c++){
+      const d = p.W*(c+0.5)/cols;
+      const i = Math.round(d/Xmax*N);
+      const X = xFor(d);
+      const top=yFor(ec[Math.min(i,N)]), bot=yFor(ev[Math.min(i,N)]);
+      const rows = 4;
+      for(let r=0;r<rows;r++){
+        const Y = top + (bot-top)*(r+0.5)/rows;
+        g.globalAlpha=.75;
+        g.beginPath(); g.arc(X,Y,2.1,0,7); g.fill();
+        g.globalAlpha=.55; g.font="9px "+css("--mono");
+        g.fillText("–", X-2.4, Y-4.5);
+      }
+    }
+    g.globalAlpha=1;
+  }
+  g.restore();
+
+  // ---- water (electrons) sitting on the conduction floor ----
+  const nRef = 1e18; // m^-3, visual threshold
+  const depthPx = 62;
+  const nTop=[];
+  for(let i=0;i<=N;i++){
+    const n = NI*clampExp((ps[i]-p.phiF)/VT);
+    const lv = Math.log10(Math.max(n,1)/nRef);
+    const t = Math.max(0, Math.min(1, lv/8));
+    nTop.push(yFor(ec[i]) - t*depthPx);
+  }
+  g.save();
+  g.beginPath();
+  g.moveTo(semX0, nTop[0]);
+  for(let i=0;i<=N;i++) g.lineTo(xFor(Xmax*i/N), nTop[i]);
+  for(let i=N;i>=0;i--) g.lineTo(xFor(Xmax*i/N), yFor(ec[i]));
+  g.closePath();
+  const wg = g.createLinearGradient(0,padT,0,h);
+  wg.addColorStop(0, "rgba(143,240,250,.85)");
+  wg.addColorStop(1, "rgba(27,124,140,.55)");
+  g.fillStyle = wg; g.fill();
+  g.restore();
+  // shimmer on the water surface
+  g.beginPath();
+  for(let i=0;i<=N;i++){
+    const X=xFor(Xmax*i/N);
+    const wob = reduceMotion?0:Math.sin(i*0.35 + state.t*0.06)*1.1;
+    const Y=nTop[i]+wob;
+    i?g.lineTo(X,Y):g.moveTo(X,Y);
+  }
+  g.strokeStyle=css("--water-hi"); g.lineWidth=1.6; g.stroke();
+
+  // ---- bubbles (holes) hanging under the valence ceiling ----
+  const pDepth=[];
+  for(let i=0;i<=N;i++){
+    const pp = NI*clampExp((p.phiF-ps[i])/VT);
+    const lv = Math.log10(Math.max(pp,1)/nRef);
+    pDepth.push(Math.max(0, Math.min(1, lv/8)) * depthPx);
+  }
+  for(let i=0;i<=N;i+=3){
+    const X=xFor(Xmax*i/N), yc=yFor(ev[i]), d=pDepth[i];
+    if(d<2) continue;
+    const nb=Math.max(1,Math.round(d/9));
+    for(let b=0;b<nb;b++){
+      const ph=(i*0.7+b*2.1);
+      const drift = reduceMotion?0:Math.sin(state.t*0.05+ph)*1.6;
+      const Y = yc + 4 + b*8 + drift;
+      const r = 2.6 - b*0.15;
+      g.beginPath(); g.arc(X+drift*0.6, Y, Math.max(1.2,r), 0, 7);
+      g.fillStyle = css("--bubble"); g.globalAlpha = 0.85 - b*0.09;
+      g.fill();
+    }
+  }
+  g.globalAlpha=1;
+
+  // ---- band edge lines ----
+  const line=(arr,col,wid,dash)=>{
+    g.setLineDash(dash||[]); g.beginPath();
+    for(let i=0;i<=N;i++){const X=xFor(Xmax*i/N),Y=yFor(arr[i]); i?g.lineTo(X,Y):g.moveTo(X,Y);}
+    g.strokeStyle=col; g.lineWidth=wid; g.stroke(); g.setLineDash([]);
+  };
+  line(ec,"#D8E6EE",2.2);
+  line(ev,"#B79A72",2.2);
+
+  // intrinsic level (dotted) in physics mode
+  if(state.mode==="physics"){
+    const ei = ec.map((e,i)=> (ec[i]+ev[i])/2 );
+    line(ei,"rgba(220,235,245,.45)",1.2,[3,4]);
+  }
+
+  // ---- Fermi level : the water table ----
+  const yF=yFor(0);
+  g.setLineDash([7,5]); g.beginPath();
+  g.moveTo(semX0,yF); g.lineTo(semX1,yF);
+  g.strokeStyle="rgba(143,240,250,.75)"; g.lineWidth=1.4; g.stroke(); g.setLineDash([]);
+  g.font="11px "+css("--mono"); g.fillStyle="rgba(143,240,250,.85)";
+  g.textAlign="right";
+  g.fillText(state.mode==="physics"?"E_F":"water table", semX1-4, yF-6);
+  g.textAlign="left";
+
+  // ---- gate metal ----
+  const mg=g.createLinearGradient(gateX0,0,gateX0+gateW,0);
+  mg.addColorStop(0,"#7C93A3"); mg.addColorStop(1,"#C3D6E2");
+  g.fillStyle=mg; g.fillRect(gateX0,padT-8,gateW,h-padT-padB+16);
+  g.fillStyle="rgba(10,22,32,.55)";
+  g.font="11px "+css("--mono"); g.save();
+  g.translate(gateX0+gateW/2, padT+40); g.rotate(-Math.PI/2);
+  g.textAlign="right"; g.fillText("GATE",0,4); g.restore(); g.textAlign="left";
+
+  // gate charge sign strip
+  // Charge neutrality: Q_gate = -(Q_semiconductor).
+  // Qacc is stored as a POSITIVE quantity (accumulated holes), so it
+  // adds to the semiconductor charge — subtracting it flipped the gate
+  // polarity in accumulation.
+  const qg = -(p.Qdep + p.Qinv + p.Qacc);
+  /* Signs are drawn as shapes, not glyphs: a text "-" rendered small and
+     low-contrast on the light metal gradient was almost invisible, which
+     is exactly the detail a student most needs to read. */
+  const pos = qg > 0;
+  const chip = pos ? "#E4655B" : "#3D86E8";
+  const nq = Math.min(14, Math.max(0, Math.round(Math.abs(qg)/(Math.abs(qg)+2e-4) * 14)));
+
+  // header chip naming the polarity outright
+  if(nq>0){
+    const label = (pos ? "+" : "\u2212") + "Q_G";
+    g.font="bold 12px "+css("--mono");
+    const tw = g.measureText(label).width;
+    const cx = gateX0+gateW/2;
+    g.fillStyle="rgba(10,22,32,.88)";
+    roundRect(g, cx-tw/2-6, padT-13, tw+12, 17, 4); g.fill();
+    g.strokeStyle=chip; g.lineWidth=1.2; g.stroke();
+    g.fillStyle=chip; g.textAlign="center";
+    g.fillText(label, cx, padT-1);
+    g.textAlign="left";
+  }
+
+  for(let i=0;i<nq;i++){
+    const Y  = padT + 16 + i*((h-padT-padB-24)/14);
+    const cx = gateX0+gateW-13;
+    g.beginPath(); g.arc(cx, Y, 7.2, 0, 7);
+    g.fillStyle=chip; g.fill();
+    g.strokeStyle="rgba(10,22,32,.75)"; g.lineWidth=1.4; g.stroke();
+    g.fillStyle="#FFFFFF";
+    g.fillRect(cx-4.2, Y-1.4, 8.4, 2.8);              // horizontal bar
+    if(pos) g.fillRect(cx-1.4, Y-4.2, 2.8, 8.4);      // vertical bar -> plus
+  }
+
+  // ---- oxide spring ----
+  const oxTop=padT-8, oxBot=h-padB+8;
+  g.fillStyle="rgba(149,131,214,.16)";
+  g.fillRect(oxX0,oxTop,oxW,oxBot-oxTop);
+  g.strokeStyle="rgba(149,131,214,.55)"; g.lineWidth=1;
+  g.strokeRect(oxX0+.5,oxTop+.5,oxW-1,oxBot-oxTop-1);
+  // coils: compression proportional to |Vox|
+  const coils=9, comp=Math.min(1,Math.abs(p.Vox)/2.5);
+  g.beginPath();
+  for(let i=0;i<=coils*2;i++){
+    const f=i/(coils*2);
+    const Y=oxTop+10+f*(oxBot-oxTop-20);
+    const X=oxX0+ (i%2 ? oxW*0.78 : oxW*0.22) - (i%2? comp*oxW*0.18 : -comp*oxW*0.18);
+    i?g.lineTo(X,Y):g.moveTo(X,Y);
+  }
+  g.strokeStyle=css("--oxide"); g.lineWidth=1.6; g.stroke();
+  g.save(); g.translate(oxX0+oxW/2, oxBot-6); g.rotate(-Math.PI/2);
+  g.fillStyle="rgba(149,131,214,.9)"; g.font="10px "+css("--mono");
+  g.fillText("V_ox = "+p.Vox.toFixed(2)+" V",0,4); g.restore();
+
+  // ---- surface marker & depletion edge ----
+  if(p.W>0){
+    const X=xFor(p.W);
+    g.setLineDash([4,4]); g.beginPath(); g.moveTo(X,padT-6); g.lineTo(X,h-padB+6);
+    g.strokeStyle="rgba(95,168,255,.55)"; g.lineWidth=1; g.stroke(); g.setLineDash([]);
+    g.fillStyle="rgba(95,168,255,.9)"; g.font="10px "+css("--mono");
+    g.fillText("W = "+(p.W*1e9).toFixed(1)+" nm", Math.min(X+5, semX1-90), padT+4);
+  }
+
+  // ---- depth axis ----
+  g.strokeStyle=css("--line-soft"); g.lineWidth=1;
+  g.beginPath(); g.moveTo(semX0,h-padB+10); g.lineTo(semX1,h-padB+10); g.stroke();
+  g.fillStyle=css("--dim"); g.font="10px "+css("--mono");
+  for(let t=0;t<=4;t++){
+    const d=Xmax*t/4, X=xFor(d);
+    g.beginPath(); g.moveTo(X,h-padB+10); g.lineTo(X,h-padB+14); g.stroke();
+    g.fillText((d*1e9).toFixed(0), X-6, h-padB+25);
+  }
+  g.fillText("depth into silicon (nm) →", semX0, h-8);
+
+  // ---- band labels ----
+  if(state.mode==="physics"){
+    g.font="11px "+css("--mono"); g.fillStyle="#D8E6EE";
+    g.fillText("E_c", semX1-30, yFor(Ec0)-7);
+    g.fillStyle="#B79A72"; g.fillText("E_v", semX1-30, yFor(Ev0)+15);
+  } else {
+    g.font="11px "+css("--mono"); g.textAlign="right";
+    g.fillStyle="rgba(216,230,238,.75)";
+    g.fillText("floor (electrons walk here)", semX1-6, yFor(Ec0)-9);
+    g.fillStyle="rgba(183,154,114,.85)";
+    g.fillText("ceiling (holes cling here)", semX1-6, yFor(Ev0)+16);
+    g.textAlign="left";
+  }
+
+  // ---- the hand: V_G arrow ----
+  const push = p.vg - p.VFB;
+  if(Math.abs(push)>0.05){
+    const dir = push>0 ? 1 : -1;
+    const ax = gateX0+gateW/2, ay = dir>0 ? padT-16 : h-padB+22;
+    g.strokeStyle=css("--water-hi"); g.lineWidth=2; g.beginPath();
+    g.moveTo(ax, ay - dir*10); g.lineTo(ax, ay + dir*10);
+    g.lineTo(ax-4, ay + dir*4); g.moveTo(ax, ay+dir*10); g.lineTo(ax+4, ay+dir*4);
+    g.stroke();
+  }
+}
+
+/* ============================================================
+   CHANNEL VIEW (MOSFET)
+   ============================================================ */
+function drawChannel(p){
+  const cv=document.getElementById("chan");
+  const _f = fit(cv);
+  if(!_f) return;
+  const {g,w,h} = _f;
+  g.fillStyle="#0A1620"; g.fillRect(0,0,w,h);
+
+  /* ------------------------------------------------------------------
+     The water surface IS the quasi-Fermi level, so it must run
+     CONTINUOUSLY from the source pool, down the channel, into the drain
+     pool. Depth above the floor is the carrier concentration.
+        surface(y) = -V(y)          (0 at source, -V_DS at drain)
+        depth(y)   = V_ov - V(y)
+        floor(y)   = surface - depth = -V_ov   -> FLAT under the gate
+     So the channel floor is flat, V_ov below the source waterline, and
+     the sloping surface is what makes the water run downhill. Pinch-off
+     is where the sloping surface meets the flat floor. The barrier hump
+     exists only below threshold.
+     ------------------------------------------------------------------ */
+  const L=38, R=w-38;
+  const capY=26, gTop=capY+16, gH=24, oxY=gTop+gH, oxH=11, siTop=oxY+oxH;
+  const bot=h-62;
+  const srcX=L+104, drnX=R-104, chW=drnX-srcX;
+
+  // fixed energy window (V) so the picture never jumps while sliders move
+  const Etop=0.85, Ebot=-4.25;
+  const plotTop=siTop+10;
+  const yFor = E => plotTop + (Etop-E)*(bot-plotTop)/(Etop-Ebot);
+  const xAt  = f => srcX + f*chW;
+
+  const vov=p.vov, vds=state.vds;
+  const vdEff=Math.min(vds, Math.max(vov,0));
+  const sat = vov>0 && vds>=vov-1e-9;
+  const fp  = sat ? 0.86 : 1.0;          // extent of the gradual-channel region
+
+  // channel potential along the gradual channel (square-law inversion)
+  const Vch = u => {
+    if(vov<=0) return 0;
+    const disc = Math.max(0, vov*vov - u*(2*vov*vdEff - vdEff*vdEff));
+    return vov - Math.sqrt(disc);
+  };
+  const floorAt = f => {
+    if(vov<=0) return Math.max(0,-vov)*Math.exp(-Math.pow((f-0.5)/0.42,2)) + 0.02;
+    if(f<=fp) return -vov;
+    const t=(f-fp)/(1-fp);
+    return -vov - (vds-vdEff+0.40)*t*t;   // drain-side depletion region
+  };
+  const surfAt = f => (vov>0 && f<=fp) ? -Vch(f/fp) : null;
+
+  const N=170;
+
+  /* ---- substrate ---- */
+  g.fillStyle="#16252F"; g.fillRect(L,siTop,R-L,bot-siTop);
+  g.strokeStyle=css("--line-soft"); g.lineWidth=1;
+  g.strokeRect(L+.5,siTop+.5,R-L-1,bot-siTop-1);
+
+  /* ---- energy axis in volts ---- */
+  g.font="10px "+css("--mono");
+  for(let v=0;v>=-4;v--){
+    const Y=yFor(v);
+    if(Y<plotTop||Y>bot) continue;
+    g.strokeStyle="rgba(140,167,184,.14)"; g.lineWidth=1;
+    g.beginPath(); g.moveTo(L+1,Y); g.lineTo(R-1,Y); g.stroke();
+    g.fillStyle="rgba(140,167,184,.6)"; g.textAlign="left";
+    g.fillText(v.toFixed(0)+" V", L+4, Y-3);
+  }
+
+  /* ---- source and drain pools ---- */
+  const pool=(x0,x1,level,label,volts,align)=>{
+    const yTop=yFor(level);
+    const grd=g.createLinearGradient(0,yTop,0,bot);
+    grd.addColorStop(0,"rgba(160,244,253,.9)"); grd.addColorStop(1,"rgba(27,124,140,.5)");
+    g.fillStyle=grd; g.fillRect(x0,yTop,x1-x0,bot-yTop);
+    g.strokeStyle=css("--water-hi"); g.lineWidth=2.2;
+    g.beginPath(); g.moveTo(x0,yTop); g.lineTo(x1,yTop); g.stroke();
+    g.textAlign=align;
+    const tx = align==="left" ? x0+4 : x1-4;
+    g.fillStyle=css("--muted"); g.font="13px "+css("--body");
+    g.fillText(label, tx, bot+19);
+    g.fillStyle=css("--water-hi"); g.font="12px "+css("--mono");
+    g.fillText(volts, tx, bot+36);
+    g.textAlign="left";
+  };
+  pool(L+1, srcX, 0,     "SOURCE  n\u207A", "0.00 V", "left");
+  pool(drnX, R-1, -vds,  "DRAIN  n\u207A",  vds.toFixed(2)+" V", "right");
+
+  /* ---- channel bedrock ---- */
+  g.beginPath(); g.moveTo(srcX,bot);
+  for(let i=0;i<=N;i++){ const f=i/N; g.lineTo(xAt(f), yFor(floorAt(f))); }
+  g.lineTo(drnX,bot); g.closePath();
+  const bg=g.createLinearGradient(0,plotTop,0,bot);
+  bg.addColorStop(0,css("--rock-2")); bg.addColorStop(1,css("--rock-3"));
+  g.fillStyle=bg; g.fill();
+  g.strokeStyle="#C6A87C"; g.lineWidth=2.4;
+  g.beginPath();
+  for(let i=0;i<=N;i++){ const f=i/N,X=xAt(f),Y=yFor(floorAt(f)); i?g.lineTo(X,Y):g.moveTo(X,Y); }
+  g.stroke();
+
+  /* ---- channel water: surface continuous with both pools ---- */
+  if(vov>0){
+    g.beginPath();
+    g.moveTo(srcX, yFor(surfAt(0)));
+    for(let i=0;i<=N;i++){ const f=i/N*fp; const s=surfAt(f); if(s!==null) g.lineTo(xAt(f), yFor(s)); }
+    for(let i=N;i>=0;i--){ const f=i/N*fp; g.lineTo(xAt(f), yFor(floorAt(f))); }
+    g.closePath();
+    const cg=g.createLinearGradient(srcX,0,drnX,0);
+    cg.addColorStop(0,"rgba(160,244,253,.92)"); cg.addColorStop(1,"rgba(49,194,214,.55)");
+    g.fillStyle=cg; g.fill();
+    g.strokeStyle=css("--water-hi"); g.lineWidth=2;
+    g.beginPath();
+    for(let i=0;i<=N;i++){ const f=i/N*fp; const s=surfAt(f); const X=xAt(f),Y=yFor(s); i?g.lineTo(X,Y):g.moveTo(X,Y); }
+    g.stroke();
+
+    // V_ov as the visible depth of the floor below the source waterline
+    g.strokeStyle="rgba(160,244,253,.5)"; g.setLineDash([3,3]); g.lineWidth=1;
+    g.beginPath(); g.moveTo(srcX+16, yFor(0)); g.lineTo(srcX+16, yFor(-vov)); g.stroke();
+    g.setLineDash([]);
+    g.fillStyle="rgba(160,244,253,.85)"; g.font="11px "+css("--mono");
+    g.fillText("V_ov = "+vov.toFixed(2)+" V", srcX+22, (yFor(0)+yFor(-vov))/2+4);
+
+    if(sat){
+      const fx=xAt(fp);
+      g.strokeStyle=css("--warn"); g.setLineDash([5,4]); g.lineWidth=1.6;
+      g.beginPath(); g.moveTo(fx, plotTop); g.lineTo(fx, bot); g.stroke(); g.setLineDash([]);
+      g.fillStyle=css("--warn"); g.font="12px "+css("--mono"); g.textAlign="center";
+      g.fillText("pinch-off", fx, bot-8); g.textAlign="left";
+    }
+  }
+
+  /* ---- the two Fermi levels: V_DS is the gap between them ---- */
+  g.setLineDash([6,5]); g.lineWidth=1.3;
+  g.strokeStyle="rgba(160,244,253,.55)";
+  g.beginPath(); g.moveTo(L+1,yFor(0)); g.lineTo(R-1,yFor(0)); g.stroke();
+  if(vds>0.01){
+    g.strokeStyle="rgba(240,162,75,.55)";
+    g.beginPath(); g.moveTo(L+1,yFor(-vds)); g.lineTo(R-1,yFor(-vds)); g.stroke();
+  }
+  g.setLineDash([]);
+
+  /* ---- gate stack ---- */
+  g.fillStyle="rgba(149,131,214,.20)"; g.fillRect(srcX-16, oxY, chW+32, oxH);
+  g.strokeStyle="rgba(149,131,214,.6)"; g.lineWidth=1;
+  g.strokeRect(srcX-16.5, oxY+.5, chW+32, oxH-1);
+  for(let i=0;i<=16;i++){
+    const X=srcX-12+i*((chW+24)/16);
+    g.beginPath(); g.moveTo(X,oxY+2); g.lineTo(X+5,oxY+oxH-2);
+    g.strokeStyle="rgba(149,131,214,.45)"; g.stroke();
+  }
+  const mg=g.createLinearGradient(0,gTop,0,gTop+gH);
+  mg.addColorStop(0,"#C9DBE6"); mg.addColorStop(1,"#7C93A3");
+  g.fillStyle=mg; g.fillRect(srcX-16, gTop, chW+32, gH);
+  g.fillStyle="#0A1620"; g.font="13px "+css("--mono");
+  g.fillText("GATE    V_G = "+state.vg.toFixed(2)+" V", srcX-8, gTop+16);
+  g.fillStyle="rgba(149,131,214,.95)"; g.font="11px "+css("--mono");
+  g.textAlign="right"; g.fillText("oxide", srcX-22, oxY+oxH-1); g.textAlign="left";
+
+  /* ---- carriers vs conventional current: opposite directions ---- */
+  if(p.Id>0){
+    const n=10, span=chW*fp+50;
+    for(let i=0;i<n;i++){
+      const ph=(state.t*1.4 + i*(span/n)) % span;
+      const X=srcX+ph;
+      if(X<srcX+4||X>xAt(fp)-4) continue;
+      const f=(X-srcX)/chW;
+      const Y=(yFor(surfAt(f))+yFor(floorAt(f)))/2;
+      g.fillStyle="rgba(240,253,255,.97)";
+      g.beginPath(); g.moveTo(X+10,Y); g.lineTo(X-2,Y-5); g.lineTo(X-2,Y+5); g.closePath(); g.fill();
+    }
+    g.fillStyle="rgba(200,250,255,.95)"; g.font="12px "+css("--mono");
+    g.fillText("electron flow  \u2192  (downhill)", srcX+8, yFor(surfAt(0.02))-9);
+
+    const cY=oxY+oxH+22;
+    g.strokeStyle=css("--bubble"); g.lineWidth=2;
+    g.beginPath(); g.moveTo(drnX-16,cY); g.lineTo(srcX+28,cY); g.stroke();
+    g.fillStyle=css("--bubble");
+    g.beginPath(); g.moveTo(srcX+16,cY); g.lineTo(srcX+30,cY-5); g.lineTo(srcX+30,cY+5); g.closePath(); g.fill();
+    g.font="12px "+css("--mono"); g.textAlign="center";
+    g.fillText("\u2190  conventional I_D = "+fmtSI(p.Id,"A",2), (srcX+drnX)/2, cY-9);
+    g.textAlign="left";
+  }
+
+  /* ---- caption ---- */
+  g.fillStyle=css("--dim"); g.font="13px "+css("--body");
+  const cap = vov<=0
+    ? "Below threshold — the floor stands above both pools. No connected water, no current."
+    : (sat ? "Saturated — the sloping surface meets the flat floor before the drain. Past that point the channel is dry and extra V_DS lands on the depletion lip, so I_D stops growing."
+           : "Triode — one continuous body of water from source to drain. V_DS sets the tilt of its surface, and the tilt is what drives the flow.");
+  g.fillText(cap, L, capY);
+}
+
+/* ============================================================
+   CHARGE BUDGET PLOT
+   ============================================================ */
+function drawCharge(p){
+  const cv=document.getElementById("charge");
+  const _f=fit(cv);
+  if(!_f) return;
+  const {g,w,h}=_f;
+  g.clearRect(0,0,w,h);
+  const pad=30, y0=h-34;
+  const items=[
+    {k:"gate", v:-(p.Qdep+p.Qinv+p.Qacc), c:"#9FB6C6"},
+    {k:"inversion", v:p.Qinv, c:css("--water")},
+    {k:"depletion", v:p.Qdep, c:css("--acceptor")},
+    {k:"accumulation", v:p.Qacc, c:css("--bubble")}
+  ];
+  const max=Math.max(1e-6, ...items.map(i=>Math.abs(i.v)));
+  const bw=(w-pad*2)/items.length;
+  g.strokeStyle=css("--line-soft"); g.beginPath(); g.moveTo(pad-8,y0); g.lineTo(w-pad+8,y0); g.stroke();
+  items.forEach((it,i)=>{
+    const x=pad+i*bw+bw*0.18, bwid=bw*0.64;
+    const hgt=Math.abs(it.v)/max*(h-90);
+    const up=it.v>0;
+    g.fillStyle=it.c; g.globalAlpha=.85;
+    roundRect(g, x, up? y0-hgt : y0, bwid, Math.max(2,hgt), 3); g.fill();
+    g.globalAlpha=1;
+    g.fillStyle=css("--muted"); g.font="10.5px "+css("--mono");
+    g.textAlign="center";
+    g.fillText(it.k, x+bwid/2, y0+16);
+    const cm2=Math.abs(it.v)/1e4;
+    g.fillStyle=css("--text");
+    g.fillText(cm2>1e-9? (cm2*1e9).toFixed(1)+" nC/cm²" : "0", x+bwid/2, (up? y0-hgt-7 : y0+hgt+27));
+    g.textAlign="left";
+  });
+  g.fillStyle=css("--dim"); g.font="10.5px "+css("--mono");
+  g.fillText("above axis = positive sheet charge", pad-8, 16);
+}
+
+/* ============================================================
+   C–V  /  I–V PLOT
+   ============================================================ */
+function drawCV(p){
+  const cv=document.getElementById("cv");
+  const _f=fit(cv);
+  if(!_f) return;
+  const {g,w,h}=_f;
+  g.clearRect(0,0,w,h);
+  const l=44,r=w-14,t=16,b=h-30;
+
+  const axes=(xlab,ylab,x0,x1,y0,y1,fmtx,fmty)=>{
+    g.strokeStyle=css("--line-soft"); g.lineWidth=1;
+    g.beginPath(); g.moveTo(l,t); g.lineTo(l,b); g.lineTo(r,b); g.stroke();
+    g.fillStyle=css("--dim"); g.font="10px "+css("--mono");
+    for(let i=0;i<=4;i++){
+      const X=l+(r-l)*i/4, v=x0+(x1-x0)*i/4;
+      g.beginPath(); g.moveTo(X,b); g.lineTo(X,b+4); g.stroke();
+      g.textAlign="center"; g.fillText(fmtx(v), X, b+16); g.textAlign="left";
+      const Y=b-(b-t)*i/4, u=y0+(y1-y0)*i/4;
+      g.beginPath(); g.moveTo(l-4,Y); g.lineTo(l,Y); g.stroke();
+      g.textAlign="right"; g.fillText(fmty(u), l-7, Y+3); g.textAlign="left";
+    }
+    g.fillStyle=css("--muted"); g.font="11px "+css("--body");
+    g.textAlign="center"; g.fillText(xlab,(l+r)/2,h-6); g.textAlign="left";
+    g.save(); g.translate(11,(t+b)/2); g.rotate(-Math.PI/2);
+    g.textAlign="center"; g.fillText(ylab,0,0); g.restore(); g.textAlign="left";
+  };
+
+  if(state.tab==="cave"){
+    const x0=-3,x1=3,y0=0,y1=1.05;
+    axes("V_G  (V)","C / C_ox",x0,x1,y0,y1,v=>v.toFixed(0),u=>u.toFixed(1));
+    const X=v=>l+(v-x0)/(x1-x0)*(r-l), Y=u=>b-(u-y0)/(y1-y0)*(b-t);
+
+    const savedMode=state.cvMode;
+    const curve=(mode,col,dash)=>{
+      state.cvMode=mode;
+      g.setLineDash(dash||[]); g.beginPath();
+      for(let i=0;i<=240;i++){
+        const v=x0+(x1-x0)*i/240;
+        const q=physics(v,state.naExp,state.tox,state.gate);
+        const yy=q.Cval/q.Cox;
+        i?g.lineTo(X(v),Y(yy)):g.moveTo(X(v),Y(yy));
+      }
+      g.strokeStyle=col; g.lineWidth=2; g.stroke(); g.setLineDash([]);
+    };
+    curve("lf", state.cvMode==="lf"?css("--water-hi"):"rgba(140,167,184,.4)", state.cvMode==="lf"?[]:[4,4]);
+    curve("hf", state.cvMode==="hf"?css("--water-hi"):"rgba(140,167,184,.4)", state.cvMode==="hf"?[]:[4,4]);
+    state.cvMode=savedMode;
+
+    // threshold marker
+    g.setLineDash([3,4]); g.strokeStyle="rgba(228,101,91,.7)";
+    g.beginPath(); g.moveTo(X(p.VT_th),t); g.lineTo(X(p.VT_th),b); g.stroke(); g.setLineDash([]);
+    g.fillStyle="rgba(228,101,91,.9)"; g.font="10px "+css("--mono");
+    g.fillText("V_T", X(p.VT_th)+4, t+10);
+
+    // operating point
+    g.fillStyle=css("--water-hi");
+    g.beginPath(); g.arc(X(p.vg), Y(p.Cval/p.Cox), 4.5, 0, 7); g.fill();
+    g.strokeStyle="#0A1620"; g.lineWidth=1.5; g.stroke();
+
+    g.fillStyle=css("--dim"); g.font="10px "+css("--mono");
+    g.fillText("solid = "+(state.cvMode==="hf"?"high frequency":"low frequency"), l+6, t+11);
+  } else {
+    const vovMax=3, x0=0,x1=3;
+    const kp=MU_N*p.Cox*WL;
+    const y1max=Math.max(1e-6, 0.5*kp*Math.pow(Math.max(0.1,p.vov),2)*1.35, 0.5*kp*1);
+    axes("V_DS  (V)","I_D  (mA)",x0,x1,0,y1max*1000,v=>v.toFixed(0),u=>u.toFixed(1));
+    const X=v=>l+(v-x0)/(x1-x0)*(r-l), Y=u=>b-(u)/(y1max)*(b-t);
+
+    for(let s=1;s<=5;s++){
+      const vov = p.vov*s/5;
+      if(vov<=0) continue;
+      g.beginPath();
+      for(let i=0;i<=160;i++){
+        const vd=x0+(x1-x0)*i/160;
+        const id = vd<vov ? kp*(vov*vd-0.5*vd*vd) : 0.5*kp*vov*vov;
+        i?g.lineTo(X(vd),Y(id)):g.moveTo(X(vd),Y(id));
+      }
+      g.strokeStyle = s===5 ? css("--water-hi") : "rgba(49,194,214,"+(0.18+s*0.09)+")";
+      g.lineWidth = s===5?2:1.2; g.stroke();
+    }
+    if(p.vov>0){
+      g.fillStyle=css("--water-hi");
+      g.beginPath(); g.arc(X(state.vds),Y(p.Id),4.5,0,7); g.fill();
+      g.strokeStyle="#0A1620"; g.lineWidth=1.5; g.stroke();
+    } else {
+      g.fillStyle=css("--dim"); g.font="11px "+css("--body");
+      g.fillText("V_G below threshold — no curve to ride.", l+10, t+22);
+    }
+  }
+}
+
+/* ============================================================
+   TEXT / READOUTS
+   ============================================================ */
+const REGIME = {
+  flatband:{tag:"flat band", text:"The hand rests without pushing. The ground is level all the way to the surface, and every carrier sits where the doping put it."},
+  accumulation:{tag:"accumulation", text:"The gate is negative, so the ceiling rises toward the water table at the surface and holes crowd underneath it. The majority carriers are piling up, not leaving."},
+  depletion:{tag:"depletion", text:"The gate pushes the ground down. Holes retreat from the surface and leave behind fixed negative acceptor ions — charge that cannot move, spread over a widening region W."},
+  weakinv:{tag:"weak inversion", text:"The floor has dipped past the halfway mark: at the surface there are now more electrons than holes. A puddle exists, but it is far too shallow to carry useful current. This is the subthreshold region."},
+  inversion:{tag:"strong inversion", text:"The surface puddle is now as deep as the hole layer in the bulk. Extra gate voltage stops widening W and goes almost entirely into electrons — the channel. This is where the transistor lives."}
+};
+
+function fmtSI(v, unit, digits){
+  const a=Math.abs(v);
+  let s=1,pre="";
+  if(a>=1){s=1;pre="";}
+  else if(a>=1e-3){s=1e3;pre="m";}
+  else if(a>=1e-6){s=1e6;pre="µ";}
+  else if(a>=1e-9){s=1e9;pre="n";}
+  else {s=1e12;pre="p";}
+  return (v*s).toFixed(digits===undefined?2:digits)+" "+pre+unit;
+}
+
+function paint(){
+  const p=physics(state.vg, state.naExp, state.tox, state.gate);
+
+  document.getElementById("vgOut").textContent = state.vg.toFixed(2)+" V";
+  document.getElementById("vdsOut").textContent = state.vds.toFixed(2)+" V";
+  document.getElementById("naOut").textContent = "1e"+state.naExp.toFixed(2).replace(/\.00$/,"")+" cm⁻³";
+  document.getElementById("toxOut").textContent = state.tox.toFixed(1)+" nm";
+
+  const r=REGIME[p.regime];
+  document.getElementById("regimeTag").textContent=r.tag;
+  document.getElementById("regimeText").textContent=r.text;
+
+  const ns = Math.abs(p.Qinv)/Q/1e4;   // cm^-2
+  const cells=[
+    ["threshold V_T", p.VT_th.toFixed(3), "V"],
+    ["surface pot. ψ_s", p.psis.toFixed(3), "V"],
+    ["oxide drop V_ox", p.Vox.toFixed(3), "V"],
+    ["depletion W", (p.W*1e9).toFixed(1), "nm"],
+    ["C_ox", (p.Cox*1e5).toFixed(0), "nF/cm²"],
+    ["C/C_ox", (p.Cval/p.Cox).toFixed(3), ""],
+    ["2φ_F", (2*p.phiF).toFixed(3), "V"],
+    ["V_FB", p.VFB.toFixed(3), "V"],
+    ["n_s (channel)", ns>1 ? ns.toExponential(2) : "0", "cm⁻²"],
+    ["I_D", fmtSI(p.Id,"A",2), "at W/L=10"]
+  ];
+  document.getElementById("readout").innerHTML = cells.map(c=>
+    `<div class="cell"><div class="k">${c[0]}</div><div class="v">${c[1]} <span class="u">${c[2]}</span></div></div>`
+  ).join("");
+
+  if(state.tab==="cave") drawCave(p); else drawChannel(p);
+  drawCharge(p);
+  drawCV(p);
+
+  document.getElementById("plotBTitle").textContent = state.tab==="cave" ? "C–V curve" : "Output characteristic I_D–V_DS";
+  updateAiStateSummary();
+}
+
+
+/* ============================================================
+   AI TUTOR, LIVE CONTEXT, CONFIGURATION, AND RESIZABLE COLUMN
+   ============================================================ */
+const AI_CONFIG_KEY="mosMetaphorAiTutorConfig";
+const AI_WIDTH_KEY="mosMetaphorAiPanelWidth";
+const AI_DEFAULT_WIDTH=390, AI_MIN_WIDTH=320, AI_MAX_WIDTH=760;
+const AI_PROMPT_VERSION=1;
+const DEFAULT_SYSTEM_PROMPT=`You are an undergraduate semiconductor-device tutor embedded in a MOS capacitor and n-channel MOSFET metaphor lab. The substrate is p-type. The visualization compares semiconductor energy bands to terrain, the Fermi level to a fixed water table, electrons to water above the conduction-band floor, holes to bubbles below the valence-band ceiling, the oxide to a spring, and gate voltage to a hand pressing or lifting the terrain.
+
+Teach accumulation, flat band, depletion, weak inversion, strong inversion, surface potential, oxide drop, depletion width, depletion and inversion charge, threshold voltage, work-function effects, oxide capacitance, high-frequency and low-frequency C-V behavior, and long-channel MOSFET triode and saturation current. Use the attached numerical simulation state whenever present. Explicitly distinguish the metaphor from physical reality: energy is plotted vertically, carriers are statistical populations rather than literal fluids, the Fermi level represents electrochemical potential, and this teaching model uses depletion approximation, Boltzmann statistics, and a square-law channel model rather than a self-consistent Poisson/continuity solution. Correct misconceptions directly. Relate equations to the visible terrain, water, bubbles, charge-budget bars, C-V curve, and channel view.
+
+Style rules: Answer directly in the first sentence. Use compact paragraphs and short bold run-in headings. Put inline mathematics only inside \\(...\\) and display mathematics only inside \\[...\\]. Never place LaTeX inside backticks or fenced code blocks. Keep equations at normal reading size. Show units and intermediate algebra when useful. Do not add filler or praise.`;
+const DETAIL_SUFFIX={concise:"\n\nLength: a few sentences and at most one central equation.",balanced:"\n\nLength: a few compact paragraphs with the essential reasoning and equations.",indepth:"\n\nLength: derive the result step by step, substitute the attached values, check units, and discuss limiting cases."};
+const FOLLOWUP_SUFFIX={on:"\n\nEnd with exactly one brief Socratic follow-up question.",off:"\n\nDo not append a follow-up question unless the student asks for a quiz."};
+const aiState={provider:"google",apiKey:"",lmUrl:"http://localhost:1234/v1",model:"gemini-2.5-flash",temperature:.4,maxTokens:8192,detail:"balanced",askFollowUp:false,sysPrompt:DEFAULT_SYSTEM_PROMPT,history:[],busy:false,lastTruncated:false};
+const byId=id=>document.getElementById(id);
+
+function simulationContext(){
+  const p=physics(state.vg,state.naExp,state.tox,state.gate);
+  const ns=Math.abs(p.Qinv)/Q/1e4;
+  const qGate=-(p.Qdep+p.Qinv+p.Qacc);
+  return [
+    "Simulator: MOS Metaphor Lab, p-type substrate and n-channel MOSFET.",
+    `Active view: ${state.tab==="cave"?"MOS capacitor cave/band view":"MOSFET channel view"}; overlay=${state.mode}; C-V measurement=${state.cvMode}.`,
+    `Controls: VG=${state.vg.toFixed(4)} V, VDS=${state.vds.toFixed(4)} V, NA=10^${state.naExp.toFixed(2)} cm^-3, tox=${state.tox.toFixed(3)} nm, gate material=${state.gate}.`,
+    `Operating regime: ${p.regime} (${REGIME[p.regime]?.tag||p.regime}); threshold VT=${p.VT_th.toFixed(5)} V; flat-band voltage VFB=${p.VFB.toFixed(5)} V; overdrive VG-VT=${p.vov.toFixed(5)} V.`,
+    `Electrostatics: surface potential psi_s=${p.psis.toFixed(6)} V, oxide drop Vox=${p.Vox.toFixed(6)} V, phi_F=${p.phiF.toFixed(6)} V, gamma=${p.gamma.toFixed(6)} V^0.5, W=${(p.W*1e9).toFixed(4)} nm, Wmax=${(p.Wmax*1e9).toFixed(4)} nm.`,
+    `Capacitance: Cox=${(p.Cox*1e5).toFixed(5)} nF/cm^2, selected C/Cox=${(p.Cval/p.Cox).toFixed(6)}, selected C=${(p.Cval*1e5).toFixed(5)} nF/cm^2.`,
+    `Sheet charges: Qgate=${(qGate/1e4).toExponential(6)} C/cm^2, Qdep=${(p.Qdep/1e4).toExponential(6)} C/cm^2, Qinv=${(p.Qinv/1e4).toExponential(6)} C/cm^2, Qacc=${(p.Qacc/1e4).toExponential(6)} C/cm^2, inversion sheet density ns=${ns.toExponential(6)} cm^-2.`,
+    `MOSFET teaching model: W/L=${WL}, mobility=${(MU_N*1e4).toFixed(2)} cm^2/(V s), ID=${p.Id.toExponential(6)} A, saturation flag=${p.sat}.`,
+    "Metaphor mapping: band edges=terrain boundaries; Fermi level=fixed water table; electrons=water; holes=bubbles; oxide=spring; gate voltage=hand pressure.",
+    "Important limitations: one-dimensional depletion approximation and Boltzmann carrier statistics; square-law long-channel current; no self-consistent Poisson/continuity solution, quantum confinement, interface traps, mobility degradation, DIBL, or velocity saturation."
+  ].join("\n");
+}
+function updateAiStateSummary(){
+  const el=byId("aiStateSummary"); if(!el) return;
+  const p=physics(state.vg,state.naExp,state.tox,state.gate);
+  el.innerHTML=`<strong>Attached state:</strong> ${REGIME[p.regime]?.tag||p.regime} · V<sub>G</sub> ${state.vg.toFixed(2)} V · ψ<sub>s</sub> ${p.psis.toFixed(2)} V · V<sub>T</sub> ${p.VT_th.toFixed(2)} V · C/C<sub>ox</sub> ${(p.Cval/p.Cox).toFixed(2)} · ${state.tab==="cave"?"cave":"channel"} view`;
+}
+function effectiveSystemPrompt(){return (aiState.sysPrompt||DEFAULT_SYSTEM_PROMPT)+(DETAIL_SUFFIX[aiState.detail]||DETAIL_SUFFIX.balanced)+(aiState.askFollowUp?FOLLOWUP_SUFFIX.on:FOLLOWUP_SUFFIX.off);}
+function loadAiSettings(){
+  try{const s=JSON.parse(localStorage.getItem(AI_CONFIG_KEY)||"{}");Object.assign(aiState,{provider:s.provider||"google",apiKey:s.apiKey||"",lmUrl:s.lmUrl||"http://localhost:1234/v1",model:s.model||"gemini-2.5-flash",temperature:s.temperature!==undefined?Number(s.temperature):.4,maxTokens:Number.isFinite(s.maxTokens)?s.maxTokens:8192,detail:s.detail||"balanced",askFollowUp:s.askFollowUp===true,sysPrompt:typeof s.sysPrompt==="string"&&s.sysPrompt.trim()?s.sysPrompt:DEFAULT_SYSTEM_PROMPT});}catch(_){aiState.sysPrompt=DEFAULT_SYSTEM_PROMPT;}
+  byId("chatStatusText").textContent=aiState.apiKey||aiState.provider==="lmstudio"?`Ready · ${aiState.model}`:"Ready — configure a provider to begin";
+}
+function openAiSettings(){
+  byId("chatProvider").value=aiState.provider;byId("chatApiKey").value=aiState.apiKey;byId("chatLmUrl").value=aiState.lmUrl;byId("chatModel").value=aiState.model;byId("chatTemp").value=aiState.temperature;byId("chatTempVal").textContent=Number(aiState.temperature).toFixed(1);byId("chatMaxTokens").value=aiState.maxTokens;byId("chatDetail").value=aiState.detail;byId("chatFollowUp").checked=aiState.askFollowUp;byId("chatSysPrompt").value=aiState.sysPrompt;byId("lmUrlGroup").classList.toggle("hidden",aiState.provider!=="lmstudio");byId("settingsModal").classList.remove("hidden");
+}
+function closeAiSettings(){byId("settingsModal").classList.add("hidden");}
+function saveAiSettings(){
+  aiState.provider=byId("chatProvider").value;aiState.apiKey=byId("chatApiKey").value.trim();aiState.lmUrl=byId("chatLmUrl").value.trim()||"http://localhost:1234/v1";aiState.model=byId("chatModel").value.trim()||(aiState.provider==="google"?"gemini-2.5-flash":"local-model");aiState.temperature=Number(byId("chatTemp").value);aiState.maxTokens=Math.min(16384,Math.max(256,Math.round(Number(byId("chatMaxTokens").value)||8192)));aiState.detail=byId("chatDetail").value;aiState.askFollowUp=byId("chatFollowUp").checked;aiState.sysPrompt=byId("chatSysPrompt").value.trim()||DEFAULT_SYSTEM_PROMPT;
+  try{localStorage.setItem(AI_CONFIG_KEY,JSON.stringify({provider:aiState.provider,apiKey:aiState.apiKey,lmUrl:aiState.lmUrl,model:aiState.model,temperature:aiState.temperature,maxTokens:aiState.maxTokens,detail:aiState.detail,askFollowUp:aiState.askFollowUp,sysPrompt:aiState.sysPrompt,promptVersion:AI_PROMPT_VERSION}));}catch(_){ }
+  byId("chatStatusText").textContent=`Ready · ${aiState.model}`;closeAiSettings();showToast("AI Tutor configuration saved.");
+}
+function clearConversation(){aiState.history=[];byId("chatMessages").innerHTML='<div class="msg assistant"><span class="role">AI Tutor</span><p>Conversation cleared. The live MOS state can still be attached to the next question.</p></div>';byId("chatStatusText").textContent=aiState.apiKey||aiState.provider==="lmstudio"?`Ready · ${aiState.model}`:"Ready — configure a provider to begin";}
+function showToast(message){const t=byId("toast");t.textContent=message;t.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>t.classList.remove("show"),2300);}
+function escapeHtml(value){return String(value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function normalizeAiMath(text){
+  let out=String(text??"").replace(/\r\n?/g,"\n");
+  out=out.replace(/```(?:latex|tex|math)\s*\n([\s\S]*?)```/gi,(_,body)=>`\\[\n${body.trim()}\n\\]`);
+  out=out.replace(/\\begin\{(?:equation\*?|displaymath)\}([\s\S]*?)\\end\{(?:equation\*?|displaymath)\}/g,(_,body)=>`\\[\n${body.trim()}\n\\]`);
+  const displays=[];out=out.replace(/\$\$([\s\S]*?)\$\$/g,(_,body)=>`@@MOS_METAPHOR_DISPLAY_${displays.push(body)-1}@@`);out=out.replace(/(^|[^\\$])\$([^$\n]+?)\$/gm,(_,prefix,body)=>`${prefix}\\(${body.trim()}\\)`);out=out.replace(/@@MOS_METAPHOR_DISPLAY_(\d+)@@/g,(_,i)=>`\\[\n${displays[Number(i)].trim()}\n\\]`);return out;
+}
+function inlineFormat(s){return s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/`([^`]+)`/g,"<code>$1</code>");}
+function renderMarkdown(text){
+  const lines=escapeHtml(normalizeAiMath(text)).split("\n");let html="",inMath=false,math=[],inCode=false,code=[],list=null;
+  const closeList=()=>{if(list){html+=`</${list}>`;list=null;}};
+  for(const line of lines){const t=line.trim();
+    if(inMath){math.push(line);if(t.endsWith("\\]")){closeList();html+=`<div class="mathBlock">${math.join("\n")}</div>`;inMath=false;math=[];}continue;}
+    if(t.startsWith("\\[")){closeList();if(t.endsWith("\\]")&&t.length>4)html+=`<div class="mathBlock">${line}</div>`;else{inMath=true;math=[line];}continue;}
+    if(t.startsWith("```")){closeList();if(inCode){html+=`<pre><code>${code.join("\n")}</code></pre>`;inCode=false;code=[];}else inCode=true;continue;}if(inCode){code.push(line);continue;}
+    if(!t){closeList();continue;}
+    const h=t.match(/^(#{1,3})\s+(.+)$/);if(h){closeList();html+=`<h${h[1].length}>${inlineFormat(h[2])}</h${h[1].length}>`;continue;}
+    const ul=t.match(/^[-*]\s+(.+)$/),ol=t.match(/^\d+\.\s+(.+)$/);if(ul||ol){const kind=ul?"ul":"ol";if(list!==kind){closeList();html+=`<${kind}>`;list=kind;}html+=`<li>${inlineFormat((ul||ol)[1])}</li>`;continue;}
+    closeList();html+=`<p>${inlineFormat(t)}</p>`;
+  }closeList();if(inMath)html+=`<div class="mathBlock">${math.join("\n")}</div>`;if(inCode)html+=`<pre><code>${code.join("\n")}</code></pre>`;return html;
+}
+function typesetMath(node){if(window.MathJax?.typesetClear)MathJax.typesetClear([node]);if(window.MathJax?.typesetPromise)MathJax.typesetPromise([node]).catch(()=>{});}
+function appendChatMessage(role,text){const div=document.createElement("div");div.className=`msg ${role}`;const label=role==="user"?"You":role==="assistant"?"AI Tutor":"Error";div.innerHTML=`<span class="role">${label}</span>${role==="error"?`<p>${escapeHtml(text)}</p>`:renderMarkdown(text)}`;byId("chatMessages").appendChild(div);byId("chatMessages").scrollTop=byId("chatMessages").scrollHeight;if(role!=="error")typesetMath(div);}
+async function fetchGoogleAi(){
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(aiState.model)}:generateContent`;const contents=aiState.history.map(m=>({role:m.role==="model"?"model":"user",parts:[{text:m.content}]}));const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":aiState.apiKey},body:JSON.stringify({contents,generationConfig:{temperature:aiState.temperature,maxOutputTokens:aiState.maxTokens},systemInstruction:{parts:[{text:effectiveSystemPrompt()}]}})});const data=await res.json();if(!res.ok)throw new Error(data?.error?.message||`HTTP ${res.status}`);const c=data?.candidates?.[0];const answer=c?.content?.parts?.map(p=>p.text||"").join("")||"";if(!answer)throw new Error(`The model returned no text (${c?.finishReason||data?.promptFeedback?.blockReason||"empty response"}).`);if(c?.finishReason==="MAX_TOKENS")aiState.lastTruncated=true;return answer;
+}
+async function fetchLocalAi(){
+  const url=`${aiState.lmUrl.replace(/\/$/,"")}/chat/completions`;const messages=[{role:"system",content:effectiveSystemPrompt()},...aiState.history.map(m=>({role:m.role==="model"?"assistant":"user",content:m.content}))];const headers={"Content-Type":"application/json"};if(aiState.apiKey)headers.Authorization=`Bearer ${aiState.apiKey}`;const res=await fetch(url,{method:"POST",headers,body:JSON.stringify({model:aiState.model,messages,temperature:aiState.temperature,max_tokens:aiState.maxTokens})});const data=await res.json();if(!res.ok)throw new Error(data?.error?.message||`HTTP ${res.status}`);const choice=data?.choices?.[0],answer=choice?.message?.content||"";if(!answer)throw new Error("The local model returned no text. Verify the server URL and loaded model.");if(choice?.finish_reason==="length")aiState.lastTruncated=true;return answer;
+}
+async function handleChatSend(){
+  if(aiState.busy)return;const raw=byId("chatInput").value.trim();if(!raw)return;if(aiState.provider==="google"&&!aiState.apiKey){showToast("Configure a Google AI Studio API key first.");openAiSettings();return;}let request=raw;if(byId("attachContextCheck").checked)request=`[Simulation Context]\n${simulationContext()}\n\n[Student Question]\n${raw}`;byId("chatInput").value="";appendChatMessage("user",raw);aiState.history.push({role:"user",content:request});aiState.busy=true;aiState.lastTruncated=false;byId("chatStatusText").textContent="AI is thinking…";byId("chatSendBtn").disabled=true;const loading=document.createElement("div");loading.className="msg assistant";loading.innerHTML='<span class="role">AI Tutor</span><div class="thinking-wrapper"><div class="dot-flashing"></div></div>';byId("chatMessages").appendChild(loading);byId("chatMessages").scrollTop=byId("chatMessages").scrollHeight;
+  try{const answer=aiState.provider==="google"?await fetchGoogleAi():await fetchLocalAi();loading.remove();appendChatMessage("assistant",answer);aiState.history.push({role:"model",content:answer});byId("chatStatusText").textContent=aiState.lastTruncated?"Ready — answer reached token limit":`Ready · ${aiState.model}`;}catch(err){loading.remove();aiState.history.pop();appendChatMessage("error",String(err?.message||err));byId("chatStatusText").textContent="AI request error";}finally{aiState.busy=false;byId("chatSendBtn").disabled=false;}
+}
+let layoutPaintFrame=0;
+function scheduleLayoutPaint(){
+  if(layoutPaintFrame)return;
+  layoutPaintFrame=requestAnimationFrame(()=>{
+    layoutPaintFrame=0;
+    paint();
+  });
+}
+function initStableLayoutObserver(){
+  const simulatorColumn=document.querySelector(".cols > div:nth-child(2)");
+  if(!simulatorColumn || !("ResizeObserver" in window))return;
+  let lastWidth=Math.round(simulatorColumn.getBoundingClientRect().width);
+  const observer=new ResizeObserver(entries=>{
+    const nextWidth=Math.round(entries[0].contentRect.width);
+    if(nextWidth===lastWidth)return;
+    lastWidth=nextWidth;
+    scheduleLayoutPaint();
+  });
+  observer.observe(simulatorColumn);
+}
+function availableAiMax(){const wrap=document.querySelector(".wrap");const width=wrap?wrap.clientWidth:window.innerWidth;return Math.max(AI_MIN_WIDTH,Math.min(AI_MAX_WIDTH,width-296-620-90));}
+function applyAiWidth(width){const safe=Math.min(availableAiMax(),Math.max(AI_MIN_WIDTH,Number(width)||AI_DEFAULT_WIDTH));document.documentElement.style.setProperty("--ai-panel-width",`${safe}px`);return safe;}
+function saveAiWidth(width){try{localStorage.setItem(AI_WIDTH_KEY,String(Math.round(width)));}catch(_){ }}
+function loadAiWidth(){let width=AI_DEFAULT_WIDTH;try{const s=localStorage.getItem(AI_WIDTH_KEY);if(s)width=Number(s);}catch(_){ }return applyAiWidth(width);}
+function initAiResize(){
+  const handle=byId("aiResizeHandle"),panel=document.querySelector(".ai-panel");if(!handle||!panel)return;loadAiWidth();let dragging=false,startX=0,startW=0;
+  const move=e=>{if(!dragging)return;saveAiWidth(applyAiWidth(startW+(startX-e.clientX)));scheduleLayoutPaint();};const stop=()=>{if(!dragging)return;dragging=false;document.body.classList.remove("resizing-ai");window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",stop);window.removeEventListener("pointercancel",stop);scheduleLayoutPaint();};
+  handle.addEventListener("pointerdown",e=>{if(window.innerWidth<=1340)return;dragging=true;startX=e.clientX;startW=panel.getBoundingClientRect().width;document.body.classList.add("resizing-ai");handle.setPointerCapture?.(e.pointerId);window.addEventListener("pointermove",move);window.addEventListener("pointerup",stop);window.addEventListener("pointercancel",stop);e.preventDefault();});
+  handle.addEventListener("dblclick",()=>{saveAiWidth(applyAiWidth(AI_DEFAULT_WIDTH));scheduleLayoutPaint();showToast("AI Tutor width reset.");});
+  handle.addEventListener("keydown",e=>{const current=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ai-panel-width"))||AI_DEFAULT_WIDTH,step=e.shiftKey?48:16;let changed=false;if(e.key==="ArrowLeft"){saveAiWidth(applyAiWidth(current-step));changed=true;e.preventDefault();}else if(e.key==="ArrowRight"){saveAiWidth(applyAiWidth(current+step));changed=true;e.preventDefault();}else if(e.key==="Home"){saveAiWidth(applyAiWidth(AI_MIN_WIDTH));changed=true;e.preventDefault();}else if(e.key==="End"){saveAiWidth(applyAiWidth(AI_MAX_WIDTH));changed=true;e.preventDefault();}if(changed)scheduleLayoutPaint();});
+  window.addEventListener("resize",()=>{if(window.innerWidth>1340)loadAiWidth();});
+}
+function bindAiUi(){
+  byId("openChatSettingsBtn").addEventListener("click",openAiSettings);byId("cancelSettingsBtn").addEventListener("click",closeAiSettings);byId("saveSettingsBtn").addEventListener("click",saveAiSettings);byId("useDefaultPromptBtn").addEventListener("click",()=>{byId("chatSysPrompt").value=DEFAULT_SYSTEM_PROMPT;showToast("Default MOS-metaphor tutor prompt loaded.");});byId("clearChatBtn").addEventListener("click",clearConversation);byId("chatSendBtn").addEventListener("click",handleChatSend);byId("chatInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();handleChatSend();}});byId("chatProvider").addEventListener("change",()=>{const p=byId("chatProvider").value;byId("lmUrlGroup").classList.toggle("hidden",p!=="lmstudio");const current=byId("chatModel").value.trim();if(p==="google"&&(!current||current==="local-model"))byId("chatModel").value="gemini-2.5-flash";if(p==="lmstudio"&&(!current||current==="gemini-2.5-flash"))byId("chatModel").value="local-model";});byId("chatTemp").addEventListener("input",()=>byId("chatTempVal").textContent=Number(byId("chatTemp").value).toFixed(1));byId("settingsModal").addEventListener("click",e=>{if(e.target===byId("settingsModal"))closeAiSettings();});document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!byId("settingsModal").classList.contains("hidden"))closeAiSettings();});document.querySelectorAll(".prompt-chip").forEach(btn=>btn.addEventListener("click",()=>{byId("chatInput").value=btn.dataset.prompt||"";byId("attachContextCheck").checked=true;byId("chatInput").focus();}));
+}
+function initAiTutor(){loadAiSettings();bindAiUi();initAiResize();initStableLayoutObserver();updateAiStateSummary();}
+
+/* ============================================================
+   INTERACTION
+   ============================================================ */
+function bindRange(id, key, tf){
+  const el=document.getElementById(id);
+  el.addEventListener("input", ()=>{ state[key]= tf? tf(+el.value) : +el.value; paint(); });
+}
+bindRange("vg","vg"); bindRange("vds","vds");
+bindRange("na","naExp"); bindRange("tox","tox");
+
+function bindSeg(id, attr, key){
+  const seg=document.getElementById(id);
+  seg.addEventListener("click", e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    [...seg.querySelectorAll("button")].forEach(x=>x.setAttribute("aria-pressed", x===b));
+    state[key]=b.dataset[attr]; paint();
+  });
+}
+bindSeg("gateSeg","gate","gate");
+bindSeg("modeSeg","mode","mode");
+bindSeg("cvSeg","cv","cvMode");
+
+const tabCave=document.getElementById("tabCave"), tabChan=document.getElementById("tabChan");
+function setTab(t){
+  state.tab=t;
+  tabCave.setAttribute("aria-selected", t==="cave");
+  tabChan.setAttribute("aria-selected", t==="chan");
+  document.getElementById("caveWrap").classList.toggle("hidden", t!=="cave");
+  document.getElementById("chanWrap").classList.toggle("hidden", t==="cave");
+  document.getElementById("vdsCtl").style.opacity = t==="cave" ? .45 : 1;
+  document.getElementById("plotATitle").textContent = t==="cave"
+    ? "Charge budget — where the coulombs sit" : "Charge budget at the source end";
+  paint();
+}
+tabCave.addEventListener("click",()=>setTab("cave"));
+tabChan.addEventListener("click",()=>setTab("chan"));
+
+document.getElementById("sweepBtn").addEventListener("click", ()=>{
+  if(state.sweep) return;
+  const el=document.getElementById("vg");
+  let v=-3; state.sweep=setInterval(()=>{
+    v+=0.045;
+    if(v>3){ clearInterval(state.sweep); state.sweep=null; return; }
+    state.vg=v; el.value=v; paint();
+  }, 16);
+});
+
+window.addEventListener("resize", scheduleLayoutPaint);
+initAiTutor();
+
+/* animation loop — only the stage canvas redraws each frame; the
+   C-V sweep is expensive and only changes when a control moves. */
+function loop(){
+  state.t += 1;
+  const p = physics(state.vg, state.naExp, state.tox, state.gate);
+  if(state.tab==="cave") drawCave(p); else drawChannel(p);
+  requestAnimationFrame(loop);
+}
+paint();
+if(!reduceMotion) requestAnimationFrame(loop);
+</script>
+
+<a class="hubMainMenuButton" href="../index.html" title="Back to Semiconductor Learning Hub">← Main Menu</a>
+
+<!-- maestra-integration-v4 -->
+<link rel="stylesheet" href="../shared/maestra-toolbar.css">
+<script defer src="../shared/theme-sync-v2.js"></script>
+<script defer src="../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="mosfet" data-maestra-module-title="MOS Capacitor and MOSFET" data-maestra-topic-title="Mosfet Metaphor Ai" data-maestra-canvas-template="mos-device"></script>
+</body>
+</html>

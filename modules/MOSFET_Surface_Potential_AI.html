@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MOS Surface-Potential Band Diagram Simulator</title>
+<script>
+  (() => {
+    const key = 'mosSurfacePotentialTheme';
+    let theme = 'light';
+    try {
+      const saved = localStorage.getItem(key);
+      theme = saved === 'dark' || saved === 'light'
+        ? saved
+        : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    } catch (_) {}
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  })();
+</script>
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']],
+      processEscapes: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+  :root {
+    --navy: #12346b;
+    --navy-dark: #0a214a;
+    --teal: #0696a6;
+    --purple: #5b2b93;
+    --orange: #d66a00;
+    --gold: #d4a107;
+    --ink: #172033;
+    --muted: #667085;
+    --line: #d7deea;
+    --panel: #ffffff;
+    --page: #eef3f9;
+    --soft: #f7f9fc;
+    --green: #16794d;
+    --surface-soft: #f7f9fd;
+    --input-bg: #ffffff;
+    --shadow: rgba(25, 52, 91, 0.11);
+    --chat-user: #e8f2ff;
+    --chat-ai: #ffffff;
+    --primary: #2458c6;
+  }
+
+  html[data-theme="dark"] {
+    --navy: #8ab4ff;
+    --navy-dark: #e7eefb;
+    --teal: #5fd3df;
+    --purple: #c8a7f0;
+    --orange: #ffad5a;
+    --gold: #f4cf58;
+    --ink: #eef4fb;
+    --muted: #aebbd0;
+    --line: #334155;
+    --panel: #111827;
+    --page: #090d14;
+    --soft: #162033;
+    --green: #63d69a;
+    --surface-soft: #162033;
+    --input-bg: #0b1220;
+    --shadow: rgba(0, 0, 0, 0.38);
+    --chat-user: #0c4a6e;
+    --chat-ai: #172033;
+    --primary: #72a7ff;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--ink);
+    background: radial-gradient(circle at 12% 0%, color-mix(in srgb,var(--panel) 76%,var(--page)) 0, color-mix(in srgb,var(--panel) 35%,var(--page)) 35%, var(--page) 100%);
+  }
+
+  .app {
+    width: min(1900px, calc(100% - 28px));
+    margin: 24px auto;
+  }
+
+  .header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(1.55rem, 2.8vw, 2.35rem);
+    line-height: 1.08;
+    color: var(--navy-dark);
+    letter-spacing: -0.03em;
+  }
+
+  .subtitle {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 0.98rem;
+  }
+
+  .status-pill {
+    white-space: nowrap;
+    border: 1px solid #b9dcca;
+    color: var(--green);
+    background: #effaf4;
+    border-radius: 999px;
+    padding: 8px 13px;
+    font-weight: 750;
+    font-size: 0.88rem;
+    box-shadow: 0 3px 12px rgba(17, 35, 70, 0.05);
+  }
+
+  .layout {
+    --ai-column-width: 390px;
+    display: grid;
+    grid-template-columns: minmax(660px, 1fr) 350px var(--ai-column-width);
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .card {
+    background: color-mix(in srgb, var(--panel) 97%, transparent);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 0 14px 36px var(--shadow);
+  }
+
+  .plot-card {
+    overflow: hidden;
+    min-height: 710px;
+  }
+
+  .plot-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid #e4e9f1;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+  }
+
+  .plot-title {
+    font-weight: 800;
+    color: var(--navy-dark);
+  }
+
+  .plot-note {
+    color: var(--muted);
+    font-size: 0.82rem;
+    text-align: right;
+  }
+
+  .svg-wrap {
+    padding: 0;
+  }
+
+  /* Only the simulator diagrams should fill their panels. MathJax also
+     generates <svg> elements, so a global svg rule would enlarge AI math. */
+  #bandSvg, #auxSvg {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #fff;
+  }
+
+  .aux-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px 0;
+  }
+
+  .aux-title {
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: var(--navy-dark);
+  }
+
+  .aux-note {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .segmented button {
+    border: 1px solid #cdd9eb;
+    background: #edf3fb;
+    color: var(--navy);
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-weight: 800;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+
+  .segmented button.active {
+    background: var(--navy);
+    color: #fff;
+    box-shadow: 0 7px 16px rgba(18, 52, 107, 0.18);
+    border-color: var(--navy);
+  }
+
+  .controls {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+  }
+
+  .control-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-weight: 800;
+    color: var(--navy-dark);
+  }
+
+  .value {
+    color: var(--teal);
+    font-variant-numeric: tabular-nums;
+    font-size: 1.18rem;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--teal);
+    cursor: pointer;
+  }
+
+  .scale {
+    display: flex;
+    justify-content: space-between;
+    margin-top: -8px;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  button {
+    border: none;
+    border-radius: 11px;
+    padding: 10px 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  }
+
+  button:hover { transform: translateY(-1px); }
+  button:active { transform: translateY(0); }
+
+  .primary {
+    color: #fff;
+    background: var(--navy);
+    box-shadow: 0 7px 16px rgba(18, 52, 107, 0.22);
+  }
+
+  .secondary {
+    color: var(--navy);
+    background: #edf3fb;
+    border: 1px solid #cdd9eb;
+  }
+
+  .readout {
+    border: 1px solid #dce5ef;
+    background: var(--soft);
+    border-radius: 14px;
+    padding: 13px;
+  }
+
+  .readout-title {
+    font-weight: 850;
+    color: var(--navy-dark);
+    margin-bottom: 8px;
+  }
+
+  .metric {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px dashed #d9e1eb;
+    font-size: 0.88rem;
+  }
+
+  .metric:last-child { border-bottom: 0; }
+  .metric strong { color: var(--purple); font-variant-numeric: tabular-nums; }
+
+  .equation {
+    background: #111827;
+    color: #f8fafc;
+    border-radius: 14px;
+    padding: 16px 18px;
+    font-family: "Cambria Math", "Times New Roman", serif;
+    font-size: 1.16rem;
+    line-height: 1.7;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+    min-height: 132px;
+  }
+
+  .equation mjx-container {
+    margin: 0 !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    font-size: 122% !important;
+  }
+
+  .equation mjx-container svg {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    background: transparent;
+  }
+
+  .mini-note {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: -6px;
+  }
+
+  .explain {
+    color: #4b5565;
+    font-size: 0.87rem;
+    line-height: 1.48;
+    margin: 0;
+  }
+
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+    font-size: 0.8rem;
+    color: #475467;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 7px; }
+  .swatch { width: 24px; height: 0; border-top: 4px solid; border-radius: 99px; }
+  .dash { border-top-style: dashed; }
+
+  .footer-note {
+    font-size: 0.75rem;
+    color: var(--muted);
+    padding: 0 18px 18px;
+    line-height: 1.45;
+  }
+
+  @media (max-width: 980px) {
+    .layout { grid-template-columns: 1fr; }
+    .plot-card { min-height: 0; }
+    .controls { display: grid; grid-template-columns: 1fr 1fr; }
+    .controls > * { min-width: 0; }
+  }
+
+  @media (max-width: 720px) {
+    .app { width: min(100% - 16px, 1260px); margin: 10px auto; }
+    .header { align-items: flex-start; flex-direction: column; }
+    .layout { gap: 10px; }
+    .controls { display: flex; }
+    .plot-head, .aux-head { align-items: flex-start; flex-direction: column; }
+    .plot-note { text-align: left; }
+  }
+
+
+  /* ================================================================
+     Workspace header, theme, and state-aware AI tutor
+     ================================================================ */
+  .header-right { display:flex; align-items:center; gap:9px; flex-wrap:wrap; justify-content:flex-end; }
+  .header-btn,.ai-btn,.chip,.modal-btn {
+    border:1px solid var(--line); background:var(--surface-soft); color:var(--ink);
+    border-radius:10px; min-height:38px; padding:8px 12px; font:inherit;
+    font-weight:800; cursor:pointer;
+  }
+  .header-btn:hover,.ai-btn:hover,.chip:hover,.modal-btn:hover { border-color:var(--primary); }
+  .header-btn:focus-visible,.ai-btn:focus-visible,.chip:focus-visible,.modal-btn:focus-visible,
+  textarea:focus-visible,input:focus-visible,select:focus-visible {
+    outline:3px solid color-mix(in srgb,var(--primary) 45%,transparent); outline-offset:2px;
+  }
+  .status-pill { box-shadow:0 3px 12px var(--shadow); }
+
+  .ai-panel {
+    position:sticky; top:12px; height:calc(100vh - 24px); min-height:700px;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .ai-resize-handle {
+    position:absolute; left:0; top:0; bottom:0; width:12px; z-index:30;
+    cursor:col-resize; touch-action:none; user-select:none;
+    background:transparent;
+  }
+  .ai-resize-handle::before {
+    content:""; position:absolute; left:3px; top:18%; bottom:18%; width:3px;
+    border-radius:999px; background:color-mix(in srgb,var(--primary) 40%,transparent);
+    opacity:.52; transition:opacity .16s ease, background-color .16s ease, width .16s ease;
+  }
+  .ai-resize-handle:hover::before,
+  .ai-resize-handle:focus-visible::before,
+  body.resizing-ai .ai-resize-handle::before {
+    width:4px; opacity:1; background:var(--primary);
+  }
+  .ai-resize-handle:focus-visible {
+    outline:3px solid color-mix(in srgb,var(--primary) 45%,transparent);
+    outline-offset:-2px;
+  }
+  body.resizing-ai { cursor:col-resize; user-select:none; }
+  body.resizing-ai * { cursor:col-resize!important; }
+
+  .ai-head {
+    padding:14px 15px; border-bottom:1px solid var(--line); display:flex;
+    align-items:center; justify-content:space-between; gap:10px; background:var(--surface-soft);
+  }
+  .ai-head-title { font-size:18px; font-weight:900; }
+  .ai-head-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+  .ai-head-actions { display:flex; gap:6px; }
+  .ai-icon-btn {
+    width:36px; height:36px; padding:0; border:1px solid var(--line); border-radius:9px;
+    background:var(--input-bg); color:var(--ink); cursor:pointer; font-size:17px;
+  }
+  .ai-state {
+    padding:10px 14px; border-bottom:1px solid var(--line);
+    background:color-mix(in srgb,var(--surface-soft) 78%,var(--panel));
+    font-size:12px; line-height:1.45; color:var(--muted);
+  }
+  .ai-state strong { color:var(--ink); }
+  .ai-chips { display:grid; grid-template-columns:1fr 1fr; gap:7px; padding:10px 12px; border-bottom:1px solid var(--line); }
+  .chip { min-height:38px; padding:7px 8px; font-size:12px; background:var(--input-bg); }
+  .chat-messages {
+    flex:1; min-height:260px; overflow-y:auto; padding:12px; background:var(--surface-soft);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .msg {
+    border:1px solid var(--line); border-radius:12px; padding:11px 12px;
+    font-size:13.5px; line-height:1.52; overflow-wrap:anywhere;
+  }
+  .msg .role {
+    display:block; text-transform:uppercase; font-size:10px; font-weight:900;
+    color:var(--muted); margin-bottom:5px; letter-spacing:.06em;
+  }
+  .msg.user { background:var(--chat-user); align-self:flex-end; width:91%; }
+  .msg.assistant { background:var(--chat-ai); align-self:flex-start; width:96%; box-shadow:0 2px 7px var(--shadow); }
+  .msg.error { background:#fee2e2; color:#991b1b; align-self:stretch; }
+  html[data-theme="dark"] .msg.error { background:#4c1d1d; color:#fecaca; }
+  .msg p { margin:.45em 0; }
+  .msg h1,.msg h2,.msg h3 { margin:.55em 0 .25em; line-height:1.2; }
+  .msg h1 { font-size:1.18em; } .msg h2 { font-size:1.1em; } .msg h3 { font-size:1.04em; }
+  .msg code { background:var(--surface-soft); padding:.1em .3em; border-radius:4px; }
+  .msg pre { background:#111827; color:#f8fafc; padding:9px; border-radius:7px; overflow:auto; }
+  .msg mjx-container {
+    max-width:100%; overflow-x:auto; overflow-y:hidden; color:inherit!important;
+    font-size:1em!important; line-height:1.25!important;
+  }
+  .msg mjx-container[display="true"] {
+    display:block!important; margin:.6em 0!important; text-align:center!important;
+    font-size:1em!important;
+  }
+  .msg mjx-container:not([display="true"]) {
+    display:inline-block!important; margin:0 .08em!important; vertical-align:-.12em;
+    font-size:1em!important;
+  }
+  .msg mjx-container svg {
+    width:auto!important; max-width:100%!important; height:auto!important;
+    display:inline-block!important; background:transparent!important;
+  }
+  .msg mjx-container[display="true"] svg {
+    display:block!important; margin:0 auto!important;
+  }
+  .mathBlock {
+    max-width:100%; overflow-x:auto; overflow-y:hidden; margin:.55em 0;
+    font-size:1em;
+  }
+  .chat-composer {
+    padding:11px 12px; background:var(--panel); border-top:1px solid var(--line);
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .chat-composer textarea {
+    width:100%; min-height:100px; resize:vertical; border:1px solid var(--line); border-radius:9px;
+    background:var(--input-bg); color:var(--ink); padding:9px 10px; font:inherit;
+    font-size:13px; line-height:1.42;
+  }
+  .chat-actions { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .attach-label { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); cursor:pointer; }
+  .send-btn { background:var(--primary); border-color:var(--primary); color:#fff; min-width:92px; }
+  .send-btn:disabled { opacity:.55; cursor:wait; }
+  .thinking-wrapper { display:flex; align-items:center; height:18px; padding:4px 0; }
+  .dot-flashing {
+    position:relative; width:7px; height:7px; border-radius:50%; background:var(--primary);
+    animation:dotFlash 1s infinite linear alternate; animation-delay:.5s; margin-left:14px;
+  }
+  .dot-flashing::before,.dot-flashing::after {
+    content:""; position:absolute; top:0; width:7px; height:7px; border-radius:50%;
+    background:var(--primary); animation:dotFlash 1s infinite alternate;
+  }
+  .dot-flashing::before { left:-14px; animation-delay:0s; }
+  .dot-flashing::after { left:14px; animation-delay:1s; }
+  @keyframes dotFlash { 0%{opacity:1} 50%,100%{opacity:.18} }
+
+  .modal {
+    position:fixed; inset:0; background:rgba(0,0,0,.58); display:flex; align-items:center;
+    justify-content:center; padding:18px; z-index:1000;
+  }
+  .modal.hidden { display:none; }
+  .modal-card {
+    width:540px; max-width:96vw; max-height:92vh; overflow:auto; background:var(--panel);
+    color:var(--ink); border:1px solid var(--line); border-radius:16px; padding:20px;
+    box-shadow:0 22px 65px rgba(0,0,0,.30);
+  }
+  .modal-card h2 { margin:0 0 6px; }
+  .modal-card .modal-note { margin:0 0 14px; color:var(--muted); font-size:12px; line-height:1.45; }
+  .modal-card label { display:block; margin:12px 0 5px; font-size:13px; font-weight:800; }
+  .modal-card input[type="text"],.modal-card input[type="password"],.modal-card input[type="number"],
+  .modal-card textarea,.modal-card select {
+    width:100%; border:1px solid var(--line); border-radius:8px; background:var(--input-bg);
+    color:var(--ink); padding:9px; font:inherit; font-size:13px;
+  }
+  .modal-card textarea { min-height:150px; resize:vertical; line-height:1.42; }
+  .modal-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:end; }
+  .modal-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
+  .modal-btn.primary { background:var(--primary); border-color:var(--primary); color:#fff; }
+  .field-hint { font-size:11px; color:var(--muted); line-height:1.4; margin-top:5px; }
+  .check-line { display:flex!important; align-items:flex-start; gap:7px; font-weight:500!important; }
+  .hidden { display:none!important; }
+  .toast {
+    position:fixed; left:50%; bottom:18px; transform:translateX(-50%); padding:9px 14px;
+    border-radius:9px; background:rgba(22,22,22,.94); color:#fff; font-size:13px;
+    opacity:0; pointer-events:none; transition:opacity .18s; z-index:1500;
+    max-width:75vw; text-align:center;
+  }
+  .toast.show { opacity:1; }
+
+  html[data-theme="dark"] .plot-head { background:linear-gradient(180deg,var(--panel),var(--soft)); border-color:var(--line); }
+  html[data-theme="dark"] .readout { background:var(--soft); border-color:var(--line); }
+  html[data-theme="dark"] .metric { border-color:var(--line); }
+  html[data-theme="dark"] .secondary,html[data-theme="dark"] .segmented button { background:var(--soft); color:var(--ink); border-color:var(--line); }
+  html[data-theme="dark"] .segmented button.active,html[data-theme="dark"] .primary { background:#244d94; color:#fff; }
+  html[data-theme="dark"] .status-pill { background:#123b2a; border-color:#28684a; color:#bbf7d0; }
+  html[data-theme="dark"] #bandSvg,html[data-theme="dark"] #auxSvg { filter:brightness(.86) contrast(1.06); }
+  html[data-theme="dark"] .equation { background:#0b1220; border:1px solid #334155; }
+
+  @media (max-width: 1500px) {
+    .layout { grid-template-columns:minmax(0,1fr) 360px; }
+    .ai-panel { grid-column:1/-1; position:static; height:730px; min-height:620px; }
+    .ai-resize-handle { display:none; }
+  }
+  @media (max-width: 980px) {
+    .layout { grid-template-columns:1fr; }
+    .controls { position:static; max-height:none; }
+    .ai-panel { grid-column:auto; height:720px; }
+  }
+  @media (max-width: 720px) {
+    .app { width:min(100% - 16px,1900px); }
+    .header-right { justify-content:flex-start; }
+    .ai-chips { grid-template-columns:1fr; }
+    .modal-row,.modal-actions { grid-template-columns:1fr; }
+    .chat-actions { align-items:flex-end; }
+    .attach-label { max-width:160px; }
+  }
+
+</style>
+
+<style id="hubMainMenuStyle">
+.hubMainMenuButton{position:fixed;right:18px;top:72px;z-index:999999;display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border-radius:999px;border:1px solid rgba(56,215,255,.7);background:linear-gradient(135deg,#38d7ff,#7f7cff);color:#06131d!important;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:14px;font-weight:950;text-decoration:none!important;box-shadow:0 12px 30px rgba(0,0,0,.30);transition:transform .15s ease,filter .15s ease}.hubMainMenuButton:hover{transform:translateY(-1px);filter:brightness(1.07)}@media(max-width:760px){.hubMainMenuButton{top:auto;right:14px;bottom:14px;font-size:13px;padding:10px 13px}}@media print{.hubMainMenuButton{display:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div>
+      <h1>MOS Surface-Potential Band Diagram</h1>
+      <p class="subtitle">Move the surface potential from flat band, ψ<sub>s</sub> = 0, to positive band bending. Auxiliary views show depletion width, potential, electric field, and charge density under the depletion approximation.</p>
+    </div>
+    <div class="header-right">
+      <div class="status-pill" id="statusPill">Flat-band condition</div>
+      <button id="themeToggle" class="header-btn" type="button" aria-pressed="false">🌙 Dark</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <section class="card plot-card">
+      <div class="plot-head">
+        <div class="plot-title">Energy-band profile near the oxide–semiconductor interface</div>
+        <div class="plot-note">Illustrative p-type semiconductor · energy in eV</div>
+      </div>
+
+      <div class="svg-wrap">
+        <svg id="bandSvg" viewBox="0 0 1050 650" role="img" aria-label="Interactive MOS energy band diagram">
+          <defs>
+            <marker id="arrowNavy" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L9,4.5 L0,9 z" fill="#12346b" />
+            </marker>
+            <marker id="arrowOrange" markerWidth="8" markerHeight="8" refX="6.4" refY="4" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L8,4 L0,8 z" fill="#d66a00" />
+            </marker>
+            <marker id="arrowOrangeStart" markerWidth="8" markerHeight="8" refX="1.6" refY="4" orient="auto" markerUnits="strokeWidth">
+              <path d="M8,0 L0,4 L8,8 z" fill="#d66a00" />
+            </marker>
+            <marker id="arrowGold" markerWidth="8" markerHeight="8" refX="6.4" refY="4" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L8,4 L0,8 z" fill="#d4a107" />
+            </marker>
+            <marker id="arrowGoldStart" markerWidth="8" markerHeight="8" refX="1.6" refY="4" orient="auto" markerUnits="strokeWidth">
+              <path d="M8,0 L0,4 L8,8 z" fill="#d4a107" />
+            </marker>
+            <pattern id="hatch" width="17" height="17" patternUnits="userSpaceOnUse" patternTransform="rotate(42)">
+              <line x1="0" y1="0" x2="0" y2="17" stroke="#8c68b5" stroke-width="5" opacity="0.72" />
+            </pattern>
+            <linearGradient id="oxideGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#f4effb" />
+              <stop offset="1" stop-color="#fbf9fe" />
+            </linearGradient>
+            <linearGradient id="semiGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ffffff" />
+              <stop offset="1" stop-color="#f8fbff" />
+            </linearGradient>
+          </defs>
+
+          <rect x="0" y="0" width="245" height="650" fill="url(#oxideGrad)" />
+          <rect x="245" y="0" width="805" height="650" fill="url(#semiGrad)" />
+          <line x1="245" y1="42" x2="245" y2="580" stroke="#12346b" stroke-width="8" stroke-linecap="round" />
+
+          <path d="M250 84 L322 30 L350 30" fill="none" stroke="#12346b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+          <text x="367" y="30" fill="#0a214a" font-size="27" font-weight="800">Semiconductor</text>
+          <text x="367" y="62" fill="#0a214a" font-size="27" font-weight="800">surface</text>
+
+          <line x1="245" y1="590" x2="353" y2="590" stroke="#12346b" stroke-width="5" marker-end="url(#arrowNavy)" />
+          <text x="370" y="600" fill="#12346b" font-size="34" font-family="Cambria Math, Times New Roman, serif" font-style="italic" font-weight="700">x</text>
+          <line x1="100" y1="555" x2="100" y2="455" stroke="#12346b" stroke-width="5" marker-end="url(#arrowNavy)" />
+          <text x="77" y="439" fill="#12346b" font-size="29" font-family="Cambria Math, Times New Roman, serif" font-style="italic" font-weight="700">E</text>
+
+          <text x="68" y="542" fill="#5b2b93" font-size="28" font-weight="850">Oxide</text>
+          <text x="555" y="610" fill="#5b2b93" font-size="29" font-weight="850">Semiconductor</text>
+
+          <rect id="depletionRect" x="245" y="115" width="0" height="405" fill="#d4a107" opacity="0.10" />
+          <line id="depletionEdge" x1="245" x2="245" y1="110" y2="523" stroke="#d4a107" stroke-width="3" stroke-dasharray="10 8" opacity="0.92" />
+          <line id="widthArrow" x1="260" x2="260" y1="555" y2="555" stroke="#d4a107" stroke-width="4" marker-start="url(#arrowGoldStart)" marker-end="url(#arrowGold)" opacity="0.95" />
+          <rect id="widthBg" x="0" y="530" width="110" height="34" rx="8" fill="#fff7d8" opacity="0.96" />
+          <text id="widthText" x="0" y="552" fill="#8b6600" font-size="22" font-family="Cambria Math, Times New Roman, serif" font-style="italic" font-weight="700">W</text>
+
+          <path id="valenceFill" d="" fill="url(#hatch)" opacity="0.9" />
+          <path id="ecPath" d="" fill="none" stroke="#12346b" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+          <path id="eiPath" d="" fill="none" stroke="#0696a6" stroke-width="5" stroke-dasharray="14 12" stroke-linecap="round" />
+          <line id="efLine" x1="245" x2="980" y1="0" y2="0" stroke="#5b2b93" stroke-width="5" stroke-dasharray="16 12" stroke-linecap="round" />
+          <path id="evPath" d="" fill="none" stroke="#12346b" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+
+          <text id="ecLabel" x="995" y="0" fill="#12346b" font-size="34" font-family="Cambria Math, Times New Roman, serif" font-style="italic" font-weight="700">E<tspan baseline-shift="sub" font-size="23">C</tspan></text>
+          <text id="eiLabel" x="995" y="0" fill="#0696a6" font-size="34" font-family="Cambria Math, Times New Roman, serif" font-style="italic" font-weight="700">E<tspan baseline-shift="sub" font-size="23">i</tspan></text>
+          <text id="efLabel" x="995" y="0" fill="#5b2b93" font-size="34" font-family="Cambria Math, Times New Roman, serif" font-style="italic" font-weight="700">E<tspan baseline-shift="sub" font-size="23">F</tspan></text>
+          <text id="evLabel" x="995" y="0" fill="#12346b" font-size="34" font-family="Cambria Math, Times New Roman, serif" font-style="italic" font-weight="700">E<tspan baseline-shift="sub" font-size="23">V</tspan></text>
+
+          <line id="egArrow" x1="905" x2="905" y1="0" y2="0" stroke="#d66a00" stroke-width="4" marker-start="url(#arrowOrangeStart)" marker-end="url(#arrowOrange)" />
+          <rect id="egBg" x="872" y="0" width="66" height="40" rx="8" fill="#ffffff" opacity="0.93" />
+          <text id="egText" x="905" y="0" text-anchor="middle" fill="#d66a00" font-size="29" font-family="Cambria Math, Times New Roman, serif" font-style="italic" font-weight="700">E<tspan baseline-shift="sub" font-size="20">g</tspan></text>
+
+          <line id="vbArrow" x1="710" x2="710" y1="0" y2="0" stroke="#d66a00" stroke-width="4" marker-start="url(#arrowOrangeStart)" marker-end="url(#arrowOrange)" />
+          <rect id="vbBg" x="658" y="0" width="104" height="42" rx="8" fill="#ffffff" opacity="0.93" />
+          <text id="vbText" x="710" y="0" text-anchor="middle" fill="#0696a6" font-size="28" font-family="Cambria Math, Times New Roman, serif" font-style="italic" font-weight="700">qV<tspan baseline-shift="sub" font-size="19">B</tspan></text>
+
+          <line id="qpsiTopGuide" x1="125" x2="238" y1="0" y2="0" stroke="#5b2b93" stroke-width="4" stroke-linecap="round" />
+          <line id="qpsiBottomGuide" x1="125" x2="238" y1="0" y2="0" stroke="#5b2b93" stroke-width="4" stroke-linecap="round" />
+          <line id="qpsiArrow" x1="166" x2="166" y1="0" y2="0" stroke="#d66a00" stroke-width="4" marker-start="url(#arrowOrangeStart)" marker-end="url(#arrowOrange)" />
+          <rect id="qpsiBg" x="54" y="0" width="102" height="45" rx="8" fill="#ffffff" opacity="0.94" />
+          <text id="qpsiText" x="105" y="0" text-anchor="middle" fill="#0696a6" font-size="27" font-family="Cambria Math, Times New Roman, serif" font-style="italic" font-weight="700">qψ<tspan baseline-shift="sub" font-size="19">s</tspan></text>
+
+          <circle id="surfacePoint" cx="250" cy="0" r="7" fill="#d66a00" stroke="#ffffff" stroke-width="3" />
+        </svg>
+      </div>
+
+      <div class="aux-head">
+        <div class="aux-title">Surface depletion approximation</div>
+        <div class="segmented" id="viewTabs">
+          <button type="button" data-view="width" class="active">Width</button>
+          <button type="button" data-view="potential">Potential</button>
+          <button type="button" data-view="field">Field</button>
+          <button type="button" data-view="charge">Charge</button>
+        </div>
+      </div>
+      <div class="aux-head" style="padding-top: 6px;">
+        <div class="aux-note" id="auxSubtitle">Depletion width and ψ(x) within the depletion region</div>
+        <div class="aux-note">horizontal axis aligned with the semiconductor region above</div>
+      </div>
+      <svg id="auxSvg" viewBox="0 0 1050 255" role="img" aria-label="Auxiliary electrostatics plot"></svg>
+      <div class="footer-note">
+        Equations follow the one-dimensional depletion approximation for a p-type semiconductor. The bulk potential reference is ψ = 0, and positive ψ<sub>s</sub> corresponds to downward band bending.
+      </div>
+    </section>
+
+    <aside class="card controls">
+      <div>
+        <div class="control-label">
+          <span>Surface potential, ψ<sub>s</sub></span>
+          <span class="value" id="psiValue">0.00 V</span>
+        </div>
+        <input id="psiSlider" type="range" min="0" max="0.60" step="0.01" value="0" aria-label="Surface potential" />
+        <div class="scale"><span>0 V · flat band</span><span>+0.60 V</span></div>
+      </div>
+
+      <div class="buttons">
+        <button class="primary" id="flatButton">Flat band</button>
+        <button class="secondary" id="animateButton">Animate</button>
+      </div>
+
+      <div class="readout">
+        <div class="readout-title" id="stateTitle">Flat band</div>
+        <div class="metric"><span>Band shift at surface</span><strong id="shiftValue">0.00 eV</strong></div>
+        <div class="metric"><span>E<sub>i,s</sub> − E<sub>F</sub></span><strong id="surfaceOffset">+0.28 eV</strong></div>
+        <div class="metric"><span>Regime</span><strong id="regimeValue">Equilibrium</strong></div>
+      </div>
+
+      <div class="readout">
+        <div class="readout-title">Electrostatic quantities</div>
+        <div class="metric"><span>Depletion width, W</span><strong id="wValue">0 nm</strong></div>
+        <div class="metric"><span>Surface field, E(0)</span><strong id="eSurfaceValue">0 V/cm</strong></div>
+        <div class="metric"><span>Charge density, ρ<sub>s</sub></span><strong id="rhoValue">0 C/cm³</strong></div>
+        <div class="metric"><span>Depletion charge, Q<sub>d</sub></span><strong id="qdValue">0 C/cm²</strong></div>
+      </div>
+
+      <div>
+        <div class="control-label" style="font-size:0.98rem;">
+          <span>Equation set</span>
+          <span class="mini-note" id="eqTag">Width</span>
+        </div>
+        <div class="equation" id="equationBox" aria-label="Electrostatic equations">
+          \[
+            W = \sqrt{\frac{2\varepsilon_s\psi_s}{qN_A}}
+          \]
+        </div>
+      </div>
+
+      <p class="explain" id="explanation">
+        At ψ<sub>s</sub> = 0, there is no electrostatic energy shift, so E<sub>C</sub>, E<sub>i</sub>, and E<sub>V</sub> are flat. E<sub>F</sub> remains constant throughout equilibrium.
+      </p>
+
+      <div class="legend">
+        <div class="legend-item"><span class="swatch" style="border-color:#12346b"></span>Band edges</div>
+        <div class="legend-item"><span class="swatch dash" style="border-color:#0696a6"></span>Intrinsic level</div>
+        <div class="legend-item"><span class="swatch dash" style="border-color:#5b2b93"></span>Fermi level</div>
+        <div class="legend-item"><span class="swatch" style="border-color:#d66a00"></span>Energy differences</div>
+      </div>
+    </aside>
+
+    <aside id="aiPanel" class="card ai-panel" aria-label="MOS surface-potential AI Tutor">
+      <div id="aiResizeHandle" class="ai-resize-handle" role="separator" aria-label="Resize AI Tutor column" aria-orientation="vertical" aria-valuemin="320" aria-valuemax="650" aria-valuenow="390" tabindex="0" title="Drag to resize the AI Tutor column. Double-click to reset."></div>
+      <div class="ai-head">
+        <div>
+          <div class="ai-head-title">AI Tutor</div>
+          <div id="chatStatusText" class="ai-head-sub">Ready — configure a provider to begin</div>
+        </div>
+        <div class="ai-head-actions">
+          <button id="clearChatBtn" class="ai-icon-btn" type="button" title="Clear conversation">↺</button>
+          <button id="openChatSettingsBtn" class="ai-icon-btn" type="button" title="AI Tutor settings">⚙</button>
+        </div>
+      </div>
+      <div id="aiStateSummary" class="ai-state"><strong>Attached state:</strong> waiting for the simulator.</div>
+      <div class="ai-chips">
+        <button class="chip prompt-chip" type="button" data-prompt="Explain the current MOS surface-potential state physically. Connect the sign and magnitude of surface potential to band bending, carrier depletion or inversion, depletion width, electric field, and space charge. Use the attached numerical values.">Explain this state</button>
+        <button class="chip prompt-chip" type="button" data-prompt="Derive the equations for the currently selected auxiliary view from one-dimensional Poisson's equation and the depletion approximation. Substitute the attached numerical values and verify units.">Derive selected view</button>
+        <button class="chip prompt-chip" type="button" data-prompt="Compare flat band, depletion, weak inversion, and strong inversion for this p-type MOS structure. State the criteria involving psi_B and 2 psi_B, and identify where the current point lies.">Compare regimes</button>
+        <button class="chip prompt-chip" type="button" data-prompt="Ask me one conceptual prediction question about the current MOS surface-potential state or selected electrostatic plot. Do not answer it until I respond; include a brief grading criterion.">Quiz me</button>
+      </div>
+      <div id="chatMessages" class="chat-messages">
+        <div class="msg assistant">
+          <span class="role">AI Tutor</span>
+          <p>I can explain the current band bending, derive the depletion-approximation equations, connect the four auxiliary plots, or quiz you.</p>
+          <p>Keep <strong>Attach Sim State</strong> checked so each answer uses the current surface potential, regime, depletion width, field, charge, and selected plot.</p>
+        </div>
+      </div>
+      <div class="chat-composer">
+        <textarea id="chatInput" rows="4" placeholder="Ask about the current MOS surface-potential state… (Ctrl+Enter to send)"></textarea>
+        <div class="chat-actions">
+          <label class="attach-label" title="Attach the current surface-potential parameters and calculated values">
+            <input id="attachContextCheck" type="checkbox" checked> 📎 Attach Sim State
+          </label>
+          <button id="chatSendBtn" class="ai-btn send-btn" type="button">Send</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+  <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-card">
+      <h2 id="settingsTitle">AI Tutor Configuration</h2>
+      <p class="modal-note">The API key and tutor preferences are stored only in this browser's local storage. On a shared classroom computer, remove the key after use.</p>
+
+      <label for="chatProvider">Provider</label>
+      <select id="chatProvider">
+        <option value="google">Google AI Studio (Gemini)</option>
+        <option value="lmstudio">LM Studio / OpenAI-compatible local server</option>
+      </select>
+
+      <label for="chatApiKey">API Key</label>
+      <input type="password" id="chatApiKey" placeholder="Paste the provider API key…">
+      <p class="field-hint">LM Studio normally does not require a key, but one may be supplied for another compatible endpoint.</p>
+
+      <div id="lmUrlGroup" class="hidden">
+        <label for="chatLmUrl">Local server base URL</label>
+        <input type="text" id="chatLmUrl" value="http://localhost:1234/v1">
+      </div>
+
+      <label for="chatModel">Model name</label>
+      <input type="text" id="chatModel" value="gemini-2.5-flash">
+
+      <div class="modal-row">
+        <div>
+          <label for="chatTemp">Temperature (<span id="chatTempVal">0.4</span>)</label>
+          <input type="range" id="chatTemp" min="0" max="1.5" step="0.1" value="0.4">
+        </div>
+        <div>
+          <label for="chatMaxTokens">Max response tokens</label>
+          <input type="number" id="chatMaxTokens" min="256" max="16384" step="256" value="8192">
+        </div>
+      </div>
+      <p class="field-hint">Increase the token limit for a full Poisson-equation derivation with numerical substitution.</p>
+
+      <label for="chatDetail">Response detail</label>
+      <select id="chatDetail">
+        <option value="concise">Concise — one key idea and equation</option>
+        <option value="balanced" selected>Balanced — reasoning plus key equations</option>
+        <option value="indepth">In-depth — full derivation with numbers</option>
+      </select>
+
+      <label class="check-line">
+        <input type="checkbox" id="chatFollowUp">
+        <span>End explanations with one Socratic follow-up question</span>
+      </label>
+
+      <label for="chatSysPrompt">System prompt</label>
+      <textarea id="chatSysPrompt" rows="7"></textarea>
+      <button id="useDefaultPromptBtn" class="modal-btn" type="button">Use MOS surface-potential default prompt</button>
+
+      <div class="modal-actions">
+        <button id="cancelSettingsBtn" class="modal-btn" type="button">Cancel</button>
+        <button id="saveSettingsBtn" class="modal-btn primary" type="button">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+  let currentSimState = {};
+
+  const slider = document.getElementById('psiSlider');
+  const psiValue = document.getElementById('psiValue');
+  const statusPill = document.getElementById('statusPill');
+  const flatButton = document.getElementById('flatButton');
+  const animateButton = document.getElementById('animateButton');
+
+  const ecPath = document.getElementById('ecPath');
+  const eiPath = document.getElementById('eiPath');
+  const evPath = document.getElementById('evPath');
+  const valenceFill = document.getElementById('valenceFill');
+  const efLine = document.getElementById('efLine');
+
+  const ecLabel = document.getElementById('ecLabel');
+  const eiLabel = document.getElementById('eiLabel');
+  const efLabel = document.getElementById('efLabel');
+  const evLabel = document.getElementById('evLabel');
+
+  const egArrow = document.getElementById('egArrow');
+  const egBg = document.getElementById('egBg');
+  const egText = document.getElementById('egText');
+  const vbArrow = document.getElementById('vbArrow');
+  const vbBg = document.getElementById('vbBg');
+  const vbText = document.getElementById('vbText');
+
+  const qpsiTopGuide = document.getElementById('qpsiTopGuide');
+  const qpsiBottomGuide = document.getElementById('qpsiBottomGuide');
+  const qpsiArrow = document.getElementById('qpsiArrow');
+  const qpsiBg = document.getElementById('qpsiBg');
+  const qpsiText = document.getElementById('qpsiText');
+  const surfacePoint = document.getElementById('surfacePoint');
+
+  const depletionRect = document.getElementById('depletionRect');
+  const depletionEdge = document.getElementById('depletionEdge');
+  const widthArrow = document.getElementById('widthArrow');
+  const widthBg = document.getElementById('widthBg');
+  const widthText = document.getElementById('widthText');
+
+  const stateTitle = document.getElementById('stateTitle');
+  const shiftValue = document.getElementById('shiftValue');
+  const surfaceOffset = document.getElementById('surfaceOffset');
+  const regimeValue = document.getElementById('regimeValue');
+  const explanation = document.getElementById('explanation');
+
+  const wValue = document.getElementById('wValue');
+  const eSurfaceValue = document.getElementById('eSurfaceValue');
+  const rhoValue = document.getElementById('rhoValue');
+  const qdValue = document.getElementById('qdValue');
+  const equationBox = document.getElementById('equationBox');
+  const eqTag = document.getElementById('eqTag');
+  const auxSvg = document.getElementById('auxSvg');
+  const auxSubtitle = document.getElementById('auxSubtitle');
+  const viewTabs = [...document.querySelectorAll('#viewTabs button')];
+
+  const x0 = 250;
+  const x1 = 980;
+  const plotTop = 90;
+  const plotBottom = 535;
+  const eMin = -0.24;
+  const eMax = 1.78;
+  const decayLengthPx = 130;
+
+  const EC_BULK = 1.56;
+  const EI_BULK = 1.01;
+  const EV_BULK = 0.46;
+  const EF = 0.73;
+  const PHI_F = EI_BULK - EF; // illustrative bulk Fermi potential, V
+
+  const q = 1.602e-19;
+  const eps0 = 8.854e-14;     // F/cm
+  const epsSi = 11.7 * eps0;  // F/cm
+  const Vt = 0.02585;         // V at 300 K
+  const ni = 1e10;            // cm^-3
+  const NA = ni * Math.exp(PHI_F / Vt); // chosen to match PHI_F approximately
+  const psiMax = Number(slider.max);
+  const WMAX = Math.sqrt(2 * epsSi * psiMax / (q * NA));
+  const AUX_XMAX = WMAX * 1.12;
+
+  let animationFrame = null;
+  let animationStart = 0;
+  let animating = false;
+  let currentView = 'width';
+
+  const yFromEnergy = (energy) =>
+    plotBottom - ((energy - eMin) / (eMax - eMin)) * (plotBottom - plotTop);
+
+  function bandEnergy(eBulk, psi, xPx) {
+    return eBulk - psi * Math.exp(-(xPx - x0) / decayLengthPx);
+  }
+
+  function buildPath(eBulk, psi) {
+    const points = [];
+    const samples = 90;
+    for (let i = 0; i <= samples; i++) {
+      const x = x0 + (x1 - x0) * (i / samples);
+      const e = bandEnergy(eBulk, psi, x);
+      const y = yFromEnergy(e);
+      points.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+    return points.join(' ');
+  }
+
+  function buildValenceFill(psi) {
+    const topPath = buildPath(EV_BULK, psi);
+    return `${topPath} L ${x1} ${plotBottom + 30} L ${x0} ${plotBottom + 30} Z`;
+  }
+
+  function setY(element, y) {
+    element.setAttribute('y', y.toFixed(1));
+  }
+
+  function setLineY(line, y1, y2 = y1) {
+    line.setAttribute('y1', y1.toFixed(1));
+    line.setAttribute('y2', y2.toFixed(1));
+  }
+
+  function setArrowAndLabel(line, bg, text, yTop, yBottom, bgHeight = 40) {
+    setLineY(line, yTop, yBottom);
+    const mid = (yTop + yBottom) / 2;
+    bg.setAttribute('y', (mid - bgHeight / 2).toFixed(1));
+    setY(text, mid + 9);
+  }
+
+  function fmtEng(value, unit, digits = 2) {
+    if (!isFinite(value) || Math.abs(value) < 1e-30) return `0 ${unit}`;
+    const exp = Math.floor(Math.log10(Math.abs(value)) / 3) * 3;
+    const prefixes = {
+      '-12': 'p', '-9': 'n', '-6': 'µ', '-3': 'm', '0': '', '3': 'k', '6': 'M', '9': 'G'
+    };
+    const chosenExp = Object.prototype.hasOwnProperty.call(prefixes, exp) ? exp : 0;
+    const scaled = value / Math.pow(10, chosenExp);
+    return `${scaled.toFixed(digits)} ${prefixes[chosenExp]}${unit}`;
+  }
+
+  function electrostatics(psi) {
+    if (psi <= 0) {
+      return {
+        W: 0,
+        Es: 0,
+        rho: 0,
+        Qd: 0,
+        psiInv: 2 * PHI_F,
+        Wm: Math.sqrt(4 * epsSi * PHI_F / (q * NA))
+      };
+    }
+    const W = Math.sqrt(2 * epsSi * psi / (q * NA));
+    const Es = 2 * psi / W;
+    const rho = -q * NA;
+    const Qd = -q * NA * W;
+    return {
+      W,
+      Es,
+      rho,
+      Qd,
+      psiInv: 2 * PHI_F,
+      Wm: Math.sqrt(4 * epsSi * PHI_F / (q * NA))
+    };
+  }
+
+  function updateMainBand(psi, elec) {
+    const yEc = yFromEnergy(EC_BULK);
+    const yEi = yFromEnergy(EI_BULK);
+    const yEv = yFromEnergy(EV_BULK);
+    const yEf = yFromEnergy(EF);
+    const yEiSurface = yFromEnergy(EI_BULK - psi);
+
+    ecPath.setAttribute('d', buildPath(EC_BULK, psi));
+    eiPath.setAttribute('d', buildPath(EI_BULK, psi));
+    evPath.setAttribute('d', buildPath(EV_BULK, psi));
+    valenceFill.setAttribute('d', buildValenceFill(psi));
+
+    setLineY(efLine, yEf);
+    setY(ecLabel, yEc + 12);
+    setY(eiLabel, yEi + 12);
+    setY(efLabel, yEf + 12);
+    setY(evLabel, yEv + 12);
+
+    setArrowAndLabel(egArrow, egBg, egText, yEc + 8, yEv - 8, 40);
+    setArrowAndLabel(vbArrow, vbBg, vbText, yEi + 6, yEf - 6, 42);
+
+    setLineY(qpsiTopGuide, yEi);
+    setLineY(qpsiBottomGuide, yEiSurface);
+    setArrowAndLabel(qpsiArrow, qpsiBg, qpsiText, yEi, yEiSurface, 45);
+
+    const arrowVisible = psi > 0.015;
+    qpsiArrow.style.opacity = arrowVisible ? '1' : '0.22';
+    qpsiBottomGuide.style.opacity = arrowVisible ? '1' : '0.42';
+    qpsiText.textContent = arrowVisible ? 'qψₛ' : 'qψₛ = 0';
+    qpsiBg.setAttribute('width', arrowVisible ? '102' : '126');
+    qpsiBg.setAttribute('x', arrowVisible ? '54' : '42');
+
+    surfacePoint.setAttribute('cy', yEiSurface.toFixed(1));
+
+    const wVisible = elec.W > 0;
+    const wPx = x0 + ((Math.max(0, Math.min(AUX_XMAX, elec.W)) / AUX_XMAX) * (x1 - x0));
+    depletionRect.setAttribute('width', Math.max(0, wPx - x0).toFixed(1));
+    depletionEdge.setAttribute('x1', wPx.toFixed(1));
+    depletionEdge.setAttribute('x2', wPx.toFixed(1));
+    depletionRect.style.opacity = wVisible ? '0.12' : '0';
+    depletionEdge.style.opacity = wVisible ? '0.95' : '0';
+    widthArrow.setAttribute('x1', (x0 + 12).toFixed(1));
+    widthArrow.setAttribute('x2', (wPx - 12).toFixed(1));
+    widthArrow.style.opacity = wVisible ? '0.95' : '0';
+    const midX = (x0 + wPx) / 2;
+    widthBg.setAttribute('x', (midX - 55).toFixed(1));
+    widthBg.style.opacity = wVisible ? '0.96' : '0';
+    widthText.setAttribute('x', midX.toFixed(1));
+    widthText.textContent = wVisible ? 'W' : '';
+  }
+
+  function axisPath(left, right, bottom, top) {
+    return `M ${left} ${top} L ${left} ${bottom} L ${right} ${bottom}`;
+  }
+
+  function renderAuxPlot(psi, elec) {
+    const left = x0;
+    const right = x1;
+    const top = 32;
+    const bottom = 210;
+    const w = right - left;
+    const h = bottom - top;
+    const xMax = Math.max(AUX_XMAX, 1e-4);
+
+    let yMin = 0;
+    let yMax = 1;
+    let label = '';
+    let lineColor = '#12346b';
+    let zeroLineNeeded = false;
+
+    if (currentView === 'width') {
+      yMin = 0;
+      yMax = Math.max(psiMax, 0.62);
+      label = 'ψ(x) [V]';
+      lineColor = '#12346b';
+    } else if (currentView === 'potential') {
+      yMin = 0;
+      yMax = Math.max(psiMax, 0.62);
+      label = 'ψ(x) [V]';
+      lineColor = '#0696a6';
+    } else if (currentView === 'field') {
+      yMin = 0;
+      yMax = Math.max(electrostatics(psiMax).Es * 1.05, 1);
+      label = 'E(x) [V/cm]';
+      lineColor = '#d66a00';
+    } else {
+      yMin = 1.15 * (-q * NA);
+      yMax = 0.15 * Math.abs(q * NA);
+      label = 'ρₛ(x) [C/cm³]';
+      lineColor = '#5b2b93';
+      zeroLineNeeded = true;
+    }
+
+    const mapX = x => left + (x / xMax) * w;
+    const mapY = y => bottom - ((y - yMin) / (yMax - yMin)) * h;
+
+    const ticksX = [0, 0.25, 0.5, 0.75, 1].map(t => t * xMax);
+    const ticksY = [0, 0.25, 0.5, 0.75, 1].map(t => yMin + t * (yMax - yMin));
+
+    let path = '';
+    let extra = '';
+    const samples = 180;
+
+    if (currentView === 'width' || currentView === 'potential') {
+      for (let i = 0; i <= samples; i++) {
+        const x = xMax * i / samples;
+        let y = 0;
+        if (elec.W > 0 && x <= elec.W) {
+          y = psi * Math.pow(1 - x / elec.W, 2);
+        }
+        const px = mapX(x);
+        const py = mapY(y);
+        path += `${i === 0 ? 'M' : 'L'} ${px.toFixed(1)} ${py.toFixed(1)} `;
+      }
+      if (elec.W > 0) {
+        const wPx = mapX(elec.W);
+        extra += `<rect x="${left}" y="${top}" width="${(wPx - left).toFixed(1)}" height="${h}" fill="#d4a107" opacity="0.08"></rect>`;
+        extra += `<line x1="${wPx.toFixed(1)}" y1="${top}" x2="${wPx.toFixed(1)}" y2="${bottom}" stroke="#d4a107" stroke-width="3" stroke-dasharray="10 8"></line>`;
+        extra += `<line x1="${left + 14}" y1="${bottom - 18}" x2="${wPx - 14}" y2="${bottom - 18}" stroke="#d4a107" stroke-width="3.3"></line>`;
+        extra += `<polygon points="${left + 14},${bottom - 18} ${left + 24},${bottom - 24} ${left + 24},${bottom - 12}" fill="#d4a107"></polygon>`;
+        extra += `<polygon points="${wPx - 14},${bottom - 18} ${wPx - 24},${bottom - 24} ${wPx - 24},${bottom - 12}" fill="#d4a107"></polygon>`;
+        extra += `<text x="${((left + wPx) / 2).toFixed(1)}" y="${bottom - 28}" text-anchor="middle" fill="#8b6600" font-size="20" font-weight="700">W</text>`;
+      }
+    } else if (currentView === 'field') {
+      for (let i = 0; i <= samples; i++) {
+        const x = xMax * i / samples;
+        let y = 0;
+        if (elec.W > 0 && x <= elec.W) {
+          y = elec.Es * (1 - x / elec.W);
+        }
+        const px = mapX(x);
+        const py = mapY(y);
+        path += `${i === 0 ? 'M' : 'L'} ${px.toFixed(1)} ${py.toFixed(1)} `;
+      }
+      if (elec.W > 0) {
+        const wPx = mapX(elec.W);
+        extra += `<line x1="${wPx.toFixed(1)}" y1="${top}" x2="${wPx.toFixed(1)}" y2="${bottom}" stroke="#d4a107" stroke-width="3" stroke-dasharray="10 8"></line>`;
+      }
+    } else if (currentView === 'charge') {
+      const yNeg = mapY(-q * NA);
+      const yZero = mapY(0);
+      const wPx = elec.W > 0 ? mapX(elec.W) : left;
+      path = `M ${left} ${yZero.toFixed(1)} L ${left} ${yNeg.toFixed(1)} L ${wPx.toFixed(1)} ${yNeg.toFixed(1)} L ${wPx.toFixed(1)} ${yZero.toFixed(1)} L ${right} ${yZero.toFixed(1)}`;
+      extra += `<rect x="${left}" y="${Math.min(yNeg,yZero).toFixed(1)}" width="${Math.max(0, wPx - left).toFixed(1)}" height="${Math.abs(yZero - yNeg).toFixed(1)}" fill="#5b2b93" opacity="0.14"></rect>`;
+      if (elec.W > 0) {
+        extra += `<line x1="${wPx.toFixed(1)}" y1="${top}" x2="${wPx.toFixed(1)}" y2="${bottom}" stroke="#d4a107" stroke-width="3" stroke-dasharray="10 8"></line>`;
+      }
+    }
+
+    const axis = axisPath(left, right, bottom, top);
+    let grid = '';
+    ticksX.forEach(x => {
+      const px = mapX(x);
+      grid += `<line x1="${px.toFixed(1)}" y1="${top}" x2="${px.toFixed(1)}" y2="${bottom}" stroke="#e6edf5" stroke-width="1"></line>`;
+    });
+    ticksY.forEach(y => {
+      const py = mapY(y);
+      grid += `<line x1="${left}" y1="${py.toFixed(1)}" x2="${right}" y2="${py.toFixed(1)}" stroke="#edf2f8" stroke-width="1"></line>`;
+    });
+
+    let tickLabels = '';
+    ticksX.forEach(x => {
+      const px = mapX(x);
+      tickLabels += `<line x1="${px.toFixed(1)}" y1="${bottom}" x2="${px.toFixed(1)}" y2="${bottom + 6}" stroke="#516277" stroke-width="1.5"></line>`;
+      tickLabels += `<text x="${px.toFixed(1)}" y="${bottom + 22}" text-anchor="middle" fill="#516277" font-size="14">${(x * 1e7).toFixed(0)} nm</text>`;
+    });
+    ticksY.forEach(y => {
+      const py = mapY(y);
+      tickLabels += `<line x1="${left - 6}" y1="${py.toFixed(1)}" x2="${left}" y2="${py.toFixed(1)}" stroke="#516277" stroke-width="1.5"></line>`;
+      let text = '';
+      if (currentView === 'field') {
+        text = `${(y / 1000).toFixed(1)}k`;
+      } else if (currentView === 'charge') {
+        text = `${(y / 1e-4).toFixed(2)}×10⁻⁴`;
+      } else {
+        text = `${y.toFixed(2)}`;
+      }
+      tickLabels += `<text x="${left - 12}" y="${(py + 5).toFixed(1)}" text-anchor="end" fill="#516277" font-size="14">${text}</text>`;
+    });
+
+    const zeroLine = zeroLineNeeded ? `<line x1="${left}" y1="${mapY(0).toFixed(1)}" x2="${right}" y2="${mapY(0).toFixed(1)}" stroke="#9aa8bb" stroke-width="2" stroke-dasharray="6 5"></line>` : '';
+
+    let surfaceY = 0;
+    let edgeY = 0;
+    if (currentView === 'width' || currentView === 'potential') {
+      surfaceY = mapY(psi);
+      edgeY = mapY(0);
+    } else if (currentView === 'field') {
+      surfaceY = mapY(elec.Es);
+      edgeY = mapY(0);
+    } else {
+      surfaceY = mapY(psi > 0 ? -q * NA : 0);
+      edgeY = mapY(psi > 0 ? -q * NA : 0);
+    }
+    const edgeX = elec.W > 0 ? mapX(elec.W) : left;
+    const markers = `
+      <circle cx="${left}" cy="${surfaceY.toFixed(1)}" r="5.5" fill="#d66a00" stroke="#ffffff" stroke-width="2"></circle>
+      ${elec.W > 0 ? `<circle cx="${edgeX.toFixed(1)}" cy="${edgeY.toFixed(1)}" r="5" fill="#d4a107" stroke="#ffffff" stroke-width="2"></circle>` : ''}
+    `;
+
+    auxSvg.innerHTML = `
+      <rect x="0" y="0" width="1050" height="255" fill="#ffffff"></rect>
+      <rect x="0" y="0" width="${left}" height="255" fill="#fbf9fe"></rect>
+      ${grid}
+      ${zeroLine}
+      ${extra}
+      <line x1="${left}" y1="${top}" x2="${left}" y2="${bottom}" stroke="#12346b" stroke-width="3.4"></line>
+      <path d="${axis}" fill="none" stroke="#334155" stroke-width="2.4"></path>
+      <path d="${path}" fill="none" stroke="${lineColor}" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"></path>
+      ${markers}
+      ${tickLabels}
+      <text x="${(left + right) / 2}" y="246" text-anchor="middle" fill="#102848" font-size="18" font-weight="700">Depth into semiconductor, x</text>
+      <text x="24" y="18" fill="#102848" font-size="18" font-weight="700">${label}</text>
+      <text x="${left}" y="18" text-anchor="middle" fill="#5b2b93" font-size="15" font-weight="700">surface</text>
+    `;
+  }
+
+  function setEquation(view, elec) {
+    let latex = '';
+    let tag = '';
+    let subtitle = '';
+
+    if (view === 'width') {
+      tag = 'Width';
+      subtitle = 'Depletion width and ψ(x) within the depletion region';
+      latex = String.raw`\[
+W = \sqrt{\frac{2\varepsilon_s\psi_s}{qN_A}}
+\]
+\[
+W_m = \sqrt{\frac{2\varepsilon_s\,\psi_s(\mathrm{inv})}{qN_A}}\approx\sqrt{\frac{4\varepsilon_s\psi_B}{qN_A}}
+\]`;
+    } else if (view === 'potential') {
+      tag = 'Potential';
+      subtitle = 'Electrostatic potential inside the surface depletion region';
+      latex = String.raw`\[
+\frac{d^2\psi}{dx^2}=-\frac{\rho_s(x)}{\varepsilon_s}
+\]
+\[
+\psi(x)=\psi_s\left(1-\frac{x}{W}\right)^2,\quad 0\le x\le W
+\]`;
+    } else if (view === 'field') {
+      tag = 'Field';
+      subtitle = 'Electric-field profile under the depletion approximation';
+      latex = String.raw`\[
+E(x)=-\frac{d\psi}{dx}=\frac{2\psi_s}{W}\left(1-\frac{x}{W}\right)
+\]
+\[
+E(x)=\frac{qN_A}{\varepsilon_s}(W-x),\quad 0\le x\le W
+\]
+\[
+E(0)=\frac{2\psi_s}{W}=\sqrt{\frac{2qN_A\psi_s}{\varepsilon_s}}
+\]`;
+    } else {
+      tag = 'Charge';
+      subtitle = 'Space-charge density and total depletion charge';
+      latex = String.raw`\[
+\rho_s(x)=\begin{cases}
+-qN_A, & 0\le x\le W\\[4pt]
+0, & x>W
+\end{cases}
+\]
+\[
+Q_d=\int_0^W \rho_s(x)\,dx=-qN_AW=-\sqrt{2q\varepsilon_s N_A \psi_s}
+\]`;
+    }
+
+    eqTag.textContent = tag;
+    auxSubtitle.textContent = subtitle;
+    equationBox.innerHTML = latex;
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      MathJax.typesetPromise([equationBox]).catch(() => {});
+    }
+  }
+
+  function update() {
+    const psi = Number(slider.value);
+    const yEiSurfaceOffset = PHI_F - psi;
+    const elec = electrostatics(psi);
+
+    updateMainBand(psi, elec);
+    renderAuxPlot(psi, elec);
+    setEquation(currentView, elec);
+
+    psiValue.textContent = `${psi.toFixed(2)} V`;
+    shiftValue.textContent = `${psi.toFixed(2)} eV`;
+    surfaceOffset.textContent = `${yEiSurfaceOffset >= 0 ? '+' : '−'}${Math.abs(yEiSurfaceOffset).toFixed(2)} eV`;
+
+    wValue.textContent = elec.W > 0 ? `${(elec.W * 1e7).toFixed(1)} nm` : '0 nm';
+    eSurfaceValue.textContent = elec.Es > 0 ? `${fmtEng(elec.Es, 'V/cm', 2)}` : '0 V/cm';
+    rhoValue.textContent = psi > 0 ? `${(elec.rho / 1e-4).toFixed(3)}×10⁻⁴ C/cm³` : '0 C/cm³';
+    qdValue.textContent = elec.Qd !== 0 ? `${fmtEng(elec.Qd, 'C/cm²', 3)}` : '0 C/cm²';
+
+    let title;
+    let regime;
+    let pill;
+    let text;
+
+    if (psi < 0.005) {
+      title = 'Flat band';
+      regime = 'Equilibrium';
+      pill = 'Flat-band condition';
+      text = 'At ψₛ = 0, there is no electrostatic energy shift, so E_C, E_i, and E_V are flat. The depletion width collapses to zero, and the depletion-approximation electrostatic profiles vanish.';
+    } else if (psi < PHI_F - 0.01) {
+      title = 'Downward band bending';
+      regime = 'Depletion';
+      pill = 'Positive surface potential';
+      text = 'A positive ψₛ lowers the electron-energy bands near the surface by qψₛ. For this p-type example, holes are depleted from the surface region, producing a depletion width W, a linearly varying electric field E(x), and a nearly uniform space charge ρₛ(x) = −qN_A.';
+    } else if (psi < 2 * PHI_F - 0.01) {
+      title = 'Intrinsic crossing';
+      regime = 'Weak inversion';
+      pill = 'Eᵢ at surface approaches E_F';
+      text = 'When ψₛ exceeds the bulk Fermi potential ψ_B, the surface intrinsic level moves below E_F and the surface begins to invert from p-type toward n-type. The depletion approximation still gives the first-order width, field, and charge profiles shown below.';
+    } else {
+      title = 'Strong band bending';
+      regime = 'Strong inversion';
+      pill = 'Strong-inversion range';
+      text = `At approximately ψₛ ≥ 2ψ_B ≈ ${(2 * PHI_F).toFixed(2)} V, the surface enters the strong-inversion range for this illustrative p-type MOS structure. The maximum depletion width predicted from the depletion approximation is W_m ≈ ${(elec.Wm * 1e7).toFixed(1)} nm.`;
+    }
+
+    stateTitle.textContent = title;
+    regimeValue.textContent = regime;
+    statusPill.textContent = pill;
+    explanation.innerHTML = text
+      .replaceAll('ψₛ', 'ψ<sub>s</sub>')
+      .replaceAll('ψ_B', 'ψ<sub>B</sub>')
+      .replaceAll('E_C', 'E<sub>C</sub>')
+      .replaceAll('E_i', 'E<sub>i</sub>')
+      .replaceAll('E_F', 'E<sub>F</sub>')
+      .replaceAll('E_V', 'E<sub>V</sub>')
+      .replaceAll('ρₛ', 'ρ<sub>s</sub>')
+      .replaceAll('qN_A', 'qN<sub>A</sub>')
+      .replaceAll('W_m', 'W<sub>m</sub>')
+      .replaceAll('W', '<em>W</em>');
+
+    currentSimState = {
+      psi, phiB: PHI_F, psiInv: elec.psiInv, regime, title, pill,
+      view: currentView, viewLabel: eqTag.textContent || currentView,
+      surfaceBandShift: psi, surfaceIntrinsicOffset: yEiSurfaceOffset,
+      W: elec.W, Wnm: elec.W * 1e7, Wm: elec.Wm, WmNm: elec.Wm * 1e7,
+      Es: elec.Es, rho: elec.rho, Qd: elec.Qd,
+      NA, epsSi, q, Vt, ni,
+      EC_BULK, EI_BULK, EV_BULK, EF,
+      modelNote: 'One-dimensional p-type MOS depletion-approximation teaching model; no self-consistent oxide voltage or mobile inversion-charge solution.'
+    };
+    updateAiStateSummary();
+  }
+
+  function stopAnimation() {
+    if (animationFrame) cancelAnimationFrame(animationFrame);
+    animationFrame = null;
+    animating = false;
+    animateButton.textContent = 'Animate';
+  }
+
+  function animationStep(timestamp) {
+    if (!animating) return;
+    if (!animationStart) animationStart = timestamp;
+    const period = 5200;
+    const phase = ((timestamp - animationStart) % period) / period;
+    const smooth = 0.5 - 0.5 * Math.cos(2 * Math.PI * phase);
+    slider.value = (psiMax * smooth).toFixed(2);
+    update();
+    animationFrame = requestAnimationFrame(animationStep);
+  }
+
+  slider.addEventListener('input', () => {
+    stopAnimation();
+    update();
+  });
+
+  flatButton.addEventListener('click', () => {
+    stopAnimation();
+    slider.value = '0';
+    update();
+  });
+
+  animateButton.addEventListener('click', () => {
+    if (animating) {
+      stopAnimation();
+      return;
+    }
+    animating = true;
+    animationStart = 0;
+    animateButton.textContent = 'Pause';
+    animationFrame = requestAnimationFrame(animationStep);
+  });
+
+  viewTabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      viewTabs.forEach(b => b.classList.toggle('active', b === btn));
+      currentView = btn.dataset.view;
+      update();
+    });
+  });
+
+
+  // =====================================================================
+  // AI tutor, provider configuration, theme, and robust math rendering
+  // =====================================================================
+  const AI_CONFIG_KEY = 'mosSurfacePotentialAiTutorConfig';
+  const THEME_KEY = 'mosSurfacePotentialTheme';
+  const AI_WIDTH_KEY = 'mosSurfacePotentialAiColumnWidth';
+  const PROMPT_VERSION = 1;
+  const DEFAULT_SYSTEM_PROMPT = `You are an undergraduate semiconductor-device tutor embedded in a MOS surface-potential and energy-band simulator for a p-type semiconductor. Explain the sign convention carefully: positive surface potential lowers the electron-energy bands at the surface by q psi_s. Teach flat band, depletion, intrinsic crossing, weak inversion, and strong inversion, including the criteria psi_s = psi_B and psi_s approximately 2 psi_B. Derive the one-dimensional depletion-approximation relations from Poisson's equation: W = sqrt(2 epsilon_s psi_s/(q N_A)), psi(x) = psi_s(1-x/W)^2, E(x) = -d psi/dx, rho_s = -q N_A in the depleted region, and Q_d = -q N_A W. Distinguish electrostatic potential, electron potential energy, electric-field sign conventions, fixed ionized acceptor charge, and mobile inversion charge. Explain that the displayed model is illustrative and does not self-consistently solve oxide voltage, gate work function, interface traps, or inversion-carrier statistics. When simulation context is attached, use the actual psi_s, psi_B, regime, selected auxiliary view, W, E(0), rho_s, Q_d, N_A, and material constants. Correct misconceptions explicitly and show intermediate algebra with units.
+
+Style rules: Answer directly in the first sentence. Do not open with praise, filler, or a restatement of the question. Use short bold run-in headings or at most ### headings. Put inline mathematics only inside \\(...\\) and display mathematics only inside \\[...\\]. Never place LaTeX inside backticks or fenced code blocks, and always close every math delimiter. Include the attached numerical values where relevant.`;
+  const DETAIL_SUFFIX = {
+    concise: '\n\nLength: a few sentences and at most one central equation. State the result and stop.',
+    balanced: '\n\nLength: a few compact paragraphs with the essential physical reasoning and equations.',
+    indepth: '\n\nLength: derive the result step by step, substitute the attached values, verify units, and discuss limiting cases without filler.'
+  };
+  const FOLLOWUP_SUFFIX = {
+    off: '\n\nDo not end with a question or an offer of more help. End on the last substantive point.',
+    on: '\n\nAfter the explanation, end with exactly one Socratic follow-up question and nothing after it.'
+  };
+  const aiState = {
+    chatHistory: [], isChatting: false, lastTruncated: false,
+    provider: 'google', apiKey: '', lmUrl: 'http://localhost:1234/v1',
+    model: 'gemini-2.5-flash', temperature: 0.4, maxTokens: 8192,
+    detail: 'balanced', askFollowUp: false, sysPrompt: DEFAULT_SYSTEM_PROMPT
+  };
+
+  function clampAiWidth(width){
+    const minWidth = 320;
+    const maxWidth = Math.min(650, Math.max(minWidth, window.innerWidth - 1030));
+    return Math.round(Math.min(maxWidth, Math.max(minWidth, Number(width) || 390)));
+  }
+  function applyAiWidth(width, persist=false){
+    const layout = document.querySelector('.layout');
+    const handle = $('aiResizeHandle');
+    if(!layout || !handle) return;
+    const next = clampAiWidth(width);
+    layout.style.setProperty('--ai-column-width', `${next}px`);
+    handle.setAttribute('aria-valuenow', String(next));
+    if(persist){
+      try{ localStorage.setItem(AI_WIDTH_KEY, String(next)); }catch(_){ }
+    }
+  }
+  function bindAiColumnResize(){
+    const handle = $('aiResizeHandle');
+    const panel = $('aiPanel');
+    if(!handle || !panel) return;
+
+    let saved = 390;
+    try{
+      const raw = Number(localStorage.getItem(AI_WIDTH_KEY));
+      if(Number.isFinite(raw) && raw > 0) saved = raw;
+    }catch(_){ }
+    applyAiWidth(saved, false);
+
+    let startX = 0;
+    let startWidth = 390;
+    const onMove = ev => {
+      const next = startWidth - (ev.clientX - startX);
+      applyAiWidth(next, false);
+    };
+    const onEnd = () => {
+      document.body.classList.remove('resizing-ai');
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onEnd);
+      window.removeEventListener('pointercancel', onEnd);
+      applyAiWidth(panel.getBoundingClientRect().width, true);
+    };
+
+    handle.addEventListener('pointerdown', ev => {
+      if(window.innerWidth <= 1500) return;
+      ev.preventDefault();
+      startX = ev.clientX;
+      startWidth = panel.getBoundingClientRect().width;
+      document.body.classList.add('resizing-ai');
+      try{ handle.setPointerCapture(ev.pointerId); }catch(_){ }
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onEnd);
+      window.addEventListener('pointercancel', onEnd);
+    });
+
+    handle.addEventListener('keydown', ev => {
+      if(window.innerWidth <= 1500) return;
+      const current = panel.getBoundingClientRect().width;
+      let next = current;
+      if(ev.key === 'ArrowLeft') next = current + (ev.shiftKey ? 50 : 20);
+      else if(ev.key === 'ArrowRight') next = current - (ev.shiftKey ? 50 : 20);
+      else if(ev.key === 'Home') next = 320;
+      else if(ev.key === 'End') next = 650;
+      else return;
+      ev.preventDefault();
+      applyAiWidth(next, true);
+    });
+
+    handle.addEventListener('dblclick', () => applyAiWidth(390, true));
+    window.addEventListener('resize', () => applyAiWidth(panel.getBoundingClientRect().width, false));
+  }
+
+  function currentTheme(){ return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'; }
+  function syncThemeButton(){
+    const btn = $('themeToggle');
+    if(!btn) return;
+    const dark = currentTheme() === 'dark';
+    btn.textContent = dark ? '☀ Bright' : '🌙 Dark';
+    btn.title = dark ? 'Switch to bright mode' : 'Switch to dark mode';
+    btn.setAttribute('aria-pressed', String(dark));
+  }
+  function applyTheme(theme, announce=false){
+    const next = theme === 'dark' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    document.documentElement.style.colorScheme = next;
+    try{ localStorage.setItem(THEME_KEY,next); }catch(_){ }
+    syncThemeButton();
+    update();
+    if(announce) showToast(next === 'dark' ? 'Dark mode enabled.' : 'Bright mode enabled.');
+  }
+
+  function updateAiStateSummary(){
+    const box = $('aiStateSummary');
+    const s = currentSimState;
+    if(!box || !s || !s.regime) return;
+    const wText = s.W > 0 ? `${s.Wnm.toFixed(1)} nm` : '0 nm';
+    const fieldText = s.Es > 0 ? fmtEng(s.Es,'V/cm',2) : '0 V/cm';
+    box.innerHTML = `<strong>${escapeHtml(s.regime)} · ${escapeHtml(s.viewLabel)}</strong><br>`+
+      `ψ<sub>s</sub> = ${s.psi.toFixed(2)} V, W = ${wText}, E(0) = ${fieldText}, `+
+      `Q<sub>d</sub> = ${s.Qd === 0 ? '0' : escapeHtml(fmtEng(s.Qd,'C/cm²',3))}`;
+  }
+
+  function simulationContext(){
+    const s = currentSimState;
+    if(!s || !s.regime) return 'The simulator has not completed its first update.';
+    const relation = s.psi < 0.005
+      ? 'Flat band: the semiconductor bands are spatially flat and the depletion charge vanishes.'
+      : s.psi < s.phiB
+        ? 'Depletion: holes are repelled from the p-type surface, leaving fixed negatively charged acceptor ions.'
+        : s.psi < 2*s.phiB
+          ? 'Weak inversion: the surface intrinsic level has crossed the Fermi level, but strong inversion has not yet been reached.'
+          : 'Strong-inversion range: mobile electron inversion charge becomes important; the displayed electrostatic profiles still use the depletion approximation.';
+    return [
+      'Simulator: MOS Surface-Potential Band Diagram Simulator',
+      'Semiconductor: p-type silicon, one-dimensional depletion-approximation teaching model',
+      `Surface potential psi_s: ${s.psi.toFixed(4)} V`,
+      `Bulk Fermi potential psi_B: ${s.phiB.toFixed(4)} V`,
+      `Strong-inversion reference 2 psi_B: ${(2*s.phiB).toFixed(4)} V`,
+      `Current regime: ${s.regime}`,
+      `State label: ${s.title}`,
+      `Selected auxiliary view: ${s.viewLabel}`,
+      `Surface band-energy shift magnitude q psi_s: ${s.surfaceBandShift.toFixed(4)} eV for an electron`,
+      `Surface intrinsic-level offset Ei,s - EF: ${s.surfaceIntrinsicOffset.toFixed(4)} eV`,
+      `Depletion width W: ${s.W.toExponential(5)} cm = ${s.Wnm.toFixed(3)} nm`,
+      `Maximum depletion width reference Wm: ${s.Wm.toExponential(5)} cm = ${s.WmNm.toFixed(3)} nm`,
+      `Surface electric field E(0): ${s.Es.toExponential(5)} V/cm`,
+      `Space-charge density rho_s: ${s.rho.toExponential(5)} C/cm^3`,
+      `Total depletion charge Qd: ${s.Qd.toExponential(5)} C/cm^2`,
+      `Acceptor density NA: ${s.NA.toExponential(5)} cm^-3`,
+      `Silicon permittivity epsilon_s: ${s.epsSi.toExponential(5)} F/cm`,
+      `Thermal voltage: ${s.Vt.toFixed(5)} V at the assumed temperature`,
+      `Physical interpretation: ${relation}`,
+      `Model limitation: ${s.modelNote}`
+    ].join('\n');
+  }
+
+  function effectiveSystemPrompt(){
+    return (aiState.sysPrompt || DEFAULT_SYSTEM_PROMPT) +
+      (DETAIL_SUFFIX[aiState.detail] || DETAIL_SUFFIX.balanced) +
+      (aiState.askFollowUp ? FOLLOWUP_SUFFIX.on : FOLLOWUP_SUFFIX.off);
+  }
+
+  function loadAiSettings(){
+    try{
+      const saved = JSON.parse(localStorage.getItem(AI_CONFIG_KEY) || '{}');
+      aiState.provider = saved.provider || 'google';
+      aiState.apiKey = saved.apiKey || '';
+      aiState.lmUrl = saved.lmUrl || 'http://localhost:1234/v1';
+      aiState.model = saved.model || 'gemini-2.5-flash';
+      aiState.temperature = saved.temperature !== undefined ? Number(saved.temperature) : 0.4;
+      aiState.maxTokens = Number.isFinite(saved.maxTokens) ? saved.maxTokens : 8192;
+      aiState.detail = saved.detail || 'balanced';
+      aiState.askFollowUp = saved.askFollowUp === true;
+      aiState.sysPrompt = typeof saved.sysPrompt === 'string' && saved.sysPrompt.trim() ? saved.sysPrompt : DEFAULT_SYSTEM_PROMPT;
+    }catch(_){ aiState.sysPrompt = DEFAULT_SYSTEM_PROMPT; }
+    $('chatStatusText').textContent = aiState.apiKey || aiState.provider === 'lmstudio'
+      ? `Ready · ${aiState.model}` : 'Ready — configure a provider to begin';
+  }
+
+  function openAiSettings(){
+    $('chatProvider').value = aiState.provider;
+    $('chatApiKey').value = aiState.apiKey;
+    $('chatLmUrl').value = aiState.lmUrl;
+    $('chatModel').value = aiState.model;
+    $('chatTemp').value = aiState.temperature;
+    $('chatTempVal').textContent = Number(aiState.temperature).toFixed(1);
+    $('chatMaxTokens').value = aiState.maxTokens;
+    $('chatDetail').value = aiState.detail;
+    $('chatFollowUp').checked = aiState.askFollowUp;
+    $('chatSysPrompt').value = aiState.sysPrompt;
+    $('lmUrlGroup').classList.toggle('hidden', aiState.provider !== 'lmstudio');
+    $('settingsModal').classList.remove('hidden');
+  }
+  function closeAiSettings(){ $('settingsModal').classList.add('hidden'); }
+  function saveAiSettings(){
+    aiState.provider = $('chatProvider').value;
+    aiState.apiKey = $('chatApiKey').value.trim();
+    aiState.lmUrl = $('chatLmUrl').value.trim() || 'http://localhost:1234/v1';
+    aiState.model = $('chatModel').value.trim() || (aiState.provider === 'google' ? 'gemini-2.5-flash' : 'local-model');
+    aiState.temperature = Number($('chatTemp').value);
+    aiState.maxTokens = Math.min(16384,Math.max(256,Math.round(Number($('chatMaxTokens').value)||8192)));
+    aiState.detail = $('chatDetail').value;
+    aiState.askFollowUp = $('chatFollowUp').checked;
+    aiState.sysPrompt = $('chatSysPrompt').value.trim() || DEFAULT_SYSTEM_PROMPT;
+    try{
+      localStorage.setItem(AI_CONFIG_KEY,JSON.stringify({
+        provider:aiState.provider,apiKey:aiState.apiKey,lmUrl:aiState.lmUrl,model:aiState.model,
+        temperature:aiState.temperature,maxTokens:aiState.maxTokens,detail:aiState.detail,
+        askFollowUp:aiState.askFollowUp,sysPrompt:aiState.sysPrompt,promptVersion:PROMPT_VERSION
+      }));
+    }catch(_){ }
+    $('chatStatusText').textContent = `Ready · ${aiState.model}`;
+    closeAiSettings();
+    showToast('AI Tutor configuration saved.');
+  }
+
+  function clearConversation(){
+    aiState.chatHistory = [];
+    $('chatMessages').innerHTML = `<div class="msg assistant"><span class="role">AI Tutor</span><p>Conversation cleared. The current simulator state can still be attached to the next question.</p></div>`;
+    typesetMath($('chatMessages'));
+    $('chatStatusText').textContent = aiState.apiKey || aiState.provider === 'lmstudio'
+      ? `Ready · ${aiState.model}` : 'Ready — configure a provider to begin';
+  }
+
+  async function handleChatSend(){
+    if(aiState.isChatting) return;
+    const rawText = $('chatInput').value.trim();
+    if(!rawText) return;
+    if(aiState.provider === 'google' && !aiState.apiKey){
+      showToast('Open AI settings and enter a Google AI Studio API key.');
+      openAiSettings();
+      return;
+    }
+    let requestText = rawText;
+    if($('attachContextCheck').checked){
+      requestText = `[Simulation Context]\n${simulationContext()}\n\n[Student Question]\n${rawText}`;
+    }
+    $('chatInput').value = '';
+    appendChatMessage('user',rawText);
+    aiState.chatHistory.push({role:'user',content:requestText});
+    aiState.isChatting = true;
+    aiState.lastTruncated = false;
+    $('chatStatusText').textContent = 'AI is thinking…';
+    $('chatSendBtn').disabled = true;
+    const loading = document.createElement('div');
+    loading.className = 'msg assistant';
+    loading.innerHTML = '<span class="role">AI Tutor</span><div class="thinking-wrapper"><div class="dot-flashing"></div></div>';
+    $('chatMessages').appendChild(loading);
+    $('chatMessages').scrollTop = $('chatMessages').scrollHeight;
+    try{
+      const response = aiState.provider === 'google' ? await fetchGoogleAi() : await fetchLocalAi();
+      loading.remove();
+      appendChatMessage('assistant',response);
+      aiState.chatHistory.push({role:'model',content:response});
+      $('chatStatusText').textContent = aiState.lastTruncated ? 'Ready — last answer reached token limit' : `Ready · ${aiState.model}`;
+      if(aiState.lastTruncated) showToast(`Answer reached the ${aiState.maxTokens}-token limit. Increase Max response tokens for the full derivation.`);
+    }catch(err){
+      loading.remove();
+      aiState.chatHistory.pop();
+      appendChatMessage('error',String(err && err.message ? err.message : err));
+      $('chatStatusText').textContent = 'AI request error';
+    }finally{
+      aiState.isChatting = false;
+      $('chatSendBtn').disabled = false;
+    }
+  }
+
+  async function fetchGoogleAi(){
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(aiState.model)}:generateContent`;
+    const contents = aiState.chatHistory.map(m=>({role:m.role === 'model' ? 'model' : 'user',parts:[{text:m.content}]}));
+    const res = await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-goog-api-key':aiState.apiKey},
+      body:JSON.stringify({
+        contents,
+        generationConfig:{temperature:aiState.temperature,maxOutputTokens:aiState.maxTokens},
+        systemInstruction:{parts:[{text:effectiveSystemPrompt()}]}
+      })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+    const candidate = data?.candidates?.[0];
+    const answer = candidate?.content?.parts?.map(p=>p.text || '').join('') || '';
+    const finish = candidate?.finishReason;
+    if(!answer){
+      if(finish === 'MAX_TOKENS') throw new Error(`The model used the ${aiState.maxTokens}-token budget before producing visible text. Increase Max response tokens.`);
+      throw new Error(`The model returned no text (${finish || data?.promptFeedback?.blockReason || 'empty response'}).`);
+    }
+    if(finish === 'MAX_TOKENS') aiState.lastTruncated = true;
+    return answer;
+  }
+
+  async function fetchLocalAi(){
+    const url = `${aiState.lmUrl.replace(/\/$/,'')}/chat/completions`;
+    const messages = [{role:'system',content:effectiveSystemPrompt()}];
+    aiState.chatHistory.forEach(m=>messages.push({role:m.role === 'model' ? 'assistant' : 'user',content:m.content}));
+    const headers = {'Content-Type':'application/json'};
+    if(aiState.apiKey) headers.Authorization = `Bearer ${aiState.apiKey}`;
+    const res = await fetch(url,{
+      method:'POST',headers,
+      body:JSON.stringify({model:aiState.model,messages,temperature:aiState.temperature,max_tokens:aiState.maxTokens})
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+    const choice = data?.choices?.[0];
+    const answer = choice?.message?.content || '';
+    if(!answer) throw new Error('The local model returned no text. Verify the server URL and loaded model.');
+    if(choice?.finish_reason === 'length') aiState.lastTruncated = true;
+    return answer;
+  }
+
+  function appendChatMessage(role,text){
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    const roleLabel = role === 'user' ? 'You' : role === 'assistant' ? 'AI Tutor' : 'Error';
+    const content = role === 'error' ? `<p>${escapeHtml(text)}</p>` : renderMarkdown(text);
+    div.innerHTML = `<span class="role">${roleLabel}</span>${content}`;
+    $('chatMessages').appendChild(div);
+    $('chatMessages').scrollTop = $('chatMessages').scrollHeight;
+    if(role !== 'error') typesetMath(div);
+  }
+  function escapeHtml(value){ return String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function normalizeAiMath(text){
+    let out = String(text ?? '').replace(/\r\n?/g,'\n');
+    out = out.replace(/```(?:latex|tex|math)\s*\n([\s\S]*?)```/gi,
+      (_,body)=>`\\[\n${body.trim()}\n\\]`);
+    out = out.replace(/\\begin\{(?:equation\*?|displaymath)\}([\s\S]*?)\\end\{(?:equation\*?|displaymath)\}/g,
+      (_,body)=>`\\[\n${body.trim()}\n\\]`);
+    const displays = [];
+    out = out.replace(/\$\$([\s\S]*?)\$\$/g,(_,body)=>`@@MOSSP_DISPLAY_MATH_${displays.push(body)-1}@@`);
+    out = out.replace(/(^|[^\\$])\$([^$\n]+?)\$/gm,
+      (_,prefix,body)=>`${prefix}\\(${body.trim()}\\)`);
+    out = out.replace(/@@MOSSP_DISPLAY_MATH_(\d+)@@/g,
+      (_,index)=>`\\[\n${displays[Number(index)].trim()}\n\\]`);
+    return out;
+  }
+  function renderMarkdown(text){
+    const lines = escapeHtml(normalizeAiMath(text)).split('\n');
+    let html = '', inMath = false, mathLines = [], inCode = false, codeLines = [], inList = false;
+    const closeList = ()=>{ if(inList){ html += '</ul>'; inList = false; } };
+    for(const line of lines){
+      const t = line.trim();
+      if(inMath){
+        mathLines.push(line);
+        if(t.endsWith('\\]')){
+          closeList(); html += `<div class="mathBlock">${mathLines.join('\n')}</div>`;
+          inMath = false; mathLines = [];
+        }
+        continue;
+      }
+      if(t.startsWith('\\[')){
+        closeList();
+        if(t.endsWith('\\]') && t.length > 4) html += `<div class="mathBlock">${line}</div>`;
+        else{ inMath = true; mathLines = [line]; }
+        continue;
+      }
+      if(t.startsWith('```')){
+        closeList();
+        if(inCode){ html += `<pre><code>${codeLines.join('\n')}</code></pre>`; inCode=false; codeLines=[]; }
+        else{ inCode=true; codeLines=[]; }
+        continue;
+      }
+      if(inCode){ codeLines.push(line); continue; }
+      if(!t){ closeList(); continue; }
+      let m = t.match(/^(#{1,3})\s+(.+)/);
+      if(m){ closeList(); const level=Math.min(3,m[1].length); html += `<h${level}>${formatInline(m[2])}</h${level}>`; continue; }
+      m = t.match(/^[-*]\s+(.+)/);
+      if(m){ if(!inList){ html += '<ul>'; inList=true; } html += `<li>${formatInline(m[1])}</li>`; continue; }
+      closeList(); html += `<p>${formatInline(line)}</p>`;
+    }
+    closeList();
+    if(inMath && mathLines.length) html += `<div class="mathBlock">${mathLines.join('\n')}\\]</div>`;
+    if(inCode && codeLines.length) html += `<pre><code>${codeLines.join('\n')}</code></pre>`;
+    return html;
+  }
+  function formatInline(text){
+    const mathTokens = [];
+    let output = text.replace(/\\\([\s\S]*?\\\)/g,
+      match=>`@@MOSSP_INLINE_MATH_${mathTokens.push(match)-1}@@`);
+    output = output.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+    return output.replace(/@@MOSSP_INLINE_MATH_(\d+)@@/g,(_,index)=>mathTokens[Number(index)]);
+  }
+  function typesetMath(target){
+    const run = ()=>{ if(window.MathJax?.typesetPromise) window.MathJax.typesetPromise([target]).catch(()=>{}); };
+    if(window.MathJax?.typesetPromise) run(); else setTimeout(run,250);
+  }
+  function showToast(message){
+    const toast = $('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(()=>toast.classList.remove('show'),2400);
+  }
+
+  function bindAiUi(){
+    $('themeToggle').addEventListener('click',()=>applyTheme(currentTheme()==='dark'?'light':'dark',true));
+    $('openChatSettingsBtn').addEventListener('click',openAiSettings);
+    $('cancelSettingsBtn').addEventListener('click',closeAiSettings);
+    $('saveSettingsBtn').addEventListener('click',saveAiSettings);
+    $('useDefaultPromptBtn').addEventListener('click',()=>{ $('chatSysPrompt').value = DEFAULT_SYSTEM_PROMPT; showToast('Default MOS surface-potential tutor prompt loaded.'); });
+    $('clearChatBtn').addEventListener('click',clearConversation);
+    $('chatSendBtn').addEventListener('click',handleChatSend);
+    $('chatInput').addEventListener('keydown',ev=>{
+      if(ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)){ ev.preventDefault(); handleChatSend(); }
+    });
+    $('chatProvider').addEventListener('change',()=>{
+      const provider = $('chatProvider').value;
+      $('lmUrlGroup').classList.toggle('hidden',provider !== 'lmstudio');
+      const current = $('chatModel').value.trim();
+      if(provider === 'google' && (!current || current === 'local-model')) $('chatModel').value = 'gemini-2.5-flash';
+      if(provider === 'lmstudio' && (!current || current === 'gemini-2.5-flash')) $('chatModel').value = 'local-model';
+    });
+    $('chatTemp').addEventListener('input',()=>{ $('chatTempVal').textContent = Number($('chatTemp').value).toFixed(1); });
+    $('settingsModal').addEventListener('click',ev=>{ if(ev.target === $('settingsModal')) closeAiSettings(); });
+    document.addEventListener('keydown',ev=>{ if(ev.key === 'Escape' && !$('settingsModal').classList.contains('hidden')) closeAiSettings(); });
+    document.querySelectorAll('.prompt-chip').forEach(btn=>btn.addEventListener('click',()=>{
+      $('chatInput').value = btn.dataset.prompt || '';
+      $('attachContextCheck').checked = true;
+      $('chatInput').focus();
+    }));
+  }
+
+
+  syncThemeButton();
+  bindAiUi();
+  bindAiColumnResize();
+  loadAiSettings();
+  update();
+  window.addEventListener('load',()=>{
+    if(window.MathJax?.typesetPromise) MathJax.typesetPromise([document.body]).catch(()=>{});
+  });
+})();
+</script>
+
+<a class="hubMainMenuButton" href="../index.html" title="Back to Semiconductor Learning Hub">← Main Menu</a>
+
+<!-- maestra-integration-v4 -->
+<link rel="stylesheet" href="../shared/maestra-toolbar.css">
+<script defer src="../shared/theme-sync-v2.js"></script>
+<script defer src="../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="mosfet" data-maestra-module-title="MOS Capacitor and MOSFET" data-maestra-topic-title="Mosfet Surface Potential Ai" data-maestra-canvas-template="mos-device"></script>
+</body>
+</html>

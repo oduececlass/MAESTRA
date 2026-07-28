@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Frozen Sluice — a MESFET metaphor lab</title>
+<style>
+:root{
+  --ink:#08121B;
+  --ink-2:#0D1B27;
+  --panel:#112532;
+  --panel-soft:#0C1B27;
+  --rule:#284454;
+  --rule-soft:rgba(157,179,194,.16);
+  --text:#E8F0F4;
+  --text-dim:#9DB3C2;
+  --water-hi:#8FDDF6;
+  --ice:#CBE7F4;
+  --brass:#E8B84B;
+  --brass-dk:#A87F22;
+  --ohmic:#E08A45;
+  --sub:#3B3050;
+  --hot:#FF7A59;
+  --shadow:0 18px 42px rgba(0,0,0,.22);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(1000px 520px at 8% -10%,rgba(37,83,105,.55),transparent 64%),
+    radial-gradient(900px 500px at 100% 0,rgba(59,48,80,.24),transparent 70%),
+    var(--ink);
+  color:var(--text);
+  font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif;
+  font-size:15px;line-height:1.5;
+  padding:22px clamp(14px,2.5vw,34px) 46px;
+}
+h1,h2{font-family:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;font-weight:600;letter-spacing:.01em}
+button,input,summary{font:inherit}
+button{color:inherit}
+.mono,.val,.unit{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+/* ---------- masthead ---------- */
+header{max-width:1560px;margin:0 auto 18px}
+.masthead{display:grid;grid-template-columns:minmax(240px,.7fr) minmax(0,2.3fr) auto;gap:12px 34px;align-items:end}
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--brass)}
+h1{font-size:clamp(28px,3.6vw,42px);line-height:1.04;margin:5px 0 4px}
+h1 em{font-style:italic;color:var(--ice)}
+.sub{color:var(--text-dim);margin:0;font-size:14px;text-wrap:pretty}
+@media (min-width:1180px){.sub{columns:2;column-gap:32px}}
+.hero-note{min-width:216px;border:1px solid var(--rule);border-radius:12px;padding:10px 13px;background:rgba(12,27,39,.7)}
+.hero-note span{display:block;color:var(--text-dim);font-size:10px;text-transform:uppercase;letter-spacing:.14em}
+.hero-note b{display:block;margin-top:3px;font-size:13px;font-weight:600}
+.mapstrip{
+  display:flex;flex-wrap:wrap;gap:6px 26px;margin-top:14px;padding-top:12px;border-top:1px solid var(--rule);
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11.5px;color:var(--text-dim);
+}
+.mapstrip span{display:flex;align-items:center;gap:7px}
+.mapstrip i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.mapstrip b{color:var(--brass);font-weight:400}
+@media (max-width:1080px){.masthead{grid-template-columns:1fr;align-items:start}}
+
+/* ---------- shell ---------- */
+main{max-width:1560px;margin:0 auto;display:grid;gap:16px;align-items:start;
+     grid-template-columns:minmax(300px,.78fr) minmax(0,2.85fr)}
+.sidebar{position:sticky;top:14px}
+.work{display:grid;gap:16px;align-items:start;grid-template-columns:minmax(0,1.45fr) minmax(360px,.95fr);min-width:0}
+.work .full{grid-column:1/-1}
+@media (max-width:1300px){main{grid-template-columns:1fr}.sidebar{position:static}}
+@media (max-width:880px){.work{grid-template-columns:1fr}}
+
+.card{
+  min-width:0;
+  background:linear-gradient(180deg,rgba(19,39,53,.98),rgba(13,27,39,.98));
+  border:1px solid var(--rule);border-radius:15px;box-shadow:var(--shadow);overflow:hidden;
+}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:14px 17px 12px;border-bottom:1px solid var(--rule-soft)}
+.card-title{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.card-title h2{font-size:17px;line-height:1.15;margin:1px 0 3px}
+.card-title p{font-size:11.5px;color:var(--text-dim);margin:0}
+.num{flex:none;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;letter-spacing:.15em;
+     color:var(--brass);border:1px solid var(--brass-dk);border-radius:5px;padding:3px 6px}
+.card-inner{padding:14px 17px 16px}
+
+.action-button{border:1px solid var(--rule);border-radius:99px;background:var(--panel-soft);
+  color:var(--text);font-size:12px;padding:6px 13px;cursor:pointer;flex:none}
+.action-button:hover{border-color:var(--brass);color:var(--brass)}
+:focus-visible{outline:2px solid var(--ice);outline-offset:3px;border-radius:8px}
+
+/* ---------- stage ---------- */
+.status-strip{display:flex;gap:12px;align-items:baseline;padding:10px 17px;
+  border-bottom:1px solid var(--rule-soft);background:rgba(12,27,39,.55);font-size:12.5px;color:var(--text-dim)}
+.status-strip b{font-family:"Iowan Old Style",Georgia,serif;font-size:14.5px;flex:none}
+.status-strip.linear b{color:var(--water-hi)}
+.status-strip.sat b{color:var(--brass)}
+.status-strip.cut b{color:var(--hot)}
+.stage-wrap,.chart-wrap{padding:14px 17px 0}
+canvas{display:block;width:100%;border-radius:10px;background:#06101A}
+.stage-tools{padding:12px 17px 14px}
+.morph label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:4px}
+.morph .ends{display:flex;justify-content:space-between;font-size:11px;color:var(--text-dim);margin-top:2px}
+
+/* ---------- drawers ---------- */
+.drawer{border-top:1px solid var(--rule-soft);padding:0 17px}
+.drawer summary,.model-card summary{list-style:none;cursor:pointer;padding:11px 0;font-size:12.5px;color:var(--text-dim)}
+.drawer summary::-webkit-details-marker,.model-card summary::-webkit-details-marker{display:none}
+.drawer summary::before,.model-card summary::before{content:"+";display:inline-block;width:18px;color:var(--brass)}
+.drawer[open] summary::before,.model-card[open] summary::before{content:"−"}
+.drawer summary:hover,.model-card summary:hover{color:var(--text)}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:11px 22px;padding:0 0 15px;font-size:12.5px;color:var(--text-dim)}
+.legend div{display:flex;gap:8px;align-items:flex-start}
+.sw{width:13px;height:13px;border-radius:3px;flex:none;margin-top:3px}
+.model-card{padding:0 17px}
+.model-card .model-body{padding:0 0 15px;font-size:13px;color:var(--text-dim)}
+.eq{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12.5px;color:var(--ice);
+    background:var(--panel-soft);border:1px solid var(--rule);border-radius:8px;padding:9px 11px;margin:9px 0 0;overflow-x:auto}
+
+/* ---------- controls ---------- */
+.section-label{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--text-dim);margin:0 0 8px}
+.section-label.spaced{margin-top:16px}
+.presets-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:2px}
+.preset-button{display:flex;flex-direction:column;gap:2px;text-align:left;padding:8px 10px;
+  border:1px solid var(--rule);border-radius:10px;background:var(--panel-soft);cursor:pointer}
+.preset-button strong{font-size:12.5px;font-weight:600}
+.preset-button span{font-size:10.5px;color:var(--text-dim);line-height:1.3}
+.preset-button:hover{border-color:var(--brass)}
+.preset-button:hover strong{color:var(--brass)}
+.ctrl{margin-bottom:11px}
+.ctrl .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:3px}
+.ctrl .name{font-size:13px}
+.ctrl .val{font-size:13px;color:var(--brass)}
+.ctrl .hint{font-size:11.5px;color:var(--text-dim);margin-top:2px;line-height:1.35}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--rule)}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--rule)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6px;border-radius:50%;background:var(--brass);border:2px solid #08121B}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--brass);border:2px solid #08121B}
+
+.cap{margin:0 0 10px;font-size:12px;color:var(--text-dim);font-family:"JetBrains Mono",ui-monospace,monospace}
+footer{max-width:1560px;margin:20px auto 0;color:var(--text-dim);font-size:12px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.side-stack{display:grid;gap:16px;align-content:start;min-width:0}
+.model-card .model-body{padding:0 0 15px;font-size:13px;color:var(--text-dim)}
+.eq-latex{background:var(--panel-soft);border:1px solid var(--rule);border-radius:8px;padding:12px 14px;margin:10px 0 0;overflow-x:auto}
+.eq-latex .mjx-container{font-size:103% !important;max-width:100%;overflow-x:auto;overflow-y:hidden}
+.eq-latex mjx-container[display="true"]{margin:.35em 0 !important;text-align:left !important}
+@media (max-width:880px){.side-stack{grid-template-columns:1fr}}
+</style>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+
+<style id="mesfet-main-menu-style">
+.mesfet-mainmenu-wrap{position:sticky;top:0;z-index:9999;display:flex;justify-content:flex-end;padding:12px 14px 0;pointer-events:none;}
+.mesfet-mainmenu-btn{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;padding:12px 20px;border-radius:999px;text-decoration:none;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:800;font-size:16px;letter-spacing:-0.01em;color:#06233a;background:linear-gradient(135deg,#3fd0ff,#8e82ff);box-shadow:0 10px 24px rgba(38,104,187,.25);border:1px solid rgba(255,255,255,.65);}
+.mesfet-mainmenu-btn:hover{filter:brightness(1.03);transform:translateY(-1px);}
+@media print{.mesfet-mainmenu-wrap{display:none!important;}}
+</style>
+
+</head>
+<body>
+<div class="mesfet-mainmenu-wrap"><a class="mesfet-mainmenu-btn" href="../../../index.html" title="Return to main menu">&#8592; Main Menu</a></div>
+
+
+<header>
+  <div class="masthead">
+    <div>
+      <div class="eyebrow">Metaphor lab · depletion-mode GaAs MESFET</div>
+      <h1>The <em>Frozen Sluice</em></h1>
+    </div>
+    <p class="sub">A canal carries water from the upstream pool to the downstream outlet. A chilled plate hangs over it. The colder the plate, the thicker the ice grows down into the flow — and because the water surface sits lower downstream, the ice always grows into a wedge. When the wedge touches the bed, the canal is pinched, and pushing harder downstream stops buying you more flow.</p>
+    <div class="hero-note">
+      <span>Device behaviour</span>
+      <b>Normally on · reverse gate bias closes the channel</b>
+    </div>
+  </div>
+  <div class="mapstrip">
+    <span><i style="background:#8FDDF6"></i>water <b>→</b> mobile electrons</span>
+    <span><i style="background:#DCF2FB"></i>ice <b>→</b> depletion region</span>
+    <span><i style="background:#E8B84B"></i>chiller plate <b>→</b> Schottky gate</span>
+    <span><i style="background:#FF7A59"></i>pinch <b>→</b> saturation</span>
+    <span><i style="background:#3B3050"></i>bedrock <b>→</b> semi-insulating substrate</span>
+  </div>
+</header>
+
+<main>
+  <aside class="sidebar">
+    <section class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <span class="num">CTRL</span>
+          <div><h2>Experiment controls</h2><p>Pick a state, then fine-tune the device</p></div>
+        </div>
+      </div>
+      <div class="card-inner">
+        <div class="section-label">Quick states</div>
+        <div class="presets-grid">
+          <button class="preset-button" data-preset="off"><strong>Cutoff</strong><span>Cold plate · shut canal</span></button>
+          <button class="preset-button" data-preset="ohmic"><strong>Linear</strong><span>Small downstream drop</span></button>
+          <button class="preset-button" data-preset="sat"><strong>Saturation</strong><span>Pinched at the outlet</span></button>
+          <button class="preset-button" data-preset="open"><strong>Wide open</strong><span>Warm plate · strong flow</span></button>
+        </div>
+
+        <div class="section-label spaced">Terminal bias</div>
+        <div class="ctrl">
+          <div class="row"><span class="name">Gate voltage V<sub>GS</sub></span><span class="val" id="vgsVal"></span></div>
+          <input type="range" id="vgs" min="-6" max="0.4" step="0.02" value="-0.6">
+          <div class="hint" id="vgsHint">How cold the plate runs. More negative = thicker ice.</div>
+        </div>
+        <div class="ctrl">
+          <div class="row"><span class="name">Drain voltage V<sub>DS</sub></span><span class="val" id="vdsVal"></span></div>
+          <input type="range" id="vds" min="0" max="6" step="0.02" value="2">
+          <div class="hint">The downstream drop that pulls water through.</div>
+        </div>
+
+        <div class="section-label spaced">Device geometry</div>
+        <div class="ctrl">
+          <div class="row"><span class="name">Channel depth a</span><span class="val" id="aVal"></span></div>
+          <input type="range" id="a" min="0.05" max="0.45" step="0.005" value="0.20">
+          <div class="hint">Epi-layer thickness — how deep the canal is cut.</div>
+        </div>
+        <div class="ctrl">
+          <div class="row"><span class="name">Doping N<sub>D</sub></span><span class="val" id="ndVal"></span></div>
+          <input type="range" id="nd" min="16" max="17.9" step="0.01" value="17">
+          <div class="hint">Carrier supply — how much water the canal holds per unit depth.</div>
+        </div>
+        <div class="ctrl">
+          <div class="row"><span class="name">Gate length L</span><span class="val" id="lVal"></span></div>
+          <input type="range" id="l" min="0.2" max="2" step="0.02" value="1">
+        </div>
+        <div class="ctrl">
+          <div class="row"><span class="name">Gate width Z</span><span class="val" id="zVal"></span></div>
+          <input type="range" id="z" min="10" max="300" step="5" value="100">
+        </div>
+      </div>
+    </section>
+  </aside>
+
+  <div class="work">
+    <section class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <span class="num">01</span>
+          <div><h2>Canal cross-section</h2><p>Animated metaphor and device view</p></div>
+        </div>
+        <button id="play" class="action-button">Pause flow</button>
+      </div>
+      <div class="status-strip linear" id="state"><b>—</b><span></span></div>
+      <div class="stage-wrap">
+        <canvas id="stage" height="470" aria-label="Animated cross-section of the canal / MESFET channel"></canvas>
+      </div>
+      <div class="stage-tools">
+        <div class="morph">
+          <label for="morph"><span>View transformation</span><span class="val mono" id="morphVal">0%</span></label>
+          <input type="range" id="morph" min="0" max="100" step="1" value="0">
+          <div class="ends"><span>Frozen sluice</span><span>n-GaAs MESFET</span></div>
+        </div>
+      </div>
+      <details class="drawer">
+        <summary>Show visual key</summary>
+        <div class="legend" id="legend"></div>
+      </details>
+    </section>
+
+    <div class="side-stack">
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <span class="num">02</span>
+            <div><h2>Output characteristics</h2><p>I<sub>D</sub>–V<sub>DS</sub> family with the operating point</p></div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <p class="cap" id="ivcap">—</p>
+          <canvas id="iv" height="290" aria-label="Drain current versus drain voltage, family of gate voltages"></canvas>
+        </div>
+        <div style="height:14px"></div>
+      </section>
+
+      <details class="card model-card" open>
+        <summary>Model assumptions and equations</summary>
+        <div class="model-body">
+          <p>First-order Shockley gradual-channel MESFET, abrupt depletion approximation, constant mobility — no velocity saturation, so currents run optimistic for short gates.</p>
+          <div class="eq-latex">
+            $$
+            \begin{aligned}
+            V_P &= \frac{qN_D a^2}{2\varepsilon}, \\
+            V_T &= V_{bi}-V_P,
+            \qquad V_{bi}=0.80\,\mathrm{V}, \\
+            I_P &= g_0V_P,
+            \qquad g_0=\frac{qN_D\mu aZ}{L}, \\
+            W(x) &= a\sqrt{\frac{V_{bi}-V_{GS}+V(x)}{V_P}}, \\
+            I_D &= I_P\Bigg[
+              \frac{V}{V_P}
+              -\frac{2}{3}\Bigg(
+              \left(\frac{V+V_{bi}-V_{GS}}{V_P}\right)^{3/2} \\
+            &\hspace{8.0em}
+              -\left(\frac{V_{bi}-V_{GS}}{V_P}\right)^{3/2}
+              \Bigg)\Bigg].
+            \end{aligned}
+            $$
+          </div>
+          <p style="margin-top:10px">The ice profile is not a sketch: for every column of pixels the channel potential $V(x)$ is solved by bisection from the constant-current condition, then $W(x)$ follows from it. That is why the wedge steepens toward the drain as $V_{DS}$ rises.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</main>
+
+<footer>Depletion-mode device: the canal conducts at V<sub>GS</sub> = 0 and must be chilled shut. Forward gate bias is limited to +0.4 V — beyond that the Schottky plate starts conducting and the metaphor (and the device) breaks down.</footer>
+
+<script>
+
+"use strict";
+const Q=1.602e-19, EPS0=8.854e-14, EPSR=12.9, VBI=0.80, MU=4500;
+
+const el=id=>document.getElementById(id);
+const stage=el('stage'), ivc=el('iv');
+const sctx=stage.getContext('2d'), ictx=ivc.getContext('2d');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const S={vgs:-0.6, vds:2, a:0.20, ndExp:17, L:1, Z:100, morph:0, playing:!reduce};
+
+/* ---------- physics ---------- */
+function model(p){
+  const a=p.a*1e-4, L=p.L*1e-4, Z=p.Z*1e-4, Nd=Math.pow(10,p.ndExp);
+  const Vp=Q*Nd*a*a/(2*EPSR*EPS0);
+  const Vt=VBI-Vp;
+  const g0=Q*Nd*MU*a*Z/L;
+  const Ip=g0*Vp;
+  const u0=(VBI-p.vgs)/Vp;              // normalized built-in depletion at source
+  const cutoff=u0>=1;
+  const Vdsat=Math.max(0,p.vgs-Vt);
+  const Veff=Math.min(p.vds,Vdsat);
+  const Id=cutoff?0:current(Veff);
+  function current(V){
+    const uL=(V+VBI-p.vgs)/Vp;
+    return Ip*( V/Vp - (2/3)*(Math.pow(Math.max(uL,0),1.5)-Math.pow(Math.max(u0,0),1.5)) );
+  }
+  return {a,L,Z,Nd,Vp,Vt,g0,Ip,u0,cutoff,Vdsat,Veff,Id,current,
+          sat:!cutoff&&p.vds>=Vdsat};
+}
+// invert f(V)=Id*x/L  ->  V at fractional position t
+function potentialAt(m,t){
+  if(m.cutoff||m.Id<=0) return 0;
+  const target=m.Id*t;
+  let lo=0, hi=m.Veff;
+  for(let i=0;i<44;i++){
+    const mid=0.5*(lo+hi);
+    if(m.current(mid)<target) lo=mid; else hi=mid;
+  }
+  return 0.5*(lo+hi);
+}
+function depthFrac(m,V,vgs){   // W(x)/a
+  const u=(VBI-vgs+V)/m.Vp;
+  return Math.min(1,Math.max(0,Math.sqrt(Math.max(u,0))));
+}
+
+/* ---------- canvas sizing ---------- */
+function fit(c,h){
+  const dpr=Math.min(devicePixelRatio||1,2);
+  const w=c.clientWidth;
+  c.width=Math.round(w*dpr); c.height=Math.round(h*dpr);
+  c.style.height=h+'px';
+  c.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
+  return {w,h};
+}
+
+/* ---------- particles ---------- */
+const P=[]; for(let i=0;i<220;i++) P.push({t:Math.random(), d:Math.random(), s:0.6+Math.random()*0.8});
+
+/* ---------- palettes ---------- */
+const lerp=(a,b,t)=>a+(b-a)*t;
+function mix(c1,c2,t){
+  const p=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+  const A=p(c1),B=p(c2);
+  return `rgb(${Math.round(lerp(A[0],B[0],t))},${Math.round(lerp(A[1],B[1],t))},${Math.round(lerp(A[2],B[2],t))})`;
+}
+
+/* ---------- main draw ---------- */
+let tPhase=0;
+function drawStage(){
+  const m=model(S), k=S.morph/100;
+  const padT=108;                                               // head-line zone
+  const chanH=Math.round(46+300*(S.a-0.05));                    // epi thickness sets the drawn depth
+  const {w,h}=fit(stage, padT+chanH+86+52);                     // canvas grows/shrinks with the device
+  const g=sctx;
+  g.clearRect(0,0,w,h);
+
+  const avail=Math.max(160,w-150);
+  const span=Math.max(130, avail*(0.45+0.55*(S.L-0.2)/1.8));    // gate length sets the drawn span
+  const x0=Math.round((w-span)/2), x1=x0+span;
+  const yTop=padT, yBot=padT+chanH;
+  const subBot=yBot+86;
+
+  // backdrop
+  const sky=g.createLinearGradient(0,0,0,h);
+  sky.addColorStop(0, mix('#0B1A26','#0B1622',k));
+  sky.addColorStop(1, mix('#071019','#080D14',k));
+  g.fillStyle=sky; g.fillRect(0,0,w,h);
+
+  // substrate (bedrock / semi-insulating GaAs)
+  g.fillStyle=mix('#2A2A2E','#3B3050',k);
+  g.fillRect(x0-40,yBot,span+80,subBot-yBot);
+  g.strokeStyle='rgba(255,255,255,.10)'; g.lineWidth=1;
+  g.beginPath(); g.moveTo(x0-40,yBot+0.5); g.lineTo(x1+40,yBot+0.5); g.stroke();
+  label(g,x0-30,subBot-14,k<0.5?'BEDROCK — no water passes':'SEMI-INSULATING GaAs SUBSTRATE',
+        'rgba(255,255,255,.36)',11,'left');
+
+  // channel bed = full n-layer box (water when open)
+  const chan=g.createLinearGradient(0,yTop,0,yBot);
+  chan.addColorStop(0, mix('#1B6D9E','#3E7F6B',k));
+  chan.addColorStop(1, mix('#0E4A70','#2C5C4E',k));
+  g.fillStyle=chan; g.fillRect(x0,yTop,span,chanH);
+
+  // ---- profiles
+  const N=Math.max(60,Math.floor(span/3));
+  const wx=[], vx=[];
+  for(let i=0;i<=N;i++){
+    const t=i/N;
+    const V=potentialAt(m,t);
+    vx.push(V);
+    wx.push(m.cutoff?1:depthFrac(m,V,S.vgs));
+  }
+
+  // ---- water body (below ice)
+  g.save();
+  g.beginPath();
+  g.moveTo(x0, yTop+chanH*wx[0]);
+  for(let i=1;i<=N;i++) g.lineTo(x0+span*(i/N), yTop+chanH*wx[i]);   // surface, source -> drain
+  g.lineTo(x1,yBot); g.lineTo(x0,yBot); g.closePath();               // along the bed, back upstream
+  g.clip();
+  const wat=g.createLinearGradient(0,yTop,0,yBot);
+  wat.addColorStop(0, mix('#59C8F0','#7FE0A8',k));
+  wat.addColorStop(1, mix('#12557E','#1E6B52',k));
+  g.fillStyle=wat; g.fillRect(x0,yTop,span,chanH);
+
+  // particles
+  const flowScale = m.cutoff?0:Math.min(1,m.Id/Math.max(m.Ip*0.22,1e-9));
+  for(const p of P){
+    const i=Math.min(N,Math.floor(p.t*N));
+    const top=yTop+chanH*wx[i], gap=Math.max(2,yBot-top);
+    const y=top+gap*p.d;
+    const px=x0+span*p.t;
+    const r=k<0.5?2.4:2.0;
+    g.beginPath();
+    if(k<0.5){ g.ellipse(px,y,r*1.5,r,0,0,7); } else { g.arc(px,y,r,0,7); }
+    g.fillStyle = k<0.5 ? 'rgba(224,248,255,.85)' : 'rgba(255,226,140,.92)';
+    g.fill();
+  }
+  g.restore();
+
+  // water surface highlight
+  g.beginPath();
+  for(let i=0;i<=N;i++){const x=x0+span*(i/N); const y=yTop+chanH*wx[i]; i?g.lineTo(x,y):g.moveTo(x,y);}
+  g.strokeStyle=mix('rgba(200,240,255,.75)','rgba(255,255,255,.30)',k); g.lineWidth=1.6; g.stroke();
+
+  // ---- ice / depletion wedge
+  g.beginPath();
+  g.moveTo(x0,yTop);
+  for(let i=0;i<=N;i++) g.lineTo(x0+span*(i/N), yTop+chanH*wx[i]);
+  g.lineTo(x1,yTop); g.closePath();
+  const ice=g.createLinearGradient(0,yTop,0,yBot);
+  ice.addColorStop(0, mix('#EAF8FF','#C6B7E8',k));
+  ice.addColorStop(1, mix('#9FD4E8','#7E6BA8',k));
+  g.fillStyle=ice; g.globalAlpha=k<0.5?0.96:0.55; g.fill(); g.globalAlpha=1;
+  g.strokeStyle=mix('#FFFFFF','#D9C9FF',k); g.lineWidth=1.2; g.stroke();
+
+  // ionized-donor plus signs appear as we morph to device view
+  if(k>0.25){
+    g.save(); g.clip();
+    g.globalAlpha=(k-0.25)/0.75*0.75; g.strokeStyle='#F2E9FF'; g.lineWidth=1.1;
+    for(let px=x0+9;px<x1;px+=17) for(let py=yTop+9;py<yBot;py+=15){
+      g.beginPath(); g.moveTo(px-3,py); g.lineTo(px+3,py); g.moveTo(px,py-3); g.lineTo(px,py+3); g.stroke();
+    }
+    g.restore(); g.globalAlpha=1;
+  }
+
+  // ---- gate slab
+  const gy=yTop-19;
+  g.fillStyle=mix('#BFD8E2','#E8B84B',k);
+  roundRect(g,x0,gy,span,19,3); g.fill();
+  g.fillStyle='rgba(0,0,0,.28)'; g.fillRect(x0,gy+15,span,4);
+  label(g,(x0+x1)/2,gy+13,k<0.5?'CHILLER PLATE':'GATE (Schottky metal)','#12202B',11.5,'center',true);
+
+  // cooling fins / gate lead
+  g.strokeStyle=mix('#9FC7D8','#E8B84B',k); g.lineWidth=2;
+  g.beginPath(); g.moveTo((x0+x1)/2,gy); g.lineTo((x0+x1)/2,gy-26); g.stroke();
+  label(g,(x0+x1)/2,gy-32,`V_GS = ${S.vgs.toFixed(2)} V`,mix('#CFEAF7','#E8B84B',k),12,'center');
+
+  // ---- contacts
+  drawPad(g,x0-40,yTop-8,40,chanH+8,k,'S');
+  drawPad(g,x1,yTop-8,40,chanH+8,k,'D');
+  label(g,x0-20,yBot+22,k<0.5?'UPSTREAM POOL':'SOURCE',mix('#CFEAF7','#E08A45',k),11.5,'center');
+  label(g,x1+20,yBot+22,k<0.5?'OUTLET':'DRAIN',mix('#CFEAF7','#E08A45',k),11.5,'center');
+  label(g,x1+20,yBot+38,`V_DS = ${S.vds.toFixed(2)} V`,'rgba(200,220,235,.65)',11,'center');
+
+  // ---- head line (channel potential) above the gate
+  const hy0=34, hAmp=46, HEADFS=6;      // fixed 0-6 V full scale: the line really moves with V_DS
+  g.setLineDash([4,4]); g.lineWidth=1.4; g.strokeStyle=mix('rgba(143,221,246,.85)','rgba(232,184,75,.85)',k);
+  g.beginPath();
+  for(let i=0;i<=N;i++){
+    const x=x0+span*(i/N), y=hy0+hAmp*(vx[i]/HEADFS);
+    i?g.lineTo(x,y):g.moveTo(x,y);
+  }
+  g.stroke(); g.setLineDash([]);
+  // the surplus beyond V_DS,sat falls across the pinch, not along the open channel
+  if(!m.cutoff && S.vds>m.Veff+1e-4){
+    const yA=hy0+hAmp*(m.Veff/HEADFS), yB=hy0+hAmp*(Math.min(S.vds,HEADFS)/HEADFS);
+    g.strokeStyle='#FF7A59'; g.lineWidth=2.2;
+    g.beginPath(); g.moveTo(x1,yA); g.lineTo(x1,yB); g.stroke();
+    g.beginPath(); g.moveTo(x1-4,yB-5); g.lineTo(x1,yB); g.lineTo(x1+4,yB-5); g.stroke();
+    label(g,x1+8,(yA+yB)/2+4,`${(S.vds-m.Veff).toFixed(2)} V across the pinch`,'#FF7A59',10.5,'left');
+  }
+  label(g,x0,hy0-12,k<0.5?'water head along the canal (drops downstream)':'channel potential V(x)','rgba(200,220,235,.55)',11,'left');
+
+  // ---- pinch marker
+  if(m.sat&&!m.cutoff){
+    g.strokeStyle='#FF7A59'; g.lineWidth=1.6;
+    g.beginPath(); g.moveTo(x1,yTop); g.lineTo(x1,yBot); g.stroke();
+    g.save(); g.translate(x1-11,(yTop+yBot)/2); g.rotate(-Math.PI/2);
+    label(g,0,0,'PINCH','#FF7A59',10.5,'center',true); g.restore();
+  }
+
+  // ---- scale ticks
+  g.strokeStyle='rgba(200,220,235,.30)'; g.lineWidth=1;
+  g.beginPath(); g.moveTo(x0-52,yTop); g.lineTo(x0-46,yTop); g.moveTo(x0-52,yBot); g.lineTo(x0-46,yBot);
+  g.moveTo(x0-49,yTop); g.lineTo(x0-49,yBot); g.stroke();
+  g.save(); g.translate(x0-56,(yTop+yBot)/2); g.rotate(-Math.PI/2);
+  label(g,0,0,`a = ${S.a.toFixed(3)} µm`,'rgba(200,220,235,.55)',10.5,'center'); g.restore();
+  // gate-length dimension bar
+  const dy=subBot+18;
+  g.strokeStyle='rgba(232,184,75,.55)';
+  g.beginPath(); g.moveTo(x0,dy-6); g.lineTo(x0,dy+6); g.moveTo(x1,dy-6); g.lineTo(x1,dy+6);
+  g.moveTo(x0,dy); g.lineTo(x1,dy); g.stroke();
+  g.fillStyle=mix('#0B1A26','#0B1622',k);
+  const cap=`L = ${S.L.toFixed(2)} µm`; g.fillRect((x0+x1)/2-40,dy-7,80,14);
+  label(g,(x0+x1)/2,dy+4,cap,'rgba(232,184,75,.85)',10.5,'center');
+
+  if(m.cutoff){
+    label(g,(x0+x1)/2,(yTop+yBot)/2+4,k<0.5?'FROZEN SOLID — NO FLOW':'CHANNEL FULLY DEPLETED','#FF7A59',15,'center',true);
+  }
+}
+function drawPad(g,x,y,w,h,k,which){
+  g.fillStyle=mix('#6F8494','#E08A45',k);
+  roundRect(g,x,y,w,h,4); g.fill();
+  g.fillStyle='rgba(0,0,0,.25)';
+  for(let i=0;i<4;i++) g.fillRect(x+5,y+10+i*((h-24)/3),w-10,2);
+}
+function roundRect(g,x,y,w,h,r){
+  g.beginPath();
+  g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r);
+  g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath();
+}
+function label(g,x,y,txt,color,size,align,bold){
+  g.fillStyle=color; g.textAlign=align||'left';
+  g.font=`${bold?'600 ':''}${size}px ui-monospace,SFMono-Regular,Menlo,monospace`;
+  g.fillText(txt,x,y); g.textAlign='left';
+}
+
+/* ---------- I-V chart ---------- */
+function drawIV(){
+  const {w,h}=fit(ivc,330);
+  const g=ictx; g.clearRect(0,0,w,h);
+  const L=62,R=18,T=16,B=42;
+  const px=v=>L+(w-L-R)*(v/6);
+  const m0=model(S);
+
+  // find y scale from the most open curve
+  const probe={...S,vgs:Math.min(0.4,0.4)};
+  let imax=0;
+  for(let v=0;v<=6;v+=0.25){const mm=model({...S,vgs:0.4}); imax=Math.max(imax, curr(mm,v));}
+  imax=Math.max(imax,1e-6);
+  const py=i=>h-B-(h-B-T)*(i/imax);
+
+  // grid
+  g.strokeStyle='rgba(255,255,255,.07)'; g.lineWidth=1;
+  for(let v=0;v<=6;v++){g.beginPath();g.moveTo(px(v),T);g.lineTo(px(v),h-B);g.stroke();}
+  for(let f=0;f<=4;f++){const y=T+(h-B-T)*f/4;g.beginPath();g.moveTo(L,y);g.lineTo(w-R,y);g.stroke();}
+  g.strokeStyle='rgba(255,255,255,.35)';
+  g.beginPath();g.moveTo(L,T);g.lineTo(L,h-B);g.lineTo(w-R,h-B);g.stroke();
+
+  for(let v=0;v<=6;v++) label(g,px(v),h-B+16,v.toFixed(0),'rgba(200,220,235,.6)',11,'center');
+  for(let f=0;f<=4;f++){
+    const y=T+(h-B-T)*(1-f/4);
+    label(g,L-8,y+4,(imax*1000*f/4).toFixed(imax*1000>20?0:1),'rgba(200,220,235,.6)',11,'right');
+  }
+  label(g,(L+w-R)/2,h-10,'V_DS  (V)','rgba(200,220,235,.7)',12,'center');
+  g.save(); g.translate(14,(T+h-B)/2); g.rotate(-Math.PI/2);
+  label(g,0,0,'I_D  (mA)','rgba(200,220,235,.7)',12,'center'); g.restore();
+
+  // curve family
+  const vt=m0.Vt;
+  const list=[];
+  for(let i=0;i<6;i++) list.push(0.4 - i*(0.4-Math.max(vt,-6))/5);
+  list.forEach((vg,idx)=>{
+    const mm=model({...S,vgs:vg});
+    g.beginPath();
+    for(let v=0;v<=6.001;v+=0.04){const x=px(v),y=py(curr(mm,v)); v?g.lineTo(x,y):g.moveTo(x,y);}
+    const t=idx/(list.length-1);
+    g.strokeStyle=mix('#8FDDF6','#274253',t); g.lineWidth=1.8; g.stroke();
+    const yEnd=py(curr(mm,6));
+    if(yEnd<h-B-6) label(g,w-R-4,yEnd-5,`${vg.toFixed(1)} V`,mix('#8FDDF6','#5C7A8C',t),10.5,'right');
+  });
+
+  // saturation locus
+  g.setLineDash([5,4]); g.strokeStyle='rgba(255,122,89,.7)'; g.lineWidth=1.3;
+  g.beginPath();
+  let started=false;
+  for(let vg=0.4; vg>=Math.max(vt,-6); vg-=0.05){
+    const mm=model({...S,vgs:vg});
+    if(mm.cutoff) continue;
+    const x=px(Math.min(mm.Vdsat,6)), y=py(mm.Id>0?curr(mm,mm.Vdsat):0);
+    started?g.lineTo(x,y):g.moveTo(x,y); started=true;
+  }
+  g.stroke(); g.setLineDash([]);
+
+  // operating point
+  const opx=px(Math.min(S.vds,6)), opy=py(m0.Id);
+  g.beginPath(); g.arc(opx,opy,5.5,0,7); g.fillStyle='#E8B84B'; g.fill();
+  g.strokeStyle='#0A141F'; g.lineWidth=2; g.stroke();
+  const tag=fmtI(m0.Id);
+  const right=opx<w*0.62;
+  label(g, right?opx+11:opx-11, opy-9, tag, '#E8B84B', 11.5, right?'left':'right');
+  function curr(mm,v){
+    if(mm.cutoff) return 0;
+    return Math.max(0,mm.current(Math.min(v,mm.Vdsat)));
+  }
+}
+function curr(mm,v){ if(mm.cutoff) return 0; return Math.max(0,mm.current(Math.min(v,mm.Vdsat))); }
+
+/* ---------- readouts ---------- */
+function fmtI(A){
+  const mA=A*1000;
+  if(mA<1) return (mA*1000).toFixed(0)+' µA';
+  return mA.toFixed(mA<10?2:1)+' mA';
+}
+function update(){
+  const m=model(S);
+  el('vgsVal').textContent=S.vgs.toFixed(2)+' V';
+  el('vdsVal').textContent=S.vds.toFixed(2)+' V';
+  el('aVal').textContent=S.a.toFixed(3)+' µm';
+  el('ndVal').textContent='1e'+S.ndExp.toFixed(2)+' cm⁻³';
+  el('lVal').textContent=S.L.toFixed(2)+' µm';
+  el('zVal').textContent=S.Z.toFixed(0)+' µm';
+  el('morphVal').textContent=S.morph+'%';
+
+  const st=el('state');
+  if(m.cutoff){
+    st.className='status-strip cut';
+    st.innerHTML='<b>Cut off — canal frozen shut</b><span>The plate is cold enough that ice reaches the bed everywhere. V<sub>GS</sub> is below V<sub>T</sub>, so no path is left. Warm the plate to reopen it.</span>';
+  }else if(m.sat){
+    st.className='status-strip sat';
+    st.innerHTML='<b>Saturation — pinched at the outlet</b><span>The wedge just touches the bed at the downstream end. Extra V<sub>DS</sub> lands across that pinch instead of the open channel, so I<sub>D</sub> flattens. The gate now sets the flow, not the drop.</span>';
+  }else{
+    st.className='status-strip linear';
+    st.innerHTML='<b>Linear — open canal</b><span>The gap stays open end to end, so the channel behaves like a resistor whose width the gate sets. Flow still rises with the downstream drop.</span>';
+  }
+
+  el('ivcap').textContent = m.cutoff
+    ? `V_P ${m.Vp.toFixed(2)} V · V_T ${m.Vt.toFixed(2)} V · cut off`
+    : `V_P ${m.Vp.toFixed(2)} V · V_T ${m.Vt.toFixed(2)} V · knee ${m.Vdsat.toFixed(2)} V · I_D ${fmtI(m.Id)}`;
+
+  el('vgsHint').textContent = S.vgs>0.15
+    ? 'Careful: forward gate bias — the Schottky plate starts leaking here.'
+    : 'How cold the plate runs. More negative = thicker ice.';
+
+  drawIV();
+  if(!S.playing) drawStage();
+}
+
+/* ---------- legend ---------- */
+const legendItems=[
+  ['#8FDDF6','Water = mobile electrons. Depth of the open gap = undepleted channel.'],
+  ['#DCF2FB','Ice = depletion region. The donors are still there (+), but frozen out — no mobile carriers.'],
+  ['#E8B84B','Chiller plate = Schottky gate. Reverse bias thickens the ice; it draws no steady current.'],
+  ['#FF7A59','Pinch point = where the wedge meets the bed. Past it, the device saturates.'],
+  ['#3B3050','Bedrock = semi-insulating substrate. Nothing flows below the epi-layer.']
+];
+el('legend').innerHTML=legendItems.map(([c,t])=>`<div><span class="sw" style="background:${c}"></span><span>${t}</span></div>`).join('');
+
+/* ---------- wiring ---------- */
+const bind=(id,key,f)=>{el(id).addEventListener('input',e=>{S[key]=f(e.target.value);update();});};
+bind('vgs','vgs',parseFloat); bind('vds','vds',parseFloat);
+bind('a','a',parseFloat); bind('nd','ndExp',parseFloat);
+bind('l','L',parseFloat); bind('z','Z',parseFloat);
+bind('morph','morph',v=>parseInt(v,10));
+
+el('play').addEventListener('click',()=>{
+  S.playing=!S.playing;
+  el('play').textContent=S.playing?'Pause flow':'Resume flow';
+  if(S.playing) loop();
+  else drawStage();
+});
+
+/* ---------- loop ---------- */
+const presets={
+  off:{vgs:-3.2,vds:2.5}, ohmic:{vgs:-0.6,vds:0.4},
+  sat:{vgs:-0.9,vds:4.2}, open:{vgs:0.2,vds:3}
+};
+document.querySelectorAll('.preset-button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    Object.assign(S,presets[b.dataset.preset]);
+    el('vgs').value=S.vgs; el('vds').value=S.vds; update();
+  });
+});
+
+function loop(){
+  if(!S.playing) return;
+  const m=model(S);
+  const N=1;
+  for(const p of P){
+    const t=p.t;
+    const V=potentialAt(m,t);
+    const wf=m.cutoff?1:depthFrac(m,V,S.vgs);
+    const gap=Math.max(0.02,1-wf);
+    const speed=m.cutoff?0:0.0016*p.s*(m.Id/Math.max(m.Ip,1e-9))/gap*22;
+    p.t+=Math.min(speed,0.05);
+    if(p.t>1){p.t-=1;p.d=Math.random();}
+  }
+  drawStage();
+  requestAnimationFrame(loop);
+}
+
+addEventListener('resize',()=>{drawStage();drawIV();});
+update(); drawStage();
+if(S.playing) loop(); 
+
+</script>
+
+<!-- maestra-integration-v4 -->
+<link rel="stylesheet" href="../../../shared/maestra-toolbar.css">
+<script defer src="../../../shared/theme-sync-v2.js"></script>
+<script defer src="../../../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="mesfet" data-maestra-module-title="MESFET and Schottky Devices" data-maestra-topic-title="04 Frozen Sluice Lab" data-maestra-canvas-template="mesfet-device"></script>
+</body>
+</html>

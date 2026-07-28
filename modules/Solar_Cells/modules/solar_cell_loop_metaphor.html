@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photovoltaic Waterworks — Loop &amp; I–V</title>
+<style>
+:root{
+  --accent:#37d5ff; --p:#ff8996; --n:#80bcff;
+  --sun:#ffcc4d; --sun2:#f2a623; --carrier:#5aa0ff; --heat:#ff6b6b;
+  --ink:#e8eefc; --dim:#9db0d0;
+  --panel:rgba(255,255,255,.05); --brd:rgba(255,255,255,.12);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  color:var(--ink);
+  background:radial-gradient(1200px 800px at 25% -10%,#0a1a34,#04070f 70%) fixed;
+  min-height:100vh;
+}
+header{padding:16px 24px 6px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+header h1{margin:0;font-size:19px;letter-spacing:.3px}
+header p{margin:3px 0 0;font-size:12.5px;color:var(--dim)}
+.headerLinks{display:flex;gap:8px;flex-wrap:wrap}
+.headerLinks a{display:inline-flex;align-items:center;text-decoration:none;background:var(--panel);color:var(--ink);border:1px solid var(--brd);border-radius:10px;padding:8px 11px;font-size:12px;font-weight:700}
+.headerLinks a:hover{border-color:var(--accent);color:var(--accent)}
+.wrap{display:flex;gap:16px;padding:12px 24px 40px;align-items:flex-start;flex-wrap:wrap}
+.left{flex:1 1 640px;min-width:600px}
+.right{flex:0 0 330px;display:flex;flex-direction:column;gap:14px}
+
+.stage{background:var(--panel);border:1px solid var(--brd);border-radius:16px;padding:10px;overflow-x:auto}
+canvas{display:block;border-radius:10px;background:#050b18}
+
+.controls{background:var(--panel);border:1px solid var(--brd);border-radius:16px;padding:16px 18px;margin-top:14px}
+.ctl{margin:12px 0}
+.ctl:first-child{margin-top:0}
+.ctl label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.ctl label b{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:600}
+.ctl .ends{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);margin-top:3px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.row{display:flex;gap:10px;align-items:center;margin-top:6px}
+.btn{background:var(--panel);color:var(--ink);border:1px solid var(--brd);border-radius:9px;padding:8px 13px;font-size:13px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.on{border-color:var(--accent);color:var(--accent)}
+
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.metric{background:var(--panel);border:1px solid var(--brd);border-radius:11px;padding:9px 11px}
+.metric .k{font-size:11px;color:var(--dim)}
+.metric .v{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+
+.tutor{background:var(--panel);border:1px solid var(--brd);border-radius:16px;display:flex;flex-direction:column;
+  resize:vertical;overflow:hidden;min-height:220px;height:340px}
+.tutor h3{margin:0;padding:12px 14px;font-size:13px;border-bottom:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center}
+.tutor h3 .tag{font-size:11px;color:var(--dim);font-weight:400}
+.tlog{flex:1;overflow-y:auto;padding:12px 14px;font-size:13px;line-height:1.5}
+.tmsg{margin:8px 0;padding:8px 11px;border-radius:10px}
+.tmsg.u{background:rgba(55,213,255,.08);border:1px solid rgba(55,213,255,.2)}
+.tmsg.a{background:var(--panel);border:1px solid var(--brd)}
+.tmsg.sys{color:var(--dim);font-size:12px;border:1px dashed var(--brd)}
+.tin{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--brd)}
+.tin input{flex:1;background:#050b18;color:var(--ink);border:1px solid var(--brd);border-radius:9px;padding:8px 10px;font-size:13px;outline:none}
+.tin input:focus{border-color:var(--accent)}
+.tcfg{padding:10px 12px;border-top:1px solid var(--brd);display:none;gap:8px;flex-direction:column}
+.tcfg.show{display:flex}
+.tcfg input,.tcfg select{background:#050b18;color:var(--ink);border:1px solid var(--brd);border-radius:8px;padding:7px 9px;font-size:12.5px;outline:none;width:100%}
+.tcfg label{font-size:11px;color:var(--dim)}
+.mini{font-size:11px;color:var(--dim);background:none;border:none;cursor:pointer;text-decoration:underline}
+.legend{font-size:11.5px;color:var(--dim);padding:8px 4px 2px;line-height:1.6}
+.legend b{color:var(--ink);font-weight:600}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle;margin-right:4px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Photovoltaic Waterworks &mdash; Loop &amp; I–V</h1>
+    <p>Photons strike carriers up the band gap; they flow through the load (the wheel) and back. The load sets where you sit on the I–V curve.</p>
+  </div>
+  <nav class="headerLinks" aria-label="Module navigation">
+    <a href="../index.html" target="_top">← Solar-Cell Ebook</a>
+    <a href="../../../index.html" target="_top">Semiconductor Hub</a>
+  </nav>
+</header>
+
+<div class="wrap">
+  <div class="left">
+    <div class="stage"><canvas id="cv" width="980" height="460"></canvas></div>
+
+    <div class="controls">
+      <div class="ctl">
+        <label>Illumination <b><span id="sunsV">1.00</span> suns</b></label>
+        <input type="range" id="suns" min="0" max="1.5" step="0.01" value="1">
+        <div class="ends"><span>dark</span><span>bright</span></div>
+      </div>
+      <div class="ctl">
+        <label>Load (waterwheel resistance) <b><span id="loadV">14</span> Ω·cm²</b></label>
+        <input type="range" id="load" min="-0.7" max="2.7" step="0.01" value="1.146">
+        <div class="ends"><span>short circuit → max flow</span><span>open circuit → max head</span></div>
+      </div>
+      <div class="ctl">
+        <label>Temperature <b><span id="tempV">300</span> K</b></label>
+        <input type="range" id="temp" min="250" max="400" step="1" value="300">
+        <div class="ends"><span>cold</span><span>hot</span></div>
+      </div>
+      <div class="row">
+        <button class="btn" id="sweep">▶ Sweep load</button>
+        <button class="btn" id="mpp">Jump to max power</button>
+        <button class="btn" id="pv">Show P–V</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="metrics">
+      <div class="metric"><div class="k">Operating V (head)</div><div class="v" id="mV">—</div></div>
+      <div class="metric"><div class="k">Operating J (flow)</div><div class="v" id="mJ">—</div></div>
+      <div class="metric"><div class="k">Power out</div><div class="v" id="mP">—</div></div>
+      <div class="metric"><div class="k">Efficiency η</div><div class="v" id="mEff">—</div></div>
+      <div class="metric"><div class="k">V<sub>oc</sub></div><div class="v" id="mVoc">—</div></div>
+      <div class="metric"><div class="k">J<sub>sc</sub></div><div class="v" id="mJsc">—</div></div>
+      <div class="metric"><div class="k">Fill factor</div><div class="v" id="mFF">—</div></div>
+      <div class="metric"><div class="k">Max power</div><div class="v" id="mPmax">—</div></div>
+    </div>
+    <div class="legend">
+      <div><span class="sw" style="background:var(--sun)"></span><b>photons</b> — strike rate ∝ illumination</div>
+      <div><span class="sw" style="background:var(--carrier)"></span><b>carriers</b> — stream speed ∝ current J</div>
+      <div><span class="sw" style="background:var(--accent)"></span><b>head column</b> — height ∝ voltage V</div>
+      <div>Wheel spin ∝ flow · lamp glow ∝ power V·J</div>
+    </div>
+
+    <div class="tutor">
+      <h3>AI Tutor <span class="tag">context-aware <button class="mini" id="cfgBtn">settings</button></span></h3>
+      <div class="tlog" id="tlog">
+        <div class="tmsg sys">Ask about the operating point, fill factor, why V<sub>oc</sub> barely moves with light, thermalization loss, etc. The current slider values are sent with each question. Configure a backend under “settings”.</div>
+      </div>
+      <div class="tcfg" id="tcfg">
+        <div>
+          <label>Backend</label>
+          <select id="backend">
+            <option value="gemini">Google Gemini (API key)</option>
+            <option value="lmstudio">LM Studio (local)</option>
+          </select>
+        </div>
+        <div id="geminiCfg">
+          <label>Gemini API key</label>
+          <input id="gkey" type="password" placeholder="AIza…">
+          <label>Model</label>
+          <input id="gmodel" value="gemini-2.0-flash">
+        </div>
+        <div id="lmCfg" style="display:none">
+          <label>LM Studio base URL</label>
+          <input id="lmurl" value="http://localhost:1234/v1">
+          <label>Model</label>
+          <input id="lmmodel" value="local-model">
+        </div>
+      </div>
+      <div class="tin">
+        <input id="tinput" placeholder="Ask the tutor…">
+        <button class="btn" id="tsend">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ---------------- physics: analytic single-diode illuminated cell ---------------- */
+const KB = 8.617333e-5;      // eV/K
+const EG = 1.12;             // eV (Si-like), sets J0(T) temperature dependence
+const JPH_1SUN = 40;         // mA/cm^2 photocurrent at 1 sun
+const J0_REF = 1e-9;         // mA/cm^2 dark saturation current density at 300 K
+const N_ID = 1;              // ideality factor
+const PIN_1SUN = 100;        // mW/cm^2 incident optical power at 1 sun
+
+function Vt(T){ return N_ID * KB * T; }                    // thermal voltage (V), n folded in
+function J0(T){ return J0_REF * Math.pow(T/300,3) * Math.exp((EG/KB)*(1/300 - 1/T)); }
+function Jph(suns){ return JPH_1SUN * suns; }
+function Jdiode(V,suns,T){ return Jph(suns) - J0(T)*(Math.exp(V/Vt(T)) - 1); } // delivered J at voltage V
+function Voc(suns,T){ const j=Jph(suns); return j<=0?0:Vt(T)*Math.log(j/J0(T)+1); }
+
+// operating point = intersection of diode curve with load line J = 1000*V/R  (V in V, J in mA/cm^2)
+function operatingPoint(suns,T,R){
+  const voc = Voc(suns,T);
+  if(voc<=0) return {V:0,J:0};
+  let lo=0, hi=voc;
+  const f = V => Jdiode(V,suns,T) - 1000*V/R;   // decreasing in V
+  for(let k=0;k<60;k++){ const m=(lo+hi)/2; if(f(m)>0) lo=m; else hi=m; }
+  const V=(lo+hi)/2; return {V, J:Math.max(0,1000*V/R)};
+}
+function maxPower(suns,T){
+  const voc=Voc(suns,T); let best={V:0,J:0,P:0};
+  if(voc<=0) return best;
+  for(let i=0;i<=400;i++){ const V=voc*i/400; const J=Math.max(0,Jdiode(V,suns,T)); const P=V*J;
+    if(P>best.P) best={V,J,P}; }
+  return best;
+}
+
+/* ---------------- state ---------------- */
+const S = { suns:1, R:14, T:300, showPV:false, sweep:false, sweepDir:1 };
+const el = id => document.getElementById(id);
+const sunsEl=el('suns'), loadEl=el('load'), tempEl=el('temp');
+
+function loadFromSlider(v){ return Math.pow(10, parseFloat(v)); }        // log slider -> R
+function sliderFromLoad(R){ return Math.log10(R); }
+
+function readControls(){
+  S.suns=parseFloat(sunsEl.value);
+  S.R=loadFromSlider(loadEl.value);
+  S.T=parseFloat(tempEl.value);
+  el('sunsV').textContent=S.suns.toFixed(2);
+  el('loadV').textContent=S.R>=100?S.R.toFixed(0):S.R.toFixed(1);
+  el('tempV').textContent=S.T.toFixed(0);
+}
+sunsEl.oninput=loadEl.oninput=tempEl.oninput=()=>{ readControls(); };
+
+/* derived, refreshed each frame */
+let D = {};
+function compute(){
+  const voc=Voc(S.suns,S.T), jsc=Jph(S.suns);
+  const op=operatingPoint(S.suns,S.T,S.R);
+  const mp=maxPower(S.suns,S.T);
+  const ff = (voc*jsc>0)? mp.P/(voc*jsc) : 0;
+  const pin = PIN_1SUN*S.suns;
+  const eff = pin>0? mp.P/pin : 0;
+  D={voc,jsc,V:op.V,J:op.J,P:op.V*op.J,mp,ff,eff,pin};
+}
+
+/* ---------------- metrics ---------------- */
+function updateMetrics(){
+  el('mV').textContent   = D.V.toFixed(3)+' V';
+  el('mJ').textContent   = D.J.toFixed(1)+' mA/cm²';
+  el('mP').textContent   = D.P.toFixed(1)+' mW/cm²';
+  el('mEff').textContent = (D.eff*100).toFixed(1)+' %';
+  el('mVoc').textContent = D.voc.toFixed(3)+' V';
+  el('mJsc').textContent = D.jsc.toFixed(1)+' mA/cm²';
+  el('mFF').textContent  = (D.ff*100).toFixed(1)+' %';
+  el('mPmax').textContent= D.mp.P.toFixed(1)+' mW/cm²';
+}
+
+/* ---------------- animation scene ---------------- */
+const cv=el('cv'), g=cv.getContext('2d');
+const W=cv.width, H=cv.height;
+// scene occupies left ~ x:20..540 ; plot occupies x:600..960
+const SC={x0:30,x1:530,topY:110,botY:380}; // ledge (conduction) and floor (valence)
+const wheel={x:470,y:250,r:44,ang:0};
+
+// carriers streaming around the loop; photons raining
+let carriers=[], photons=[], carrierAcc=0, photonAcc=0;
+function spawnCarrier(){ carriers.push({p:0}); }
+function spawnPhoton(){ const sx=90+Math.random()*40, sy=70;
+  const tx=SC.x0+40+Math.random()*90, ty=SC.botY-6;
+  photons.push({x:sx,y:sy,tx,ty,t:0,kind:Math.random()}); }
+
+// loop path as phase 0..1: up-left -> across top -> down head+wheel -> across bottom
+function loopXY(p){
+  const liftX=SC.x0+70;
+  const headTop=SC.topY, headBot=wheel.y-wheel.r;
+  // segment lengths (approx, for even-ish speed)
+  if(p<0.18){ const t=p/0.18; return {x:liftX, y:SC.botY - t*(SC.botY-SC.topY)}; }      // lift up
+  if(p<0.55){ const t=(p-0.18)/0.37; return {x:liftX + t*(wheel.x-liftX), y:SC.topY}; }  // across top
+  if(p<0.72){ const t=(p-0.55)/0.17; return {x:wheel.x, y:SC.topY + t*(headBot-SC.topY)}; } // down head column
+  if(p<0.80){ const t=(p-0.72)/0.08; const a=-Math.PI/2 + t*Math.PI; return {x:wheel.x+wheel.r*Math.cos(a), y:wheel.y+wheel.r*Math.sin(a)}; } // around wheel
+  const t=(p-0.80)/0.20; return {x:wheel.x - t*(wheel.x-liftX), y:SC.botY};              // across bottom back
+}
+
+function drawScene(dt){
+  // bands
+  g.lineWidth=2;
+  g.strokeStyle='rgba(128,188,255,.7)'; g.beginPath(); g.moveTo(SC.x0,SC.topY); g.lineTo(wheel.x+8,SC.topY); g.stroke();
+  g.strokeStyle='rgba(255,137,150,.7)'; g.beginPath(); g.moveTo(SC.x0,SC.botY); g.lineTo(SC.x1,SC.botY); g.stroke();
+  g.fillStyle='var(--n)';
+  g.font='12px Inter'; g.fillStyle='#80bcff'; g.fillText('conduction band (top ledge)',SC.x0,SC.topY-8);
+  g.fillStyle='#ff8996'; g.fillText('valence band (carriers wait here)',SC.x0,SC.botY+18);
+
+  // band gap bracket
+  g.strokeStyle='rgba(255,255,255,.25)'; g.lineWidth=1;
+  g.beginPath(); g.moveTo(SC.x0-8,SC.topY); g.lineTo(SC.x0-8,SC.botY); g.stroke();
+  g.fillStyle='#c9d6f0'; g.save(); g.translate(SC.x0-14,(SC.topY+SC.botY)/2); g.rotate(-Math.PI/2);
+  g.textAlign='center'; g.fillText('E_g',0,0); g.restore(); g.textAlign='left';
+
+  // sun
+  g.fillStyle='#ffcc4d'; g.beginPath(); g.arc(75,60,15,0,7); g.fill();
+  g.strokeStyle='#f2a623'; g.lineWidth=1.5;
+  for(let i=0;i<8;i++){ const a=i/8*Math.PI*2; g.beginPath(); g.moveTo(75+Math.cos(a)*20,60+Math.sin(a)*20); g.lineTo(75+Math.cos(a)*26,60+Math.sin(a)*26); g.stroke(); }
+  g.fillStyle='#c9d6f0'; g.font='12px Inter'; g.fillText('sunlight',56,95);
+
+  // photons
+  photonAcc += dt * (2 + S.suns*22);
+  while(photonAcc>1){ spawnPhoton(); photonAcc-=1; }
+  g.fillStyle='#ffcc4d';
+  for(const ph of photons){
+    ph.t += dt*1.6; const x=ph.x+(ph.tx-ph.x)*ph.t, y=ph.y+(ph.ty-ph.y)*ph.t;
+    g.beginPath(); g.arc(x,y,3,0,7); g.fill();
+    g.strokeStyle='rgba(255,204,77,.5)'; g.lineWidth=1.5;
+    g.beginPath(); g.moveTo(x,y); g.lineTo(x-(ph.tx-ph.x)*0.05,y-(ph.ty-ph.y)*0.05); g.stroke();
+  }
+  photons=photons.filter(p=>p.t<1);
+
+  // carriers — spawn rate & speed scale with flow (current)
+  const flow=D.J; // mA/cm^2
+  const speed=0.05 + flow*0.010;                 // phase per second
+  carrierAcc += dt * (1 + flow*0.9);
+  while(carrierAcc>1){ if(carriers.length<160) spawnCarrier(); carrierAcc-=1; }
+  for(const c of carriers){ c.p += dt*speed; }
+  carriers=carriers.filter(c=>c.p<1);
+  for(const c of carriers){ const pt=loopXY(c.p);
+    g.fillStyle='#5aa0ff'; g.beginPath(); g.arc(pt.x,pt.y,3.2,0,7); g.fill(); }
+
+  // head column (height ∝ V / Voc) beside the wheel
+  const headTop=SC.topY, headBot=wheel.y-wheel.r;
+  const frac = D.voc>0? Math.min(1,D.V/D.voc):0;
+  const colX=wheel.x-16, colW=12, colTop=headBot, colH=(headBot-headTop);
+  g.strokeStyle='rgba(255,255,255,.2)'; g.lineWidth=1; g.strokeRect(colX,headTop,colW,colH);
+  g.fillStyle='rgba(55,213,255,.55)';
+  g.fillRect(colX, colTop-frac*colH, colW, frac*colH);
+  g.fillStyle='#37d5ff'; g.font='11px Inter'; g.fillText('head = V', colX-6, headTop-6);
+
+  // waterwheel — spin rate ∝ flow
+  wheel.ang += dt*(0.4+flow*0.09);
+  g.save(); g.translate(wheel.x,wheel.y); g.rotate(wheel.ang);
+  g.strokeStyle='#9db0d0'; g.lineWidth=2; g.beginPath(); g.arc(0,0,wheel.r,0,7); g.stroke();
+  for(let i=0;i<8;i++){ const a=i/8*Math.PI*2; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*wheel.r,Math.sin(a)*wheel.r); g.stroke(); }
+  g.restore();
+  g.fillStyle='#c9d6f0'; g.font='12px Inter'; g.textAlign='center'; g.fillText('load',wheel.x,wheel.y+wheel.r+18); g.textAlign='left';
+
+  // power lamp — glow ∝ P
+  const pnorm = D.mp.P>0? Math.min(1,D.P/D.mp.P):0;
+  const lampX=wheel.x, lampY=wheel.y+wheel.r+42;
+  g.beginPath(); g.arc(lampX,lampY,10,0,7);
+  g.fillStyle=`rgba(255,204,77,${0.15+0.85*pnorm})`; g.fill();
+  g.strokeStyle='rgba(255,204,77,.6)'; g.lineWidth=1; g.stroke();
+  g.fillStyle='#c9d6f0'; g.font='11px Inter'; g.textAlign='center';
+  g.fillText('P = V·J',lampX,lampY+24); g.textAlign='left';
+}
+
+/* ---------------- I–V plot ---------------- */
+const PL={x0:610,y0:410,w:340,h:330,Vmax:0.75,Jmax:48};
+function px(V){ return PL.x0 + (V/PL.Vmax)*PL.w; }
+function py(J){ return PL.y0 - (J/PL.Jmax)*PL.h; }
+function drawPlot(){
+  // axes
+  g.strokeStyle='rgba(255,255,255,.35)'; g.lineWidth=1;
+  g.beginPath(); g.moveTo(PL.x0,PL.y0-PL.h); g.lineTo(PL.x0,PL.y0); g.lineTo(PL.x0+PL.w,PL.y0); g.stroke();
+  g.fillStyle='#9db0d0'; g.font='11px Inter';
+  for(let v=0;v<=0.7;v+=0.1){ const x=px(v); g.strokeStyle='rgba(255,255,255,.08)';
+    g.beginPath(); g.moveTo(x,PL.y0); g.lineTo(x,PL.y0-PL.h); g.stroke();
+    g.fillText(v.toFixed(1),x-8,PL.y0+14); }
+  for(let j=0;j<=40;j+=10){ const y=py(j); g.strokeStyle='rgba(255,255,255,.08)';
+    g.beginPath(); g.moveTo(PL.x0,y); g.lineTo(PL.x0+PL.w,y); g.stroke();
+    g.fillText(j.toFixed(0),PL.x0-24,y+4); }
+  g.fillStyle='#c9d6f0'; g.fillText('V (V)',PL.x0+PL.w-30,PL.y0+26);
+  g.save(); g.translate(PL.x0-40,PL.y0-PL.h/2); g.rotate(-Math.PI/2); g.textAlign='center';
+  g.fillText('J (mA/cm²)',0,0); g.restore(); g.textAlign='left';
+
+  // Voc x Jsc reference rectangle (FF denominator)
+  g.strokeStyle='rgba(255,255,255,.18)'; g.setLineDash([4,4]);
+  g.strokeRect(PL.x0,py(D.jsc),px(D.voc)-PL.x0,PL.y0-py(D.jsc)); g.setLineDash([]);
+
+  // max-power rectangle (FF numerator)
+  g.fillStyle='rgba(55,213,255,.12)';
+  g.fillRect(PL.x0,py(D.mp.J),px(D.mp.V)-PL.x0,PL.y0-py(D.mp.J));
+
+  // I–V curve
+  g.strokeStyle='#37d5ff'; g.lineWidth=2.5; g.beginPath();
+  for(let i=0;i<=200;i++){ const V=D.voc*i/200; const J=Math.max(0,Jdiode(V,S.suns,S.T));
+    const x=px(V),y=py(J); if(i===0)g.moveTo(x,y); else g.lineTo(x,y); }
+  g.stroke();
+
+  // P–V curve (optional), scaled to Jmax
+  if(S.showPV){ g.strokeStyle='#ffcc4d'; g.lineWidth=1.5; g.beginPath();
+    const pscale = D.mp.P>0? (PL.Jmax*0.85)/D.mp.P : 0;
+    for(let i=0;i<=200;i++){ const V=D.voc*i/200; const J=Math.max(0,Jdiode(V,S.suns,S.T)); const P=V*J;
+      const x=px(V),y=py(P*pscale); if(i===0)g.moveTo(x,y); else g.lineTo(x,y); }
+    g.stroke();
+    g.fillStyle='#ffcc4d'; g.fillText('power',px(D.mp.V)+6,py(D.mp.P*pscale)-6);
+  }
+
+  // load line
+  g.strokeStyle='rgba(157,176,208,.8)'; g.lineWidth=1.2; g.setLineDash([6,4]);
+  const jAtVmax = 1000*PL.Vmax/S.R; g.beginPath(); g.moveTo(px(0),py(0));
+  if(jAtVmax<=PL.Jmax) g.lineTo(px(PL.Vmax),py(jAtVmax)); else g.lineTo(px(PL.Jmax*S.R/1000),py(PL.Jmax));
+  g.stroke(); g.setLineDash([]);
+
+  // markers Jsc, Voc
+  g.fillStyle='#80bcff'; g.beginPath(); g.arc(px(0),py(D.jsc),4,0,7); g.fill();
+  g.fillText('Jsc',px(0)+7,py(D.jsc)-6);
+  g.fillStyle='#ff8996'; g.beginPath(); g.arc(px(D.voc),py(0),4,0,7); g.fill();
+  g.fillText('Voc',px(D.voc)-6,py(0)-8);
+
+  // operating dot
+  g.fillStyle='#fff'; g.beginPath(); g.arc(px(D.V),py(D.J),6,0,7); g.fill();
+  g.strokeStyle='#37d5ff'; g.lineWidth=2; g.beginPath(); g.arc(px(D.V),py(D.J),9,0,7); g.stroke();
+
+  // MPP dot
+  g.fillStyle='#ffcc4d'; g.beginPath(); g.arc(px(D.mp.V),py(D.mp.J),3.5,0,7); g.fill();
+
+  g.fillStyle='#c9d6f0'; g.font='12px Inter';
+  g.fillText('illuminated I–V',PL.x0+PL.w-96,PL.y0-PL.h+2);
+}
+
+/* ---------------- main loop ---------------- */
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+
+  if(S.sweep){
+    let s=parseFloat(loadEl.value)+S.sweepDir*dt*0.55;
+    if(s>2.7){s=2.7;S.sweepDir=-1;} if(s<-0.7){s=-0.7;S.sweepDir=1;}
+    loadEl.value=s; readControls();
+  }
+
+  compute();
+  g.clearRect(0,0,W,H);
+  drawScene(dt);
+  drawPlot();
+  updateMetrics();
+  requestAnimationFrame(frame);
+}
+
+/* ---------------- buttons ---------------- */
+el('sweep').onclick=e=>{ S.sweep=!S.sweep; e.target.classList.toggle('on',S.sweep); e.target.textContent=S.sweep?'⏸ Sweeping':'▶ Sweep load'; };
+el('mpp').onclick=()=>{ compute(); if(D.mp.J>0){ const R=1000*D.mp.V/D.mp.J; loadEl.value=sliderFromLoad(R); readControls(); S.sweep=false; el('sweep').classList.remove('on'); el('sweep').textContent='▶ Sweep load'; } };
+el('pv').onclick=e=>{ S.showPV=!S.showPV; e.target.classList.toggle('on',S.showPV); };
+
+/* ---------------- AI tutor ---------------- */
+el('cfgBtn').onclick=()=>el('tcfg').classList.toggle('show');
+el('backend').onchange=e=>{ const g=e.target.value==='gemini'; el('geminiCfg').style.display=g?'':'none'; el('lmCfg').style.display=g?'none':''; };
+function addMsg(role,text){ const d=document.createElement('div'); d.className='tmsg '+role; d.textContent=text; el('tlog').appendChild(d); el('tlog').scrollTop=el('tlog').scrollHeight; return d; }
+function simContext(){
+  return `Current simulator state:
+- Illumination: ${S.suns.toFixed(2)} suns
+- Load resistance: ${S.R.toFixed(1)} Ohm·cm^2
+- Temperature: ${S.T.toFixed(0)} K
+- Operating point: V=${D.V.toFixed(3)} V, J=${D.J.toFixed(1)} mA/cm^2, P=${D.P.toFixed(1)} mW/cm^2
+- Voc=${D.voc.toFixed(3)} V, Jsc=${D.jsc.toFixed(1)} mA/cm^2, Vmp=${D.mp.V.toFixed(3)} V, Jmp=${D.mp.J.toFixed(1)} mA/cm^2
+- Fill factor=${(D.ff*100).toFixed(1)}%, efficiency=${(D.eff*100).toFixed(1)}%
+This is a metaphor sim: photons strike carriers up the band gap; head (water column height) = voltage; flow = current; the waterwheel is the electrical load.`;
+}
+async function ask(q){
+  const backend=el('backend').value;
+  const sys=`You are a concise physics tutor for undergraduate solid-state electronics students using a solar-cell metaphor simulator. Keep answers short and tie them to the metaphor (photons, head, flow, waterwheel) and to the numbers when relevant.`;
+  const prompt=`${sys}\n\n${simContext()}\n\nStudent question: ${q}`;
+  const wait=addMsg('a','…');
+  try{
+    let text;
+    if(backend==='gemini'){
+      const key=el('gkey').value.trim(); const model=el('gmodel').value.trim();
+      if(!key){ wait.textContent='Add a Gemini API key under settings.'; return; }
+      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+      const j=await r.json();
+      text=j?.candidates?.[0]?.content?.parts?.[0]?.text || j?.error?.message || 'No response.';
+    } else {
+      const url=el('lmurl').value.trim().replace(/\/$/,''); const model=el('lmmodel').value.trim();
+      const r=await fetch(url+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model,messages:[{role:'system',content:sys},{role:'user',content:simContext()+'\n\nQuestion: '+q}],temperature:0.4})});
+      const j=await r.json();
+      text=j?.choices?.[0]?.message?.content || j?.error?.message || 'No response.';
+    }
+    wait.textContent=text;
+  }catch(err){ wait.textContent='Request failed: '+err.message+' (check backend / CORS).'; }
+}
+function send(){ const q=el('tinput').value.trim(); if(!q) return; addMsg('u',q); el('tinput').value=''; ask(q); }
+el('tsend').onclick=send;
+el('tinput').addEventListener('keydown',e=>{ if(e.key==='Enter') send(); });
+
+/* ---------------- go ---------------- */
+readControls(); compute(); requestAnimationFrame(frame);
+</script>
+
+<!-- maestra-integration-v4 -->
+<link rel="stylesheet" href="../../../shared/maestra-toolbar.css">
+<script defer src="../../../shared/theme-sync-v2.js"></script>
+<script defer src="../../../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="solar-cells" data-maestra-module-title="Solar Cells" data-maestra-topic-title="Solar Cell Loop Metaphor" data-maestra-canvas-template="solar-cell"></script>
+</body>
+</html>

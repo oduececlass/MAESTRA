@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MESFET Interactive Chapter</title>
+<script>
+  (function(){
+    try {
+      var saved = localStorage.getItem('mesfetPnTheme');
+      document.addEventListener('DOMContentLoaded', function(){
+        document.body.classList.toggle('light', saved !== 'dark');
+      });
+    } catch (e) {
+      document.addEventListener('DOMContentLoaded', function(){ document.body.classList.add('light'); });
+    }
+  })();
+  </script>
+<script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)'], ['$', '$']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+    :root {
+      --bg: #071018;
+      --panel: #0e1b26;
+      --panel2: #122638;
+      --card: #101f2b;
+      --text: #eaf4ff;
+      --muted: #9bb2c7;
+      --accent: #34c9ff;
+      --accent2: #8a7dff;
+      --accent3: #ff6fae;
+      --good: #54e391;
+      --warn: #ffd166;
+      --bad: #ff6b6b;
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 18px 45px rgba(0,0,0,0.35);
+      --math: #dbeafe;
+      --plot-bg: #071018;
+      --plot-grid: rgba(255,255,255,0.16);
+      --plot-axis: rgba(255,255,255,0.74);
+      --input-bg: #0b1722;
+      --chip: rgba(52,201,255,0.12);
+    }
+    body.light {
+      --bg: #f5f8fb;
+      --panel: #ffffff;
+      --panel2: #edf5fb;
+      --card: #ffffff;
+      --text: #16202a;
+      --muted: #516577;
+      --accent: #0077b6;
+      --accent2: #5b54c9;
+      --accent3: #c53373;
+      --good: #0e9f6e;
+      --warn: #ad6a00;
+      --bad: #c24141;
+      --border: rgba(20,35,50,0.14);
+      --shadow: 0 12px 30px rgba(24,45,70,0.12);
+      --math: #123044;
+      --plot-bg: #ffffff;
+      --plot-grid: rgba(0,0,0,0.11);
+      --plot-axis: rgba(0,0,0,0.72);
+      --input-bg: #f0f6fb;
+      --chip: rgba(0,119,182,0.10);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, rgba(52,201,255,0.14), transparent 38%), var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    a { color: inherit; }
+    .app {
+      display: grid;
+      grid-template-columns: 290px minmax(0,1fr) 360px;
+      min-height: 100vh;
+    }
+    aside.nav {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 22px 16px;
+      background: linear-gradient(180deg, var(--panel), rgba(14,27,38,0.88));
+      border-right: 1px solid var(--border);
+    }
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      box-shadow: var(--shadow);
+    }
+    .brand h1 {
+      font-size: 17px;
+      margin: 0;
+      line-height: 1.1;
+    }
+    .brand p { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+    .nav .small-title {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin: 20px 8px 8px;
+    }
+    .nav a, .nav button.navbtn {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--muted);
+      border: 1px solid transparent;
+      background: transparent;
+      font: inherit;
+      cursor: pointer;
+      text-align: left;
+    }
+    .nav a:hover, .nav button.navbtn:hover, .nav a.active {
+      color: var(--text);
+      background: var(--chip);
+      border-color: var(--border);
+    }
+    .nav .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex: 0 0 auto;
+    }
+    .subnav { padding-left: 14px; }
+    .subnav a { font-size: 13px; padding: 7px 12px; }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn {
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--panel2), var(--panel));
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 700;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.1);
+    }
+    .btn:hover { border-color: var(--accent); }
+    main {
+      padding: 28px clamp(18px, 4vw, 52px) 70px;
+      overflow: hidden;
+    }
+    .hero {
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(52,201,255,0.16), rgba(138,125,255,0.12)), var(--panel);
+      border-radius: 28px;
+      padding: clamp(26px, 5vw, 54px);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero:after {
+      content: "";
+      position: absolute;
+      width: 360px;
+      height: 360px;
+      right: -120px;
+      top: -120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(52,201,255,0.22), transparent 70%);
+      pointer-events: none;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--accent);
+      font-weight: 800;
+      background: rgba(255,255,255,0.04);
+      font-size: 13px;
+    }
+    .hero h2 {
+      font-size: clamp(34px, 6vw, 68px);
+      letter-spacing: -0.05em;
+      margin: 18px 0 14px;
+      line-height: 0.97;
+      max-width: 820px;
+    }
+    .hero p { max-width: 820px; color: var(--muted); font-size: 18px; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 14px;
+      margin-top: 28px;
+    }
+    .hero-start-grid { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(320px,0.8fr); gap:18px; margin-top:22px; align-items:start; }
+    .hero-figure-card, .hero-info-card { border:1px solid var(--border); border-radius:22px; background:linear-gradient(180deg, rgba(255,255,255,0.045), transparent), var(--card); box-shadow: var(--shadow); }
+    .hero-figure-card { padding:16px; }
+    .hero-figure-card img { width:100%; display:block; border-radius:16px; border:1px solid var(--border); }
+    .hero-figure-card .figure-note { margin-top:10px; color:var(--muted); font-size:14px; line-height:1.55; }
+    .hero-info-card { padding:18px; }
+    .hero-info-card h3 { margin:0 0 10px; font-size:22px; }
+    .hero-info-card p { font-size:15px; margin:0 0 12px; }
+    .quick-link-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .quick-link-row a { display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:12px; text-decoration:none; font-weight:800; border:1px solid var(--border); background:var(--panel2); color:var(--text); }
+    .quick-link-row a:hover { border-color:var(--accent); }
+    .formula-stack { display:grid; gap:10px; margin-top:14px; }
+    .formula-chip { border:1px solid var(--border); border-left:4px solid var(--accent); border-radius:14px; background:rgba(255,255,255,0.04); padding:12px 14px; color:var(--math); font-size:15px; overflow-x:auto; }
+    .metric {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      background: rgba(255,255,255,0.045);
+      backdrop-filter: blur(8px);
+    }
+    .metric strong { font-size: 24px; color: var(--accent); display: block; }
+    .metric span { color: var(--muted); font-size: 13px; }
+    section.topic {
+      margin-top: 36px;
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    /* Single-page ebook mode: only the selected navigation target is shown. */
+    .view-block { display: none; }
+    .view-block.active-view { display: block; animation: pageFade 0.18s ease-out; }
+    @keyframes pageFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .nav a.active { box-shadow: inset 3px 0 0 var(--accent); }
+    .focus-target { outline: 2px solid var(--accent); outline-offset: 8px; }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      padding: 24px clamp(18px, 3vw, 32px);
+      background: linear-gradient(90deg, rgba(52,201,255,0.10), transparent);
+      border-bottom: 1px solid var(--border);
+    }
+    .section-head h2 { margin: 0; font-size: clamp(24px, 3vw, 36px); letter-spacing: -0.025em; }
+    .section-head p { margin: 4px 0 0; color: var(--muted); }
+    .pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      font-weight: 800;
+      white-space: nowrap;
+      background: var(--chip);
+    }
+    .content { padding: clamp(18px, 3vw, 32px); }
+    details.subsection {
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: 20px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+    details.subsection[open] { box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+    details.subsection summary {
+      cursor: pointer;
+      padding: 18px 22px;
+      font-weight: 900;
+      color: var(--text);
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    details.subsection summary::-webkit-details-marker { display:none; }
+    details.subsection summary:after {
+      content: "+";
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+    }
+    details.subsection[open] summary:after { content: "−"; }
+    .subbody { padding: 0 22px 22px; }
+    .two-col, .three-col {
+      display: grid;
+      gap: 18px;
+      margin: 18px 0;
+    }
+    .two-col { grid-template-columns: 1fr 1fr; }
+    .three-col { grid-template-columns: repeat(3,1fr); }
+    .card {
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), transparent), var(--card);
+      border-radius: 18px;
+      padding: 18px;
+    }
+    .card h3 { margin: 0 0 10px; font-size: 18px; }
+    .card p, .card li { color: var(--muted); }
+    .mathbox {
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(52,201,255,0.10), rgba(138,125,255,0.06));
+      border-radius: 18px;
+      padding: 18px;
+      overflow-x: auto;
+      color: var(--math);
+      margin: 16px 0;
+    }
+    .note {
+      border-left: 4px solid var(--accent);
+      background: var(--chip);
+      padding: 14px 16px;
+      border-radius: 14px;
+      color: var(--muted);
+      margin: 16px 0;
+    }
+    .sim {
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(52,201,255,0.07), transparent), var(--card);
+      padding: 18px;
+      margin: 22px 0;
+    }
+    .sim h3 { margin: 0 0 5px; }
+    .sim p { color: var(--muted); margin-top: 0; }
+    .sim-grid {
+      display: grid;
+      grid-template-columns: 285px minmax(0,1fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .controls {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      background: rgba(0,0,0,0.06);
+    }
+    .control { margin-bottom: 14px; }
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .control output { color: var(--accent); font-weight: 900; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+    select, input[type="number"], textarea {
+      width: 100%;
+      background: var(--input-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+    }
+    .readouts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .readout {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px;
+      background: rgba(255,255,255,0.035);
+    }
+    .readout span { display: block; color: var(--muted); font-size: 12px; }
+    .readout strong { display: block; color: var(--text); font-size: 17px; margin-top: 2px; }
+    .plot-panel {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1fr 1fr;
+      min-width: 0;
+    }
+    canvas.plot, svg.diagram {
+      width: 100%;
+      height: 310px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--plot-bg);
+      display: block;
+    }
+    .wide { grid-column: 1 / -1; }
+    .diagram text { font-family: Inter, ui-sans-serif, system-ui, sans-serif; fill: var(--text); }
+    .diagram .muted { fill: var(--muted); }
+    .diagram .accent { fill: var(--accent); }
+    .diagram .stroke { stroke: var(--plot-axis); }
+    .diagram .accent-stroke { stroke: var(--accent); }
+    .diagram.tall-diagram { height: 420px; }
+    .fig-caption { margin-top: 10px; color: var(--muted); font-size: 13px; text-align: center; }
+    .eq-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; margin: 18px 0 8px; }
+    .eq-card { border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; background: linear-gradient(135deg, rgba(52,201,255,0.08), rgba(138,125,255,0.05)); }
+    .eq-card .eq-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); font-weight: 900; margin-bottom: 8px; }
+    .eq-card .eq-formula { color: var(--math); overflow-x: auto; text-align: center; font-size: 1.06rem; }
+    .figure-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+    .figure-card { border: 1px solid var(--border); border-radius: 18px; padding: 16px; background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent), var(--card); }
+    .figure-card h4 { margin: 0 0 10px; font-size: 16px; }
+    .figure-img { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-radius: 14px; background: #fff; }
+    .figure-note { margin-top: 10px; color: var(--muted); font-size: 13px; }
+    .compact-figure-card { max-width: 820px; margin-left: auto; margin-right: auto; }
+    .compact-band-figure { max-width: 760px; margin-left: auto; margin-right: auto; }
+    .sim-theory-card {
+      max-width: 620px;
+      margin: 16px auto 20px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), transparent), var(--card);
+    }
+    .sim-theory-img {
+      width: 100%;
+      max-width: 520px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fff;
+    }
+    .sim-theory-card .figure-note { text-align: center; }
+    .derivation-step {
+      border-left: 3px solid var(--accent2);
+      padding-left: 14px;
+      margin: 16px 0;
+    }
+    .quiz-grid {
+      display: grid;
+      grid-template-columns: repeat(2,1fr);
+      gap: 14px;
+    }
+    .quiz-card { border: 1px solid var(--border); border-radius: 16px; padding: 16px; background: var(--card); }
+    .quiz-card .answer { display:none; margin-top: 10px; color: var(--good); }
+    .quiz-card.show .answer { display:block; }
+    .tutor {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      border-left: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--panel), rgba(14,27,38,0.9));
+      display: flex;
+      flex-direction: column;
+    }
+    .tutor-head { padding: 20px; border-bottom: 1px solid var(--border); }
+    .tutor-head h2 { margin: 0; font-size: 20px; }
+    .tutor-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .chatlog { flex: 1; padding: 16px; overflow: auto; display: flex; flex-direction: column; gap: 12px; }
+    .msg {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px 14px;
+      max-width: 93%;
+      background: var(--card);
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .msg.user { align-self: flex-end; background: var(--chip); color: var(--text); }
+    .msg.bot { align-self: flex-start; }
+    .quick-prompts { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 12px; }
+    .quick-prompts button {
+      border: 1px solid var(--border);
+      background: var(--chip);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .chatbox { padding: 14px; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+    .mini { font-size: 12px; color: var(--muted); }
+    .source-tag { font-size: 11px; color: var(--muted); padding: 3px 8px; border: 1px solid var(--border); border-radius: 999px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border: 1px solid var(--border); padding: 10px 12px; text-align: left; }
+    th { background: var(--panel2); color: var(--text); }
+    td { color: var(--muted); }
+    footer { color: var(--muted); padding: 30px 0; text-align: center; }
+
+
+    /* Bright mode readability fixes for side navigation and tutor panel */
+    body.light aside.nav {
+      background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+      color: var(--text);
+      box-shadow: 8px 0 26px rgba(30, 55, 80, 0.07);
+    }
+    body.light .tutor {
+      background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+      color: var(--text);
+      box-shadow: -8px 0 26px rgba(30, 55, 80, 0.07);
+    }
+    body.light .brand h1,
+    body.light .tutor-head h2 {
+      color: #152536;
+    }
+    body.light .brand p,
+    body.light .tutor-head p,
+    body.light .nav .small-title,
+    body.light .mini,
+    body.light .source-tag {
+      color: #5f7285;
+    }
+    body.light .nav a,
+    body.light .nav button.navbtn,
+    body.light .subnav a {
+      color: #3f5368;
+      font-weight: 650;
+    }
+    body.light .nav a:hover,
+    body.light .nav button.navbtn:hover,
+    body.light .nav a.active {
+      color: #0f2e45;
+      background: #e8f4fb;
+      border-color: rgba(0,119,182,0.22);
+    }
+    body.light .nav a.active {
+      background: #dff0fa;
+      box-shadow: inset 3px 0 0 var(--accent), 0 6px 16px rgba(0,119,182,0.10);
+    }
+    body.light .tutor-head,
+    body.light .chatbox {
+      background: rgba(255,255,255,0.80);
+      border-color: var(--border);
+    }
+    body.light .msg.bot {
+      background: #ffffff;
+      color: #3f5368;
+      border-color: rgba(20,35,50,0.12);
+      box-shadow: 0 8px 22px rgba(24,45,70,0.08);
+    }
+    body.light .msg.user,
+    body.light .quick-prompts button {
+      background: #e8f4fb;
+      color: #123044;
+      border-color: rgba(0,119,182,0.18);
+    }
+    body.light #chatInput {
+      background: #ffffff;
+      color: #152536;
+      border-color: rgba(20,35,50,0.18);
+    }
+    body.light .eq-card {
+      background: linear-gradient(135deg, #f7fcff, #f2f7fd);
+      border-color: rgba(20,35,50,0.12);
+    }
+    body.light .eq-card .eq-label {
+      color: #00689e;
+      letter-spacing: 0.14em;
+    }
+    body.light .eq-card .eq-formula {
+      color: #123044;
+    }
+
+
+    .module-hub {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 14px;
+      margin: 18px 0 22px;
+    }
+    .mini-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), transparent), var(--card);
+    }
+    .mini-card h4 { margin: 0 0 8px; font-size: 16px; }
+    .mini-card p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+    .mini-card .mini-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .mini-pill {
+      display:inline-flex; align-items:center; gap:6px;
+      padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 800;
+      border: 1px solid var(--border); color: var(--accent); background: var(--chip);
+      margin-bottom: 10px;
+    }
+    .btn-link {
+      display:inline-flex; align-items:center; justify-content:center;
+      border:1px solid var(--border); background:var(--panel2); color:var(--text);
+      border-radius: 10px; padding: 9px 12px; cursor:pointer; font-weight: 800; text-decoration:none;
+    }
+    .btn-link:hover { border-color: var(--accent); }
+    .embed-lab {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(52,201,255,0.05), transparent), var(--card);
+      margin: 16px 0 18px;
+    }
+    .embed-head {
+      display:flex; justify-content:space-between; align-items:center; gap:14px;
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+    }
+    .embed-head h4 { margin:0; font-size:16px; }
+    .embed-head p { margin:4px 0 0; color:var(--muted); font-size:13px; }
+    .embed-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .embed-frame {
+      width: 100%; height: 880px; border: 0; display:block; background:#fff;
+    }
+    .embed-frame.short { height: 760px; }
+    .anchor-jump { position: relative; top: -14px; }
+
+    @media (max-width: 1220px) {
+      .app { grid-template-columns: 250px minmax(0,1fr); }
+      .tutor { grid-column: 1 / -1; height: 620px; position: relative; border-left: 0; border-top: 1px solid var(--border); }
+    }
+    @media (max-width: 900px) {
+      .app { display: block; }
+      aside.nav { position: relative; height: auto; }
+      .two-col, .three-col, .sim-grid, .plot-panel, .hero-grid, .quiz-grid, .module-hub, .hero-start-grid { grid-template-columns: 1fr; }
+      main { padding: 18px; }
+      .tutor { height: 640px; }
+      .embed-frame, .embed-frame.short { height: 680px; }
+    }
+    @media print {
+      .view-block { display: block !important; }
+      aside.nav, .tutor, .toolbar, .controls, .quick-prompts, .chatbox { display: none !important; }
+      .app { display: block; }
+      body { background: white; color: black; }
+      section.topic, .hero, .card, .sim, details.subsection { box-shadow: none; break-inside: avoid; }
+      details.subsection { display: block; }
+      details.subsection .subbody { display: block; }
+    }
+  
+/* Discrete-page mode: every navigation item is an independent page. */
+#readModeBtnPN{display:none!important}.readingToolbarPN{grid-template-columns:auto minmax(220px,1fr) auto!important}.view-block{display:none!important}.view-block.active-view{display:block!important}.fullChapterMode .view-block{display:none!important}.fullChapterMode .view-block.active-view{display:block!important}.topic>.content{min-height:420px}.embed-frame{min-height:820px}.standalone-page-intro{margin-bottom:18px}
+</style>
+<style id="pnDiodeStyleOverride">
+  /* ===== PN-diode ebook inspired shell ===== */
+  :root{
+    --pn-accent:#23c7f4;
+    --pn-accent-2:#6f74ff;
+    --pn-app:#eef7fc;
+    --pn-side:#f8fcff;
+    --pn-surface:#ffffff;
+    --pn-surface-2:#f5fbff;
+    --pn-surface-3:#eaf7fd;
+    --pn-text:#102033;
+    --pn-body:#2d465e;
+    --pn-muted:#5f7488;
+    --pn-stroke:#cfe1ee;
+    --pn-stroke-2:#9fd4ed;
+    --pn-shadow:0 18px 45px rgba(23,55,84,.10);
+    --pn-nav-active:#dff4ff;
+    --pn-nav-hover:#eef9ff;
+    --pn-equation:#f4fbff;
+    --pn-equation-line:#8fd8f8;
+  }
+  body:not(.light){
+    --pn-app:#0d1b26;
+    --pn-side:#0b1822;
+    --pn-surface:#102333;
+    --pn-surface-2:#132b3b;
+    --pn-surface-3:#173447;
+    --pn-text:#f4fbff;
+    --pn-body:#b9d5ea;
+    --pn-muted:#93aebf;
+    --pn-stroke:#263f52;
+    --pn-stroke-2:#31566f;
+    --pn-shadow:0 20px 60px rgba(0,0,0,.35);
+    --pn-nav-active:#153c50;
+    --pn-nav-hover:#112d3d;
+    --pn-equation:linear-gradient(180deg,#143247 0%,#122c3f 100%);
+    --pn-equation-line:#4fb8de;
+  }
+  html,body{background:var(--pn-app)!important;color:var(--pn-body)!important;font-family:Inter,Arial,Helvetica,sans-serif!important;}
+  body{margin:0!important;}
+  .ebookTopbar{
+    height:56px;position:sticky;top:0;z-index:1000;
+    display:grid;grid-template-columns:68px 260px minmax(220px,1fr) auto;
+    align-items:center;gap:12px;background:var(--pn-side);border-bottom:1px solid var(--pn-stroke);
+  }
+  .ebookHome{
+    width:44px;height:44px;margin-left:12px;border:0;border-radius:16px;
+    display:grid;place-items:center;background:linear-gradient(135deg,#38d7ff,#8068ff);
+    color:#fff;font-weight:950;font-size:18px;cursor:pointer;box-shadow:0 10px 25px rgba(56,215,255,.22);
+  }
+  .ebookSiteTitle{color:var(--pn-text);font-size:16px;font-weight:850;letter-spacing:-.01em;white-space:nowrap;}
+  .ebookSearch{height:36px;border:1px solid var(--pn-stroke);background:var(--pn-surface-2);color:var(--pn-body);border-radius:12px;padding:0 14px;width:100%;font:inherit;}
+  .ebookTopActions{display:flex;gap:8px;align-items:center;padding-right:16px;}
+  .ebookTopBtn,.readingBtn,.navToolBtn{
+    border:1px solid var(--pn-stroke-2);background:var(--pn-surface-2);color:var(--pn-text);
+    border-radius:14px;padding:9px 13px;font-weight:850;cursor:pointer;white-space:nowrap;
+  }
+.ebookTopBtn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;}
+  .ebookTopBtn:hover,.readingBtn:hover,.navToolBtn:hover{background:var(--pn-nav-hover);border-color:var(--pn-accent);color:var(--pn-accent);}
+  .app{display:grid!important;grid-template-columns:310px minmax(0,1fr)!important;min-height:calc(100vh - 56px)!important;background:var(--pn-app)!important;}
+  aside.nav{
+    position:sticky!important;top:56px!important;height:calc(100vh - 56px)!important;overflow:auto!important;
+    padding:18px 12px 28px!important;background:linear-gradient(180deg,var(--pn-side),var(--pn-app))!important;
+    border-right:1px solid var(--pn-stroke)!important;box-shadow:10px 0 28px rgba(25,71,104,.05)!important;
+  }
+  aside.nav .brand{margin:0 8px 12px!important;padding:4px 2px 14px;border-bottom:1px solid var(--pn-stroke);}
+  aside.nav .logo{width:46px!important;height:46px!important;border-radius:15px!important;background:linear-gradient(135deg,#38d7ff,#8068ff)!important;box-shadow:0 10px 24px rgba(56,215,255,.18)!important;}
+  aside.nav .brand h1{color:var(--pn-text)!important;font-size:16px!important;font-weight:850!important;}
+  aside.nav .brand p{color:var(--pn-muted)!important;}
+  aside.nav>.toolbar{display:none!important;}
+  .navToolsPN{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:0 8px 14px;}
+  .navToolBtn{padding:9px 8px;font-size:12px;}
+  aside.nav .small-title{color:var(--pn-muted)!important;text-transform:uppercase!important;letter-spacing:.16em!important;font-size:10px!important;font-weight:850!important;margin:17px 12px 8px!important;}
+  aside.nav a,aside.nav button.navbtn{
+    color:var(--pn-muted)!important;border:1px solid transparent!important;border-radius:12px!important;
+    margin:3px 0!important;padding:10px 11px!important;background:transparent!important;font-weight:650!important;
+  }
+  aside.nav a:hover,aside.nav button.navbtn:hover{background:var(--pn-nav-hover)!important;color:var(--pn-text)!important;border-color:var(--pn-stroke)!important;}
+  aside.nav a.active{background:linear-gradient(90deg,var(--pn-nav-active),var(--pn-surface-2))!important;color:var(--pn-text)!important;border-color:var(--pn-accent)!important;box-shadow:inset 5px 0 0 var(--pn-accent),0 8px 22px rgba(35,199,244,.12)!important;font-weight:900!important;}
+  aside.nav .dot{background:var(--pn-accent)!important;}
+  aside.nav .subnav{padding-left:18px!important;}
+  aside.nav .subnav a{font-size:13px!important;padding:8px 10px!important;}
+  aside.nav.compactSubnav .subnav{display:none!important;}
+  main{padding:34px 30px 88px!important;overflow:visible!important;background:transparent!important;min-width:0!important;}
+  .tutor{display:none!important;}
+  .readingToolbarPN{
+    display:grid;grid-template-columns:auto minmax(180px,1fr) auto auto;gap:10px;align-items:center;
+    margin:0 0 22px;padding:10px;border:1px solid var(--pn-stroke);border-radius:16px;
+    background:linear-gradient(90deg,var(--pn-surface),var(--pn-surface-2));box-shadow:0 6px 18px rgba(15,23,42,.07);
+    position:sticky;top:68px;z-index:20;
+  }
+  .readingStatusPN{display:flex;flex-direction:column;gap:2px;min-width:0;color:var(--pn-muted);font-size:13px;line-height:1.25;}
+  #readingModeLabelPN{font-weight:850;color:var(--pn-accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .readingBtn:disabled{opacity:.45;cursor:not-allowed;}
+  .pageBottomNavPN{display:flex;justify-content:space-between;gap:12px;margin:30px 0 4px;padding-top:18px;border-top:1px solid var(--pn-stroke);}
+  .view-block{scroll-margin-top:142px;}
+  body.fullChapterMode .view-block{display:block!important;margin-bottom:34px!important;}
+  body.fullChapterMode .view-block:not(:last-of-type){border-bottom:2px solid var(--pn-stroke);padding-bottom:34px;}
+  .hero,section.topic{
+    border:1px solid var(--pn-stroke)!important;background:var(--pn-surface)!important;border-radius:28px!important;
+    box-shadow:var(--pn-shadow)!important;overflow:hidden!important;
+  }
+  .hero{padding:34px 38px!important;background:linear-gradient(135deg,var(--pn-surface),var(--pn-surface-2))!important;}
+  .hero h2{color:var(--pn-text)!important;font-size:clamp(36px,5vw,62px)!important;font-weight:900!important;letter-spacing:-.045em!important;}
+  .hero p{color:var(--pn-body)!important;}
+  .section-head{
+    padding:30px 34px 26px!important;background:linear-gradient(135deg,var(--pn-surface),var(--pn-surface-2))!important;
+    border-bottom:1px solid var(--pn-stroke)!important;
+  }
+  .section-head h2{color:var(--pn-text)!important;font-size:clamp(30px,4vw,46px)!important;font-weight:900!important;letter-spacing:-.035em!important;}
+  .section-head p{color:var(--pn-body)!important;font-size:17px!important;line-height:1.55!important;}
+  .pill,.eyebrow{background:var(--pn-nav-active)!important;color:var(--pn-accent)!important;border-color:var(--pn-stroke-2)!important;}
+  .content{padding:28px 32px!important;}
+  details.subsection,.card,.figure-card,.sim,.mini-card,.embed-lab,.quiz-card,.eq-card{
+    background:linear-gradient(180deg,var(--pn-surface),var(--pn-surface-2))!important;
+    border-color:var(--pn-stroke)!important;border-radius:18px!important;color:var(--pn-body)!important;
+    box-shadow:0 10px 28px rgba(23,55,84,.06)!important;
+  }
+  details.subsection summary{background:var(--pn-surface-2)!important;color:var(--pn-text)!important;border-bottom-color:var(--pn-stroke)!important;font-size:17px!important;}
+  details.subsection summary:after{color:var(--pn-accent)!important;border-color:var(--pn-stroke-2)!important;}
+  .card h3,.card h4,.figure-card h4,.sim h3,.mini-card h4,.embed-head h4{color:var(--pn-text)!important;}
+  .card p,.card li,.figure-note,.sim p,.mini-card p,.embed-head p,td{color:var(--pn-body)!important;}
+  .mathbox,.eq-card,.note,.derivation-step{
+    background:var(--pn-equation)!important;border:1.5px solid var(--pn-equation-line)!important;
+    border-left:4px solid var(--pn-accent)!important;border-radius:16px!important;color:var(--pn-text)!important;box-shadow:none!important;
+  }
+  body:not(.light) .mathbox mjx-container,body:not(.light) .eq-card mjx-container{color:#ffe2b3!important;}
+  .btn,.btn-link,.quick-prompts button{
+    border:1px solid var(--pn-stroke-2)!important;background:var(--pn-surface-2)!important;color:var(--pn-text)!important;border-radius:13px!important;box-shadow:none!important;
+  }
+  .btn:hover,.btn-link:hover,.quick-prompts button:hover{background:var(--pn-nav-hover)!important;color:var(--pn-accent)!important;border-color:var(--pn-accent)!important;}
+  input,textarea,select{background:var(--pn-surface-2)!important;color:var(--pn-text)!important;border-color:var(--pn-stroke)!important;}
+  table,th,td{border-color:var(--pn-stroke)!important;}
+  th{background:var(--pn-surface-3)!important;color:var(--pn-text)!important;}
+  canvas.plot,svg.diagram,.figure-img,.sim-theory-img{border-color:var(--pn-stroke)!important;border-radius:16px!important;box-shadow:0 10px 28px rgba(0,0,0,.08)!important;}
+  body.light canvas.plot,body.light svg.diagram{background:#fff!important;}
+  .embed-head{background:var(--pn-surface-2)!important;border-bottom-color:var(--pn-stroke)!important;}
+  .source-tag{color:var(--pn-muted)!important;border-color:var(--pn-stroke)!important;}
+  .focus-target{outline-color:var(--pn-accent)!important;}
+  .navSearchEmpty{display:none;margin:12px;color:var(--pn-muted);font-size:13px;}
+  @media(max-width:1050px){
+    .ebookTopbar{grid-template-columns:58px 220px 1fr auto;}
+    .app{grid-template-columns:270px minmax(0,1fr)!important;}
+  }
+  @media(max-width:820px){
+    .ebookTopbar{grid-template-columns:58px 1fr auto;height:auto;min-height:58px;padding:4px 0;}
+    .ebookSearch{grid-column:1/-1;margin:0 12px 6px;width:calc(100% - 24px);}
+    .ebookSiteTitle{font-size:14px;}
+    .app{display:block!important;}
+    aside.nav{position:relative!important;top:0!important;height:auto!important;max-height:none!important;}
+    main{padding:22px 14px 70px!important;}
+    .readingToolbarPN{grid-template-columns:1fr 1fr;top:8px;}
+    .readingStatusPN{grid-column:1/-1;order:-1;text-align:center;}
+    .readingBtn{width:100%;}
+    .section-head{padding:24px 22px!important;}
+    .content{padding:20px!important;}
+  }
+  @media print{
+    .ebookTopbar,aside.nav,.readingToolbarPN,.pageBottomNavPN,.embed-actions{display:none!important;}
+    .app{display:block!important;}.view-block{display:block!important;}main{padding:0!important;}
+  }
+  </style>
+</head>
+<body>
+<header aria-label="MESFET chapter toolbar" class="ebookTopbar">
+<button class="ebookHome" id="ebookHomeBtn" title="Open main page" type="button">7</button>
+<div class="ebookSiteTitle">MESFET Interactive Chapter</div>
+<input aria-label="Search chapter topics" class="ebookSearch" id="chapterSearchPN" placeholder="Search topic or simulator" type="search"/>
+<div class="ebookTopActions">
+<a class="ebookTopBtn" href="../../../index.html" title="Return to Semiconductor Learning Hub">&#8592; Main Menu</a>
+<button class="ebookTopBtn" id="topThemeBtnPN" type="button">Dark</button>
+<button class="ebookTopBtn" id="topPrintBtnPN" type="button">Print</button>
+</div>
+</header>
+<div class="app">
+<aside aria-label="Chapter navigation" class="nav">
+<div class="brand">
+<div class="logo">7</div>
+<div>
+<h1>MESFET Ebook Tutor</h1>
+<p>Interactive solid-state electronics</p>
+</div>
+</div>
+<div class="toolbar">
+<button class="btn" id="modeBtn">Bright</button>
+<button class="btn" onclick="window.print()">Print</button>
+</div>
+<div class="small-title">Navigation</div>
+<a href="#overview"><span class="dot"></span>Start here</a>
+<a href="#contacts"><span class="dot"></span>7.1 Metal–Semiconductor Contacts</a>
+<div class="subnav">
+<a href="#contact-metaphor-lab">Contact metaphor lab</a>
+<a href="#schottky-sim">Schottky simulator</a>
+<a href="#contact-resistance-sim">Ohmic contact simulator</a>
+<a href="#thermionic-lab">Thermionic emission lab</a>
+</div>
+<a href="#mesfet"><span class="dot"></span>7.2 MESFET</a>
+<div class="subnav">
+<a href="#frozen-metaphor-lab">Frozen-sluice metaphor</a>
+<a href="#mesfet-sim">MESFET I–V simulator</a>
+<a href="#dynamic-channel-lab">2D dynamic channel</a>
+<a href="#hf-sim">High-frequency simulator</a>
+</div>
+<a href="#modfet"><span class="dot"></span>7.3 MODFET / HEMT</a>
+<div class="subnav">
+<a href="#modfet-sim">2DEG simulator</a>
+</div>
+<a href="#quiz"><span class="dot"></span>Practice</a>
+<div class="small-title">Study actions</div>
+<button class="navbtn" onclick="askTutor('Explain the difference between Schottky, ohmic, MESFET, and MODFET in a simple table.')">Compare devices</button>
+<button class="navbtn" onclick="askTutor('Give me a step-by-step derivation of MESFET drain current from channel resistance.')">Derive MESFET I–V</button>
+<button class="navbtn" onclick="askTutor('Create a conceptual quiz about pinch-off and depletion width.')">Generate quiz</button>
+</aside>
+<main>
+<div aria-label="Reading navigation" class="readingToolbarPN">
+<button class="readingBtn" id="prevReadBtnPN" type="button">← Previous</button>
+<div class="readingStatusPN">
+<span id="readingModeLabelPN">Single Subsection Mode</span>
+<span id="readingProgressPN">Page 1 of 1</span>
+</div>
+<button class="readingBtn" id="readModeBtnPN" type="button">Full Chapter</button>
+<button class="readingBtn" id="nextReadBtnPN" type="button">Next →</button>
+</div><div class="hero view-block active-view" id="overview">
+<span class="eyebrow">Start here · MESFET visual metaphor first</span>
+<h2>MESFET Frozen-Sluice Metaphor</h2>
+<p>Begin the ebook with the uploaded frozen-sluice visual metaphor, then explore the corresponding interactive simulator directly below. This gives a fast conceptual entry point before the detailed contact physics, I–V derivations, and HEMT section.</p>
+<div class="hero-start-grid">
+<div class="hero-figure-card">
+<img alt="MESFET frozen-sluice metaphor overview" src="../assets/frozen_sluice_start.jpg"/>
+<div class="figure-note">This opening figure maps <strong>gate bias</strong> to chiller strength and ice thickness, <strong>drain bias</strong> to downstream pull, and <strong>pinch-off</strong> to the ice wedge reaching the channel floor. It is used as the visual anchor for the MESFET chapter.</div>
+</div>
+<div class="hero-info-card">
+<h3>How to use this start page</h3>
+<p>1. Read the frozen-sluice metaphor image.<br/>2. Launch the interactive frozen-sluice simulator in the embedded frame.<br/>3. Continue to the internal MESFET I–V and 2D channel tools.</p>
+<div class="formula-stack">
+<div class="formula-chip">\[V_P=\frac{qN_Da^2}{2\varepsilon_s}\]</div>
+<div class="formula-chip">\[W(x)=a\sqrt{\frac{V_{bi}-V_{GS}+V(x)}{V_P}}\]</div>
+<div class="formula-chip">More negative \(V_{GS}\) increases depletion width, while larger \(V_{DS}\) promotes wedge formation and pinch-off.</div>
+</div>
+<div class="quick-link-row">
+<a href="#frozen-metaphor-lab">Open chapter section</a>
+<a href="#mesfet-sim">Jump to I–V simulator</a>
+<a href="#dynamic-channel-lab">Jump to 2D channel</a>
+</div>
+</div>
+</div>
+<div class="embed-lab" style="margin-top:24px;">
+<div class="embed-head">
+<div>
+<h4>Embedded simulator · Frozen Sluice Lab</h4>
+<p>Use the same metaphor immediately: adjust gate and drain bias and connect depletion width, wedge formation, and current saturation.</p>
+</div>
+<div class="embed-actions"><a class="btn-link" href="04_frozen_sluice_lab.html" rel="noopener" target="_blank">Open separate page</a></div>
+</div>
+<iframe class="embed-frame" loading="lazy" src="04_frozen_sluice_lab.html" title="Frozen-sluice MESFET simulator"></iframe>
+</div>
+</div><section class="topic view-block" id="contacts"><div class="section-head"><div><h2>7.1 Metal–Semiconductor Contacts</h2><p>Schottky and ohmic contact foundations used by the MESFET gate, source, and drain.</p></div><span class="pill">Schottky + Ohmic</span></div><div class="content"><details class="subsection" open="">
+<summary>7.1.1 Physical picture: work function, electron affinity, and barrier height</summary>
+<div class="subbody">
+<div class="card">
+<h3>Professional band-diagram reconstruction</h3>
+<p>This section recreates the ideal metal–semiconductor energy-band picture from the chapter using cleaner notation, larger labels, and a tutorial-friendly layout. Panel (a) shows the isolated materials before contact. Panel (b) shows the metal–semiconductor contact at thermal equilibrium, where the Fermi level is flat and the semiconductor bands bend to satisfy electrostatic equilibrium.</p>
+</div>
+<div class="two-col">
+<div class="card">
+<h3>Before contact</h3>
+<p>The metal work function \(\phi_m\) and the semiconductor work function \(\phi_s\) are generally different. The electron affinity \(\chi\) measures the energy gap from the vacuum level down to the conduction-band edge \(E_C\).</p>
+<div class="mathbox">\[q\phi_{Bn}=q\phi_m-q\chi\quad\Rightarrow\quad \phi_{Bn}=\phi_m-\chi\]</div>
+</div>
+<div class="card">
+<h3>After contact</h3>
+<p>Once contact is made, the Fermi levels align at equilibrium. The conduction and valence bands bend in the semiconductor, creating the built-in potential \(V_{bi}\) and the depletion region under the Schottky contact.</p>
+<div class="mathbox">\[V_{bi}=\phi_{Bn}-V_n,\qquad V_n=V_T\ln\!\left(\frac{N_C}{N_D}\right)\]</div>
+</div>
+</div>
+<div class="figure-grid">
+<div class="figure-card">
+<h4>Figure (a) · Isolated metal + n-type semiconductor</h4>
+<img alt="Energy band diagram of isolated metal and n-type semiconductor before contact" class="figure-img" src="../assets/ebook_figure_1.webp"/>
+<div class="figure-note">This figure shows the isolated metal and semiconductor before contact, highlighting the work-function terms \(q\phi_m\), \(q\phi_s\), the electron affinity \(q\chi\), and the barrier-height relation \(q(\phi_m-\chi)\).</div>
+</div>
+<div class="figure-card">
+<h4>Figure (b) · Metal–semiconductor contact at thermal equilibrium</h4>
+<img alt="Energy band diagram of metal semiconductor contact at thermal equilibrium" class="figure-img" src="../assets/ebook_figure_2.webp"/>
+<div class="figure-note">This figure shows the aligned Fermi level after contact, the band bending in the semiconductor, and the key energetic quantities \(q\phi_{Bn}\), \(qV_{bi}\), \(qV_n\), and \(q\phi_s\).</div>
+</div>
+</div>
+<div class="fig-caption">Textbook-style energy-band diagrams are used here directly for the before-contact and thermal-equilibrium cases.</div>
+<div class="eq-grid">
+<div class="eq-card">
+<div class="eq-label">Equation (1) · Electron barrier height</div>
+<div class="eq-formula">\[q\phi_{Bn}=q\phi_m-q\chi\]</div>
+</div>
+<div class="eq-card">
+<div class="eq-label">Equation (2) · Hole barrier height</div>
+<div class="eq-formula">\[q\phi_{Bp}=E_g-\left(q\phi_m-q\chi\right)\]</div>
+</div>
+<div class="eq-card">
+<div class="eq-label">Equation (3) · Barrier-height sum rule</div>
+<div class="eq-formula">\[q\left(\phi_{Bn}+\phi_{Bp}\right)=E_g\]</div>
+</div>
+<div class="eq-card">
+<div class="eq-label">Equation (4) · Built-in potential</div>
+<div class="eq-formula">\[V_{bi}=\phi_{Bn}-V_n,\qquad V_n=V_T\ln\!\left(\frac{N_C}{N_D}\right)\]</div>
+</div>
+</div>
+<div class="note"><strong>Notation.</strong> \(\phi_m\) is the metal work function, \(\chi\) is the semiconductor electron affinity, \(\phi_s\) is the semiconductor work function, \(\phi_{Bn}\) and \(\phi_{Bp}\) are the electron and hole barrier heights, \(V_n\) is the energy spacing between \(E_C\) and \(E_F\) in the neutral n-type region, and \(V_{bi}\) is the built-in potential on the semiconductor side.</div>
+</div>
+</details><details class="subsection" open="">
+<summary>7.1.2 Bias effects in n-type and p-type Schottky contacts</summary>
+<div class="subbody">
+<div class="card">
+<h3>Professional band diagrams for equilibrium, forward bias, and reverse bias</h3>
+<p>This figure summarizes how a metal–semiconductor contact behaves for both <strong>n-type</strong> and <strong>p-type</strong> semiconductors. Row <strong>(a)</strong> shows thermal equilibrium, row <strong>(b)</strong> shows forward bias, and row <strong>(c)</strong> shows reverse bias. These diagrams are especially useful for understanding why the MESFET gate behaves as a rectifying Schottky contact.</p>
+</div>
+<div class="figure-card compact-figure-card">
+<img alt="Professional energy band diagrams for n-type and p-type metal-semiconductor contacts at equilibrium, forward bias, and reverse bias" class="figure-img compact-band-figure" src="../assets/ebook_figure_3.webp"/>
+<div class="figure-note">Energy-band diagrams for n-type and p-type metal–semiconductor contacts. The panels compare equilibrium, forward bias, and reverse bias using the quantities \(q\phi_{Bn}\), \(q\phi_{Bp}\), \(qV_{bi}\), \(qV_F\), and \(qV_R\).</div>
+</div>
+<div class="eq-grid">
+<div class="eq-card">
+<div class="eq-label">n-type Schottky contact</div>
+<div class="eq-formula">\[q\phi_{Bn} = q(\phi_m-\chi), \qquad V_{bi} = \phi_{Bn} - V_n\]</div>
+</div>
+<div class="eq-card">
+<div class="eq-label">p-type Schottky contact</div>
+<div class="eq-formula">\[q\phi_{Bp} = E_g - q\phi_{Bn}, \qquad V_{bi} = \phi_p - \phi_m\]</div>
+</div>
+<div class="eq-card">
+<div class="eq-label">Forward bias</div>
+<div class="eq-formula">\[\text{effective\ barrier} = q(V_{bi}-V_F)\]</div>
+</div>
+<div class="eq-card">
+<div class="eq-label">Reverse bias</div>
+<div class="eq-formula">\[\text{effective\ barrier} = q(V_{bi}+V_R)\]</div>
+</div>
+</div>
+<div class="note"><strong>MESFET connection.</strong> In a MESFET, the gate is a Schottky contact on an n-type channel. A more positive reverse gate bias increases depletion and narrows the channel, while forward bias reduces the barrier and is usually avoided in normal operation.</div>
+</div>
+</details><details class="subsection" open="">
+<summary>7.1.3 Advanced math: depletion width, electric field, and capacitance</summary>
+<div class="subbody">
+<p>Using the depletion approximation for a uniformly doped n-type semiconductor, the charge density is approximately \(\rho=qN_D\) inside the depletion region. Poisson's equation then gives a linearly varying electric field.</p>
+<div class="mathbox">
+                \[
+                |\mathcal{E}(x)|=\frac{qN_D}{\varepsilon_s}(W-x),\qquad
+                \mathcal{E}_{m}=\frac{qN_DW}{\varepsilon_s}
+                \]
+                \[
+                V_{bi}-V=\frac{qN_DW^2}{2\varepsilon_s},\qquad
+                W=\sqrt{\frac{2\varepsilon_s(V_{bi}-V)}{qN_D}}
+                \]
+                \[
+                C=\frac{\varepsilon_s}{W},\qquad
+                \frac{1}{C^2}=\frac{2(V_{bi}-V)}{q\varepsilon_sN_D}
+                \]
+              </div>
+<div class="derivation-step"><strong>Step 1.</strong> Start from \(d\mathcal{E}/dx=\rho/\varepsilon_s=qN_D/\varepsilon_s\).</div>
+<div class="derivation-step"><strong>Step 2.</strong> Use \(\mathcal{E}(W)=0\) to obtain \(\mathcal{E}(x)=-(qN_D/\varepsilon_s)(W-x)\).</div>
+<div class="derivation-step"><strong>Step 3.</strong> Integrate the field area: \(V_{bi}-V=\int_0^W |\mathcal{E}(x)|dx=qN_DW^2/(2\varepsilon_s)\).</div>
+</div>
+</details><details class="subsection" open="">
+<summary>7.1.3 Ohmic contacts: why high doping reduces contact resistance</summary>
+<div class="subbody">
+<p>An ohmic contact should pass current with a small voltage drop compared with the active device region. Low-resistance ohmic behavior can be obtained by lowering the barrier height, using very high doping, or both. High doping narrows the depletion width and increases tunneling probability.</p>
+<div class="mathbox">
+                \[
+                R_c=\left(\frac{\partial J}{\partial V}\right)^{-1}_{V=0}
+                \]
+                \[
+                R_c\propto \exp\!\left(\frac{q\phi_{Bn}}{kT}\right)\quad\text{for thermionic emission}
+                \]
+                \[
+                R_c\sim \exp\!\left(\frac{C_2\phi_{Bn}}{\sqrt{N_D}}\right)\quad\text{for tunneling-dominated transport}
+                \]
+              </div>
+<div class="figure-card" style="max-width:680px; margin:18px auto 0;">
+<img alt="Specific contact resistance versus doping for different barrier heights" class="figure-img" src="../assets/ebook_figure_4.webp" style="max-width:620px; margin:0 auto; display:block;"/>
+<div class="figure-note">This reference plot shows how the specific contact resistance \(R_c\) changes with doping and Schottky barrier height. Lower barrier heights and heavier doping strongly reduce \(R_c\), which is why ohmic source and drain contacts are often formed using heavily doped semiconductor regions.</div>
+</div>
+<div class="note"><strong>Design insight.</strong> The interactive ohmic-contact simulator below follows the same core trend seen in this plot: increasing \(N_D\) or reducing \(\phi_B\) decreases the contact resistance dramatically.</div>
+</div>
+</details></div></section><section class="topic view-block" id="contact-metaphor-lab"><div class="section-head"><div><h2>Contact Metaphor Lab</h2><p>Hill-and-reservoir visualization of barrier formation and bias response.</p></div><span class="pill">Metaphor Lab</span></div><div class="content"><div class="embed-lab"><div class="embed-head"><div><h4>Hill &amp; Reservoir Contact Metaphor</h4><p>Explore equilibrium barrier formation, forward bias, and reverse bias using the metal–semiconductor contact metaphor.</p></div><div class="embed-actions"><a class="btn-link" href="02_metal_semiconductor_metaphor_lab.html" rel="noopener" target="_blank">Open separate page</a></div></div><iframe class="embed-frame" loading="lazy" src="02_metal_semiconductor_metaphor_lab.html" title="Hill &amp; Reservoir Contact Metaphor"></iframe></div></div></section><section class="topic view-block" id="schottky-sim"><div class="section-head"><div><h2>Schottky Contact Simulator</h2><p>Band bending, depletion width, electric field, and bias-dependent contact behavior.</p></div><span class="pill">Interactive Simulator</span></div><div class="content"><div class="sim" id="schottky-sim-panel">
+<h3>Interactive simulation 1: Schottky band diagram, applied bias, charge density, and electrostatics</h3>
+<p>Move the sliders and compare the energy-band structure, the applied-bias configuration, the space-charge distribution, the electric field, and the electrostatic potential.</p>
+<div class="note"><strong>Simulation layout.</strong> The upper row begins with the energy-band structure and then shows the applied-bias schematic. The lower plots use fixed axes so the curves change without the x- and y-scales jumping. The vertical quantities are normalized: ρ/(qN_D), E/E_m, and ψ/V_eff; the absolute values are shown in the readout boxes on the left.</div>
+<div class="sim-grid">
+<div class="controls">
+<div class="control"><label>Barrier height \(\phi_B\) <output id="phiBOut"></output></label><input id="phiB" max="1.05" min="0.35" step="0.01" type="range" value="0.75"/></div>
+<div class="control"><label>log₁₀ donor density \(N_D\) <output id="ndOut"></output></label><input id="ndLog" max="18.5" min="14" step="0.1" type="range" value="16"/></div>
+<div class="control"><label>Applied voltage \(V\) <output id="biasOut"></output></label><input id="bias" max="0.55" min="-1.5" step="0.01" type="range" value="0"/></div>
+<div class="control"><label>Temperature \(T\) <output id="tempOut"></output></label><input id="temp" max="420" min="220" step="5" type="range" value="300"/></div>
+<div class="control"><label>Semiconductor</label><select id="semi"><option value="GaAs">GaAs</option><option value="Si">Si</option><option value="InP">InP</option></select></div>
+<div class="readouts">
+<div class="readout"><span>Built-in potential</span><strong id="vbiRead">—</strong></div>
+<div class="readout"><span>Depletion width</span><strong id="wRead">—</strong></div>
+<div class="readout"><span>Peak field</span><strong id="emRead">—</strong></div>
+<div class="readout"><span>Capacitance</span><strong id="capRead">—</strong></div>
+</div>
+</div>
+<div class="plot-panel">
+<svg class="diagram" id="schottkyBandSvg" viewbox="0 0 760 310"></svg>
+<svg class="diagram" id="schottkyBiasSvg" viewbox="0 0 760 310"></svg>
+<canvas class="plot" id="chargePlot"></canvas>
+<canvas class="plot" id="fieldPlot"></canvas>
+<canvas class="plot wide" id="potentialPlot"></canvas>
+</div>
+</div>
+</div></div></section><section class="topic view-block" id="contact-resistance-sim"><div class="section-head"><div><h2>Ohmic Contact Simulator</h2><p>Specific contact resistance, high-doping tunneling trends, and voltage drop.</p></div><span class="pill">Interactive Simulator</span></div><div class="content"><div class="sim" id="contact-resistance-sim-panel">
+<h3>Interactive simulation 2: specific contact resistance trend</h3>
+<p>This simulator uses a simplified tunneling-inspired model to show how the specific contact resistance decreases as the donor density increases and the effective tunneling barrier becomes thinner.</p>
+<div class="two-col" style="margin-bottom:16px;">
+<div class="card">
+<h4>Model equations</h4>
+<div class="mathbox">
+                \[
+                \rho_c(N_D,\phi_B) \propto \min\!\left[\exp\!\left(\frac{\phi_B-0.20}{0.045}\right),\; \exp\!\left(\frac{C\,\phi_B}{\sqrt{N_D}}\right)\right]
+                \]
+                </div>
+<div class="mathbox">
+                \[
+                R_c = \frac{\rho_c}{A}, \qquad V_{\text{drop}}(I=1\,\mathrm{A}) = I R_c = \frac{\rho_c}{A}
+                \]
+                </div>
+</div>
+<div class="card">
+<h4>How to read the graphics</h4>
+<p>The upper plot shows the selected point on the \(\rho_c\) versus \(N_D\) trend. The lower schematic uses the same slider values, so the barrier height \(q\phi_B\), barrier thinning, and tunneling arrows directly reflect the current simulation state.</p>
+</div>
+</div>
+<div class="sim-grid">
+<div class="controls">
+<div class="control"><label>Barrier height \(\phi_B\) <output id="rcPhiOut"></output></label><input id="rcPhi" max="0.95" min="0.2" step="0.01" type="range" value="0.65"/></div>
+<div class="control"><label>Selected log₁₀ \(N_D\) <output id="rcNdOut"></output></label><input id="rcNd" max="20" min="16" step="0.05" type="range" value="18.5"/></div>
+<div class="control"><label>Contact area \(A\) in cm² <output id="areaOut"></output></label><input id="areaLog" max="-4" min="-10" step="0.25" type="range" value="-6"/></div>
+<div class="readouts">
+<div class="readout"><span>Specific \(\rho_c\)</span><strong id="rcRead">—</strong></div>
+<div class="readout"><span>\(V_{\text{drop}}\) at \(I=1\,\mathrm{A}\)</span><strong id="dropRead">—</strong></div>
+</div>
+</div>
+<div class="plot-panel">
+<canvas class="plot wide" id="rcPlot"></canvas>
+<svg class="diagram wide" id="ohmicSvg" viewbox="0 0 760 320"></svg>
+</div>
+</div>
+</div></div></section><section class="topic view-block" id="thermionic-lab"><div class="section-head"><div><h2>Thermionic Emission Lab</h2><p>Temperature- and barrier-controlled majority-carrier transport across a Schottky contact.</p></div><span class="pill">Transport Lab</span></div><div class="content"><div class="embed-lab"><div class="embed-head"><div><h4>Thermionic Emission Simulator</h4><p>Adjust barrier height, temperature, and bias to study thermionic-emission current.</p></div><div class="embed-actions"><a class="btn-link" href="01_schottky_thermionic_emission.html" rel="noopener" target="_blank">Open separate page</a></div></div><iframe class="embed-frame" loading="lazy" src="01_schottky_thermionic_emission.html" title="Thermionic Emission Simulator"></iframe></div></div></section><section class="topic view-block" id="mesfet"><div class="section-head"><div><h2>7.2 MESFET</h2><p>Device structure, depletion control, pinch-off, saturation, and the drain-current model.</p></div><span class="pill">Gate-Controlled Channel</span></div><div class="content"><details class="subsection" open="">
+<summary>7.2.1 Device structure and channel resistance</summary>
+<div class="subbody">
+<div class="two-col">
+<div class="card">
+<h3>Geometry</h3>
+<p>The MESFET has a Schottky gate and ohmic source/drain contacts on a doped channel above a semi-insulating substrate. Key dimensions are gate length \(L\), width \(Z\), channel thickness \(a\), and depletion width \(W\).</p>
+</div>
+<div class="card">
+<h3>Channel resistance</h3>
+<p>The conducting cross-section is reduced from \(Za\) to \(Z(a-W)\). As \(W\) increases, channel resistance rises.</p>
+<div class="mathbox">\[R=\frac{L}{q\mu_n N_D Z(a-W)}\]</div>
+</div>
+</div>
+<div class="figure-card" style="max-width:960px; margin:18px auto;">
+<h4>Figure · MESFET structure and equivalent cross-sectional view</h4>
+<img alt="MESFET structure showing source ohmic contact, metal gate Schottky contact, passivation, drain ohmic contact, channel, and n-type semiconductor" class="figure-img" src="../assets/ebook_figure_5.webp" style="max-width:900px; margin:0 auto; display:block;"/>
+<div class="figure-note">Panel <strong>(a)</strong> shows a three-dimensional device view. The <strong>source</strong> and <strong>drain</strong> are ohmic contacts so carriers can enter and leave the channel with low resistance. The <strong>metal gate</strong> forms a Schottky contact to the semiconductor, so the gate voltage controls depletion under the gate. The <strong>passivation / insulator</strong> helps protect the surface and defines the active gate region. Panel <strong>(b)</strong> shows the corresponding cross-sectional view with terminals \(V_S\), \(V_G\), and the grounded drain, highlighting the channel directly under the gate.</div>
+</div>
+<div class="note"><strong>How MESFET control works.</strong> When the gate is reverse biased relative to the n-type channel, the depletion region beneath the Schottky gate widens into the semiconductor. That reduces the effective channel thickness and increases the channel resistance. If the depletion region becomes deep enough, the channel pinches off and the drain current saturates.</div>
+<svg class="diagram" id="mesfetStructureSvg" viewbox="0 0 760 330"></svg>
+</div>
+</details><details class="subsection" open="">
+<summary>7.2.2 Pinch-off and saturation</summary>
+<div class="subbody">
+<p>As drain voltage increases, the channel potential rises from source to drain. The gate-to-channel reverse bias is largest near the drain, so depletion is deepest there. Pinch-off occurs when the depletion region reaches the channel thickness.</p>
+<div class="mathbox">
+                \[
+                V_P=\frac{qN_Da^2}{2\varepsilon_s}
+                \]
+                \[
+                V_{Dsat}=V_P-V_G-V_{bi}
+                \]
+                \[
+                W(y)=\sqrt{\frac{2\varepsilon_s[V(y)+V_G+V_{bi}]}{qN_D}}
+                \]
+              </div>
+<div class="note">Important sign convention: for an n-channel depletion-mode MESFET, \(V_G\le 0\). A more negative gate voltage increases depletion width and lowers the saturation current.</div>
+</div>
+</details><details class="subsection" open="">
+<summary>7.2.3 Current-voltage characteristic</summary>
+<div class="subbody">
+<p>Before pinch-off, the current follows from integrating the differential channel resistance along the gate length.</p>
+<div class="mathbox">
+                \[
+                I_D=I_P\left[\frac{V_D}{V_P}-\frac{2}{3}\left(\frac{V_D+V_G+V_{bi}}{V_P}\right)^{3/2}+\frac{2}{3}\left(\frac{V_G+V_{bi}}{V_P}\right)^{3/2}\right]
+                \]
+                \[
+                I_P=\frac{Z\mu_nq^2N_D^2a^3}{2\varepsilon_sL}
+                \]
+                \[
+                I_{Dsat}=I_P\left[\frac{1}{3}-\left(\frac{V_G+V_{bi}}{V_P}\right)+\frac{2}{3}\left(\frac{V_G+V_{bi}}{V_P}\right)^{3/2}\right]
+                \]
+              </div>
+</div>
+</details></div></section><section class="topic view-block" id="frozen-metaphor-lab"><div class="section-head"><div><h2>Frozen-Sluice MESFET Metaphor</h2><p>Gate bias freezes the channel; drain bias tilts the water head; pinch-off produces current saturation.</p></div><span class="pill">Start with the Metaphor</span></div><div class="content"><div class="figure-card compact-figure-card"><img alt="Frozen-Sluice MESFET Simulator" class="figure-img" src="../assets/frozen_sluice_start.jpg"/><div class="figure-note">Use the uploaded visual metaphor, then adjust gate and drain bias in the corresponding interactive simulation.</div></div><div class="embed-lab"><div class="embed-head"><div><h4>Frozen-Sluice MESFET Simulator</h4><p>Use the uploaded visual metaphor, then adjust gate and drain bias in the corresponding interactive simulation.</p></div><div class="embed-actions"><a class="btn-link" href="04_frozen_sluice_lab.html" rel="noopener" target="_blank">Open separate page</a></div></div><iframe class="embed-frame" loading="lazy" src="04_frozen_sluice_lab.html" title="Frozen-Sluice MESFET Simulator"></iframe></div></div></section><section class="topic view-block" id="mesfet-sim"><div class="section-head"><div><h2>MESFET I–V Simulator</h2><p>Quantitative channel opening, pinch-off voltage, drain current, transconductance, and output curves.</p></div><span class="pill">Interactive Simulator</span></div><div class="content"><div class="sim" id="mesfet-sim-panel">
+<h3>Interactive simulation 3: MESFET channel, pinch-off, and I–V curves</h3>
+<p>Adjust gate voltage, channel thickness, doping, mobility, and geometry. The device diagram and output characteristics update together.</p>
+<div class="sim-grid">
+<div class="controls">
+<div class="control"><label>Gate voltage \(V_G\) <output id="vgOut"></output></label><input id="vg" max="0" min="-2.5" step="0.05" type="range" value="-0.5"/></div>
+<div class="control"><label>Drain voltage \(V_D\) <output id="vdOut"></output></label><input id="vd" max="8" min="0" step="0.05" type="range" value="2.0"/></div>
+<div class="control"><label>log₁₀ \(N_D\) <output id="mesNdOut"></output></label><input id="mesNd" max="17" min="14.5" step="0.1" type="range" value="15.3"/></div>
+<div class="control"><label>Channel thickness \(a\) <output id="aOut"></output></label><input id="aUm" max="1.2" min="0.15" step="0.01" type="range" value="0.60"/></div>
+<div class="control"><label>Gate length \(L\) <output id="lOut"></output></label><input id="lUm" max="2.0" min="0.1" step="0.05" type="range" value="0.5"/></div>
+<div class="control"><label>Gate width \(Z\) <output id="zOut"></output></label><input id="zUm" max="500" min="20" step="10" type="range" value="300"/></div>
+<div class="control"><label>Mobility \(\mu_n\) <output id="muOut"></output></label><input id="mu" max="9000" min="1000" step="100" type="range" value="5000"/></div>
+<div class="readouts">
+<div class="readout"><span>Pinch-off voltage</span><strong id="vpRead">—</strong></div>
+<div class="readout"><span>Saturation voltage</span><strong id="vdsatRead">—</strong></div>
+<div class="readout"><span>Drain current</span><strong id="idRead">—</strong></div>
+<div class="readout"><span>Transconductance</span><strong id="gmRead">—</strong></div>
+</div>
+</div>
+<div class="plot-panel">
+<svg class="diagram wide" id="channelSvg" viewbox="0 0 820 330"></svg>
+<canvas class="plot wide" id="mesIvPlot"></canvas>
+<canvas class="plot" id="gmPlot"></canvas>
+<canvas class="plot" id="wPlot"></canvas>
+</div>
+</div>
+</div></div></section><section class="topic view-block" id="dynamic-channel-lab"><div class="section-head"><div><h2>2D Dynamic-Channel Simulator</h2><p>Live channel geometry, depletion boundary, device parameters, and MESFET output characteristics.</p></div><span class="pill">2D Device Lab</span></div><div class="content"><div class="embed-lab"><div class="embed-head"><div><h4>MESFET 2D Dynamic Channel</h4><p>Explore how bias, doping, mobility, channel thickness, and geometry reshape the conducting channel.</p></div><div class="embed-actions"><a class="btn-link" href="05_mesfet_2d_dynamic_channel.html" rel="noopener" target="_blank">Open separate page</a></div></div><iframe class="embed-frame" loading="lazy" src="05_mesfet_2d_dynamic_channel.html" title="MESFET 2D Dynamic Channel"></iframe></div></div></section><section class="topic view-block" id="hf-sim"><div class="section-head"><div><h2>High-Frequency MESFET Simulator</h2><p>Cutoff-frequency scaling with gate length, mobility, channel thickness, and saturation velocity.</p></div><span class="pill">RF Performance</span></div><div class="content"><details class="subsection" open="">
+<summary>7.2.4 High-frequency performance</summary>
+<div class="subbody">
+<p>The cutoff frequency \(f_T\) is the frequency at which the small-signal output current no longer exceeds the input charging current. The result emphasizes short gate length and high carrier velocity.</p>
+<div class="mathbox">
+                \[
+                \tilde{i}_{in}=2\pi fC_G\tilde{v}_g,\qquad \tilde{i}_{out}=g_m\tilde{v}_g
+                \]
+                \[
+                f_T=\frac{g_m}{2\pi C_G}\approx \frac{\mu_n qN_Da^2}{2\pi\varepsilon_sL^2}
+                \]
+                \[
+                \text{velocity-saturation limit:}\qquad f_T\approx \frac{v_s}{2\pi L}
+                \]
+              </div>
+</div>
+</details><div class="sim" id="hf-sim-panel">
+<h3>Interactive simulation 4: cutoff frequency and velocity limit</h3>
+<p>Compare mobility-limited and saturation-velocity-limited estimates of \(f_T\).</p>
+<div class="sim-grid">
+<div class="controls">
+<div class="control"><label>Gate length \(L\) <output id="hfLOut"></output></label><input id="hfL" max="2" min="0.05" step="0.01" type="range" value="0.5"/></div>
+<div class="control"><label>Channel thickness \(a\) <output id="hfAOut"></output></label><input id="hfA" max="1.0" min="0.1" step="0.01" type="range" value="0.6"/></div>
+<div class="control"><label>Mobility \(\mu_n\) <output id="hfMuOut"></output></label><input id="hfMu" max="10000" min="1000" step="100" type="range" value="5000"/></div>
+<div class="control"><label>Saturation velocity \(v_s\) <output id="vsOut"></output></label><input id="vs" max="3.0" min="0.6" step="0.05" type="range" value="1.2"/></div>
+<div class="readouts">
+<div class="readout"><span>Mobility estimate</span><strong id="ftMobRead">—</strong></div>
+<div class="readout"><span>Velocity limit</span><strong id="ftVsRead">—</strong></div>
+</div>
+</div>
+<div class="plot-panel">
+<canvas class="plot wide" id="ftPlot"></canvas>
+<svg class="diagram wide" id="hfSvg" viewbox="0 0 760 250"></svg>
+</div>
+</div>
+</div></div></section><section class="topic view-block" id="modfet"><div class="section-head"><div><h2>7.3 MODFET / HEMT</h2><p>Modulation doping, heterojunction confinement, 2DEG formation, and mobility enhancement.</p></div><span class="pill">High-Mobility Channel</span></div><div class="content"><details class="subsection" open="">
+<summary>7.3.1 Why modulation doping increases mobility</summary>
+<div class="subbody">
+<div class="two-col">
+<div class="card">
+<h3>MESFET limitation</h3>
+<p>The channel is doped, so electrons move through a region containing ionized donors. Ionized impurity scattering reduces mobility, especially at low temperature.</p>
+</div>
+<div class="card">
+<h3>MODFET advantage</h3>
+<p>Dopants are placed in a wider-bandgap layer. Electrons transfer to the narrow-bandgap undoped channel, creating a 2DEG separated from the donors by a spacer.</p>
+</div>
+</div>
+<div class="mathbox">
+                \[
+                n_s\approx \eta N_D d_1,\qquad R_{sheet}\approx \frac{1}{q\mu n_s}
+                \]
+                \[
+                I_D\propto \mu n_s\left(V_G-V_T\right)^2
+                \]
+              </div>
+<svg class="diagram" id="modfetSvg" viewbox="0 0 820 340"></svg>
+</div>
+</details></div></section><section class="topic view-block" id="modfet-sim"><div class="section-head"><div><h2>2DEG Simulator</h2><p>Carrier transfer, spacer thickness, 2DEG density, mobility, and sheet resistance.</p></div><span class="pill">Interactive Simulator</span></div><div class="content"><div class="sim" id="modfet-sim-panel">
+<h3>Interactive simulation 5: 2DEG density, mobility, and sheet resistance</h3>
+<p>Explore how spacer thickness, donor density, and temperature influence the high-mobility channel.</p>
+<div class="sim-grid">
+<div class="controls">
+<div class="control"><label>Donor layer log₁₀ \(N_D\) <output id="modNdOut"></output></label><input id="modNd" max="19" min="17" step="0.05" type="range" value="18"/></div>
+<div class="control"><label>Doped layer thickness \(d_1\) <output id="d1Out"></output></label><input id="d1" max="80" min="5" step="1" type="range" value="30"/></div>
+<div class="control"><label>Spacer thickness \(d_0\) <output id="d0Out"></output></label><input id="d0" max="30" min="1" step="1" type="range" value="8"/></div>
+<div class="control"><label>Temperature \(T\) <output id="modTOut"></output></label><input id="modT" max="300" min="4" step="1" type="range" value="80"/></div>
+<div class="readouts">
+<div class="readout"><span>2DEG density</span><strong id="nsRead">—</strong></div>
+<div class="readout"><span>Mobility</span><strong id="mobRead">—</strong></div>
+<div class="readout"><span>Sheet resistance</span><strong id="rsRead">—</strong></div>
+<div class="readout"><span>MESFET comparison</span><strong id="gainRead">—</strong></div>
+</div>
+</div>
+<div class="plot-panel">
+<svg class="diagram wide" id="modfetLiveSvg" viewbox="0 0 820 300"></svg>
+<canvas class="plot wide" id="mobilityPlot"></canvas>
+<canvas class="plot" id="sheetPlot"></canvas>
+<canvas class="plot" id="densityPlot"></canvas>
+</div>
+</div>
+</div></div></section><section class="topic view-block" id="quiz">
+<div class="section-head">
+<div>
+<h2>Practice and guided checks</h2>
+<p>Use these questions after exploring the simulations.</p>
+</div>
+<span class="pill">Self-test</span>
+</div>
+<div class="content">
+<div class="quiz-grid">
+<div class="quiz-card"><strong>1. Why does reverse bias increase Schottky depletion width?</strong><p>Relate your answer to \(V_{bi}-V\).</p><button class="btn" onclick="toggleAnswer(this)">Show answer</button><div class="answer">Reverse bias makes \(V\) negative, so \(V_{bi}-V\) becomes larger. Because \(W\propto\sqrt{V_{bi}-V}\), the depletion region widens.</div></div>
+<div class="quiz-card"><strong>2. What happens to MESFET \(V_{Dsat}\) as \(V_G\) becomes more negative?</strong><p>Use \(V_{Dsat}=V_P-V_G-V_{bi}\).</p><button class="btn" onclick="toggleAnswer(this)">Show answer</button><div class="answer">With the sign convention in this tutor, more negative \(V_G\) increases the drain voltage needed to reach the same depletion condition, but it also reduces available channel opening and saturation current.</div></div>
+<div class="quiz-card"><strong>3. Why is an ohmic contact usually heavily doped?</strong><p>Think about barrier width and tunneling.</p><button class="btn" onclick="toggleAnswer(this)">Show answer</button><div class="answer">Heavy doping reduces depletion width. A narrower barrier greatly increases tunneling probability, reducing specific contact resistance.</div></div>
+<div class="quiz-card"><strong>4. Why can MODFET mobility exceed MESFET mobility?</strong><p>Use the idea of modulation doping.</p><button class="btn" onclick="toggleAnswer(this)">Show answer</button><div class="answer">The electrons conduct in an undoped channel separated from ionized donors, so impurity scattering is reduced and mobility can become much higher.</div></div>
+</div>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Device/contact</th><th>Main control</th><th>Key equation</th><th>Simulation to inspect</th></tr></thead>
+<tbody>
+<tr><td>Schottky contact</td><td>Barrier height and depletion width</td><td>\(W=\sqrt{2\varepsilon_s(V_{bi}-V)/(qN_D)}\)</td><td>C–V and energy band</td></tr>
+<tr><td>Ohmic contact</td><td>Doping and tunneling</td><td>\(R_c\sim\exp(C_2\phi_B/\sqrt{N_D})\)</td><td>Contact resistance trend</td></tr>
+<tr><td>MESFET</td><td>Gate-controlled channel thickness</td><td>\(V_P=qN_Da^2/(2\varepsilon_s)\)</td><td>I–V and channel pinch-off</td></tr>
+<tr><td>MODFET/HEMT</td><td>2DEG density and mobility</td><td>\(R_{sheet}=1/(q\mu n_s)\)</td><td>Mobility and sheet resistance</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<footer>Standalone educational HTML · Equations render with MathJax CDN; plots and simulations are native JavaScript/SVG/Canvas.</footer>
+<div aria-label="Bottom reading navigation" class="pageBottomNavPN">
+<button class="readingBtn" id="prevReadBtnBottomPN" type="button">← Previous</button>
+<button class="readingBtn" id="nextReadBtnBottomPN" type="button">Next →</button>
+</div>
+</main>
+<aside aria-label="AI tutor panel" class="tutor">
+<div class="tutor-head">
+<h2>AI Tutor Panel</h2>
+<p>Local guided tutor. Replace <span class="source-tag">localTutor()</span> with your API call when ready.</p>
+</div>
+<div class="chatlog" id="chatlog">
+<div class="msg bot">Welcome. Ask about Schottky barriers, MESFET pinch-off, I–V equations, high-frequency cutoff, or MODFET 2DEG formation.</div>
+</div>
+<div class="quick-prompts">
+<button onclick="askTutor('Explain Schottky barrier height with an analogy.')">Schottky analogy</button>
+<button onclick="askTutor('Explain MESFET pinch-off step by step.')">Pinch-off</button>
+<button onclick="askTutor('Why does MODFET have higher mobility?')">MODFET mobility</button>
+<button onclick="askTutor('Give me one numerical practice problem.')">Practice problem</button>
+</div>
+<div class="chatbox">
+<textarea id="chatInput" placeholder="Ask the tutor..." rows="2"></textarea>
+<button class="btn" onclick="sendTutor()">Send</button>
+</div>
+</aside>
+</div>
+<script>
+    const $ = id => document.getElementById(id);
+    const q = 1.602176634e-19;
+    const eps0_cm = 8.854187817e-14;
+    const k = 1.380649e-23;
+    const pi = Math.PI;
+    const materials = {
+      Si: {epsr: 11.7, Nc: 2.86e19, Astar: 110, chi: 4.05, color: '#34c9ff'},
+      GaAs: {epsr: 12.4, Nc: 4.7e17, Astar: 8, chi: 4.07, color: '#8a7dff'},
+      InP: {epsr: 12.5, Nc: 5.7e17, Astar: 9, chi: 4.38, color: '#ff6fae'}
+    };
+    function fmt(x, digits=3){
+      if (!Number.isFinite(x)) return '—';
+      const ax = Math.abs(x);
+      if (ax === 0) return '0';
+      if (ax >= 1e4 || ax < 1e-2) return x.toExponential(digits-1).replace('e+', '×10^');
+      return x.toFixed(digits).replace(/\.0+$/,'').replace(/(\.\d*?)0+$/,'$1');
+    }
+    function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+    function cssVar(name){ return getComputedStyle(document.body).getPropertyValue(name).trim(); }
+    function clearCanvas(canvas){
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(2, Math.round(rect.width * dpr));
+      canvas.height = Math.max(2, Math.round(rect.height * dpr));
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.clearRect(0,0,rect.width,rect.height);
+      return {ctx, w: rect.width, h: rect.height};
+    }
+    function niceTicks(min, max, count=5){
+      if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) return [min];
+      const span = max-min;
+      const step0 = Math.abs(span)/Math.max(1,count);
+      const mag = Math.pow(10, Math.floor(Math.log10(step0)));
+      const err = step0/mag;
+      const step = (err >= 7.5 ? 10 : err >= 3.5 ? 5 : err >= 1.5 ? 2 : 1) * mag;
+      const start = Math.ceil(min/step)*step;
+      const ticks=[];
+      for(let v=start; v<=max+step*0.5; v+=step) ticks.push(v);
+      return ticks;
+    }
+    function drawPlot(canvas, series, opts={}){
+      const {ctx,w,h} = clearCanvas(canvas);
+      const m = {l: opts.left || 62, r: opts.right || 18, t: opts.top || 32, b: opts.bottom || 48};
+      const plotW = w - m.l - m.r, plotH = h - m.t - m.b;
+      const bg = cssVar('--plot-bg'), grid = cssVar('--plot-grid'), axis = cssVar('--plot-axis'), text = cssVar('--text'), muted=cssVar('--muted');
+      ctx.fillStyle = bg; ctx.fillRect(0,0,w,h);
+      let xs=[], ys=[];
+      for(const s of series){
+        for(const p of s.data){ if(Number.isFinite(p.x) && Number.isFinite(p.y)){ xs.push(p.x); ys.push(opts.logY ? Math.log10(Math.max(p.y, opts.yFloor || 1e-30)) : p.y); } }
+      }
+      let xmin = opts.xmin ?? Math.min(...xs), xmax = opts.xmax ?? Math.max(...xs);
+      let ymin = opts.ymin ?? Math.min(...ys), ymax = opts.ymax ?? Math.max(...ys);
+      if(!Number.isFinite(xmin) || !Number.isFinite(xmax) || xmin===xmax){ xmin=0; xmax=1; }
+      if(!Number.isFinite(ymin) || !Number.isFinite(ymax) || ymin===ymax){ ymin=0; ymax=1; }
+      const ypad = (ymax-ymin)*0.08 || 1;
+      ymin = opts.ymin ?? (ymin-ypad); ymax = opts.ymax ?? (ymax+ypad);
+      const xpad = (xmax-xmin)*0.03 || 1;
+      xmin = opts.xmin ?? (xmin-xpad); xmax = opts.xmax ?? (xmax+xpad);
+      const X = x => m.l + (x-xmin)/(xmax-xmin)*plotW;
+      const Y = y => m.t + plotH - (y-ymin)/(ymax-ymin)*plotH;
+      ctx.strokeStyle = grid; ctx.lineWidth = 1;
+      ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = muted;
+      const xticks = opts.xticks || niceTicks(xmin,xmax,5);
+      const yticks = opts.yticks || niceTicks(ymin,ymax,5);
+      for(const t of xticks){ const x=X(t); ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,m.t+plotH); ctx.stroke(); const lab=opts.xTickFormat?opts.xTickFormat(t):fmt(t,2); ctx.fillText(lab, x-10, h-18); }
+      for(const t of yticks){ const y=Y(t); ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(m.l+plotW,y); ctx.stroke(); const lab=opts.yTickFormat?opts.yTickFormat(t):fmt(t,2); ctx.fillText(lab, 12, y+4); }
+      ctx.strokeStyle = axis; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(m.l,m.t); ctx.lineTo(m.l,m.t+plotH); ctx.lineTo(m.l+plotW,m.t+plotH); ctx.stroke();
+      ctx.fillStyle = text; ctx.font = '700 15px Inter, sans-serif'; ctx.fillText(opts.title || '', m.l, 20);
+      ctx.fillStyle = muted; ctx.font = '12px Inter, sans-serif';
+      const xlab = opts.xlabel || ''; const xlabw = ctx.measureText(xlab).width; ctx.fillText(xlab, m.l + (plotW-xlabw)/2, h-6);
+      ctx.save(); ctx.translate(16, m.t + plotH/2 + 40); ctx.rotate(-Math.PI/2); ctx.fillText(opts.ylabel || '', 0, 0); ctx.restore();
+      const colors = [cssVar('--accent'), cssVar('--accent2'), cssVar('--accent3'), cssVar('--good'), cssVar('--warn'), cssVar('--bad')];
+      series.forEach((s,idx)=>{
+        const col = s.color || colors[idx%colors.length];
+        if(s.fillTo !== undefined){
+          ctx.beginPath(); let first=true;
+          for(const p of s.data){
+            if(!Number.isFinite(p.x) || !Number.isFinite(p.y)) continue;
+            const yval = opts.logY ? Math.log10(Math.max(p.y, opts.yFloor || 1e-30)) : p.y;
+            const x = X(p.x), y = Y(yval);
+            if(first){ ctx.moveTo(x, Y(s.fillTo)); ctx.lineTo(x,y); first=false; } else ctx.lineTo(x,y);
+          }
+          const lastFinite = [...s.data].reverse().find(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));
+          if(lastFinite){ ctx.lineTo(X(lastFinite.x), Y(s.fillTo)); }
+          ctx.closePath();
+          ctx.save(); ctx.globalAlpha = s.fillAlpha ?? 0.16; ctx.fillStyle = col; ctx.fill(); ctx.restore();
+        }
+        ctx.strokeStyle = col; ctx.lineWidth = s.width || 2.6; ctx.beginPath(); let first=true;
+        for(const p of s.data){
+          if(!Number.isFinite(p.x) || !Number.isFinite(p.y)) { first=true; continue; }
+          const yval = opts.logY ? Math.log10(Math.max(p.y, opts.yFloor || 1e-30)) : p.y;
+          const x = X(p.x), y = Y(yval);
+          if(first){ ctx.moveTo(x,y); first=false; } else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+        if(s.points){
+          ctx.fillStyle = col;
+          for(const p of s.data){ if(Number.isFinite(p.x)&&Number.isFinite(p.y)){ const yval=opts.logY?Math.log10(Math.max(p.y,opts.yFloor||1e-30)):p.y; ctx.beginPath(); ctx.arc(X(p.x), Y(yval), 3.2, 0, 2*pi); ctx.fill(); }}
+        }
+        if(s.label){ ctx.fillStyle = col; ctx.font='700 12px Inter, sans-serif'; ctx.fillText(s.label, m.l+14, m.t+16+idx*16); }
+      });
+      if(opts.vline !== undefined){ ctx.strokeStyle = cssVar('--warn'); ctx.setLineDash([6,5]); ctx.beginPath(); ctx.moveTo(X(opts.vline),m.t); ctx.lineTo(X(opts.vline),m.t+plotH); ctx.stroke(); ctx.setLineDash([]); }
+      if(opts.marker){ ctx.fillStyle = cssVar('--warn'); ctx.beginPath(); ctx.arc(X(opts.marker.x), Y(opts.logY?Math.log10(Math.max(opts.marker.y,opts.yFloor||1e-30)):opts.marker.y), 4.2,0,2*pi); ctx.fill(); }
+      return {X,Y,xmin,xmax,ymin,ymax,m,plotW,plotH};
+    }
+    function svgSet(id, html){ const el = $(id); if(el) el.innerHTML = html; }
+    function drawStaticDiagrams(){
+      svgSet('bandDiagram', `
+        <defs>
+          <linearGradient id="panelGlowA" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(52,201,255,0.10)"/>
+            <stop offset="100%" stop-color="rgba(52,201,255,0.03)"/>
+          </linearGradient>
+          <linearGradient id="panelGlowB" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(138,125,255,0.10)"/>
+            <stop offset="100%" stop-color="rgba(138,125,255,0.03)"/>
+          </linearGradient>
+          <marker id="arrowTeal" viewBox="0 0 10 10" markerWidth="5.2" markerHeight="5.2" refX="7.0" refY="5" orient="auto-start-reverse">
+            <path d="M1.2,2 L7.0,5 L1.2,8" fill="none" stroke="var(--accent)" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+          <marker id="arrowViolet" viewBox="0 0 10 10" markerWidth="5.2" markerHeight="5.2" refX="7.0" refY="5" orient="auto-start-reverse">
+            <path d="M1.2,2 L7.0,5 L1.2,8" fill="none" stroke="var(--accent2)" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+          <marker id="arrowGray" viewBox="0 0 10 10" markerWidth="5.2" markerHeight="5.2" refX="7.0" refY="5" orient="auto-start-reverse">
+            <path d="M1.2,2 L7.0,5 L1.2,8" fill="none" stroke="var(--plot-axis)" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <rect x="24" y="20" width="488" height="378" rx="24" fill="url(#panelGlowA)" stroke="var(--border)"/>
+        <rect x="536" y="20" width="540" height="378" rx="24" fill="url(#panelGlowB)" stroke="var(--border)"/>
+
+        <text x="52" y="52" font-size="20" font-weight="900">(a) Isolated metal + n-type semiconductor</text>
+        <text x="562" y="52" font-size="20" font-weight="900">(b) Metal–semiconductor contact at thermal equilibrium</text>
+
+        <!-- LEFT PANEL -->
+        <line x1="54" y1="92" x2="486" y2="92" stroke="var(--accent2)" stroke-width="2.4" stroke-dasharray="8 7" opacity="0.95"/>
+        <text x="214" y="79" font-size="15" class="muted">Vacuum level</text>
+
+        <rect x="100" y="196" width="104" height="10" rx="3" fill="var(--accent)"/>
+        <text x="128" y="229" font-size="16" class="muted">Metal</text>
+        <text x="216" y="202" font-size="16">E<tspan baseline-shift="sub" font-size="11">F</tspan></text>
+
+        <line x1="322" y1="150" x2="446" y2="150" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>
+        <line x1="322" y1="196" x2="446" y2="196" stroke="var(--accent2)" stroke-width="2.4" stroke-dasharray="7 6"/>
+        <line x1="310" y1="255" x2="446" y2="255" stroke="var(--plot-axis)" stroke-width="2.7" stroke-linecap="round"/>
+        <text x="458" y="155" font-size="16">E<tspan baseline-shift="sub" font-size="11">C</tspan></text>
+        <text x="458" y="201" font-size="16">E<tspan baseline-shift="sub" font-size="11">F</tspan></text>
+        <text x="458" y="260" font-size="16">E<tspan baseline-shift="sub" font-size="11">V</tspan></text>
+        <text x="306" y="287" font-size="16" class="muted">n-type semiconductor</text>
+
+        <line x1="146" y1="92" x2="146" y2="196" stroke="var(--accent)" stroke-width="2.15" stroke-linecap="round" marker-start="url(#arrowTeal)" marker-end="url(#arrowTeal)"/>
+        <text x="159" y="150" font-size="15">qφ<tspan baseline-shift="sub" font-size="11">m</tspan></text>
+
+        <line x1="348" y1="92" x2="348" y2="150" stroke="var(--accent)" stroke-width="2.15" stroke-linecap="round" marker-start="url(#arrowTeal)" marker-end="url(#arrowTeal)"/>
+        <text x="360" y="126" font-size="15">qχ</text>
+
+        <line x1="425" y1="92" x2="425" y2="196" stroke="var(--accent2)" stroke-width="2.15" stroke-linecap="round" marker-start="url(#arrowViolet)" marker-end="url(#arrowViolet)"/>
+        <text x="438" y="150" font-size="15">qφ<tspan baseline-shift="sub" font-size="11">s</tspan></text>
+
+        <line x1="293" y1="150" x2="293" y2="196" stroke="var(--accent)" stroke-width="2.1" stroke-linecap="round" marker-start="url(#arrowTeal)" marker-end="url(#arrowTeal)"/>
+        <text x="192" y="170" font-size="14" class="muted">q(φ<tspan baseline-shift="sub" font-size="10">m</tspan> − χ) = qφ<tspan baseline-shift="sub" font-size="10">Bn</tspan></text>
+
+        <!-- RIGHT PANEL -->
+        <path d="M570,92 H760 C785,92 803,99 822,110 C860,131 922,133 1056,133" fill="none" stroke="var(--accent2)" stroke-width="2.4" stroke-dasharray="8 7" opacity="0.95"/>
+        <text x="774" y="79" font-size="15" class="muted">Vacuum level</text>
+
+        <rect x="618" y="196" width="110" height="10" rx="3" fill="var(--accent)"/>
+        <text x="650" y="229" font-size="16" class="muted">Metal</text>
+        <text x="596" y="201" font-size="16">E<tspan baseline-shift="sub" font-size="11">F</tspan></text>
+
+        <line x1="618" y1="202" x2="1042" y2="202" stroke="var(--accent2)" stroke-width="2.4" stroke-dasharray="7 6"/>
+        <text x="1049" y="206" font-size="16">E<tspan baseline-shift="sub" font-size="11">F</tspan></text>
+
+        <path d="M744,145 C770,153 795,168 820,181 C850,195 900,196 1042,170" fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="round"/>
+        <path d="M744,202 C770,210 795,225 820,238 C850,251 900,252 1042,247" fill="none" stroke="var(--plot-axis)" stroke-width="2.6" stroke-linecap="round"/>
+        <text x="1049" y="174" font-size="16">E<tspan baseline-shift="sub" font-size="11">C</tspan></text>
+        <text x="1049" y="251" font-size="16">E<tspan baseline-shift="sub" font-size="11">V</tspan></text>
+        <text x="880" y="286" font-size="16" class="muted">n-type semiconductor</text>
+        <text x="727" y="218" font-size="14" class="muted">flat Fermi level at equilibrium</text>
+
+        <line x1="744" y1="104" x2="744" y2="304" stroke="var(--border)" stroke-width="2.0"/>
+        <text x="711" y="318" font-size="14" class="muted">interface</text>
+
+        <line x1="684" y1="92" x2="684" y2="196" stroke="var(--accent)" stroke-width="2.15" stroke-linecap="round" marker-start="url(#arrowTeal)" marker-end="url(#arrowTeal)"/>
+        <text x="598" y="151" font-size="15">qφ<tspan baseline-shift="sub" font-size="11">m</tspan></text>
+
+        <line x1="792" y1="133" x2="792" y2="170" stroke="var(--accent2)" stroke-width="2.1" stroke-linecap="round" marker-start="url(#arrowViolet)" marker-end="url(#arrowViolet)"/>
+        <text x="803" y="156" font-size="15">qV<tspan baseline-shift="sub" font-size="11">bi</tspan> = q(φ<tspan baseline-shift="sub" font-size="10">m</tspan> − φ<tspan baseline-shift="sub" font-size="10">s</tspan>)</text>
+
+        <line x1="775" y1="92" x2="775" y2="170" stroke="var(--accent)" stroke-width="2.1" stroke-linecap="round" marker-start="url(#arrowTeal)" marker-end="url(#arrowTeal)"/>
+        <text x="786" y="133" font-size="15">qχ</text>
+
+        <line x1="742" y1="145" x2="742" y2="202" stroke="var(--accent)" stroke-width="2.1" stroke-linecap="round" marker-start="url(#arrowTeal)" marker-end="url(#arrowTeal)"/>
+        <text x="624" y="173" font-size="15">qφ<tspan baseline-shift="sub" font-size="11">Bn</tspan> = q(φ<tspan baseline-shift="sub" font-size="10">m</tspan> − χ)</text>
+
+        <line x1="867" y1="170" x2="867" y2="202" stroke="var(--accent)" stroke-width="2.1" stroke-linecap="round" marker-start="url(#arrowTeal)" marker-end="url(#arrowTeal)"/>
+        <text x="880" y="191" font-size="15">qV<tspan baseline-shift="sub" font-size="11">n</tspan></text>
+
+        <line x1="980" y1="133" x2="980" y2="202" stroke="var(--accent2)" stroke-width="2.15" stroke-linecap="round" marker-start="url(#arrowViolet)" marker-end="url(#arrowViolet)"/>
+        <text x="992" y="170" font-size="15">qφ<tspan baseline-shift="sub" font-size="11">s</tspan></text>
+      `);
+      svgSet('mesfetStructureSvg', `
+        <rect x="100" y="210" width="560" height="70" fill="rgba(255,255,255,0.08)" stroke="var(--border)"/><text x="300" y="252" font-size="17" class="muted">Semi-insulating substrate</text>
+        <rect x="100" y="150" width="560" height="60" fill="rgba(52,201,255,0.10)" stroke="var(--accent)"/><text x="330" y="187" font-size="17">n-type channel</text>
+        <rect x="160" y="112" width="100" height="38" rx="4" fill="var(--plot-axis)"/><text x="178" y="104" font-size="16">Source</text>
+        <rect x="330" y="100" width="120" height="50" rx="4" fill="rgba(52,201,255,0.55)" stroke="var(--accent)"/><text x="370" y="92" font-size="16">Gate</text>
+        <rect x="510" y="112" width="100" height="38" rx="4" fill="var(--plot-axis)"/><text x="535" y="104" font-size="16">Drain</text>
+        <path d="M330,150 C350,190 430,190 450,150 Z" fill="rgba(255,111,174,0.22)" stroke="var(--accent3)" stroke-width="2"/>
+        <line x1="330" y1="72" x2="450" y2="72" stroke="var(--accent)" stroke-width="2" marker-start="url(#arr)" marker-end="url(#arr)"/><text x="380" y="62" font-size="15">L</text>
+        <line x1="86" y1="150" x2="86" y2="210" stroke="var(--accent)" stroke-width="2" marker-start="url(#arr)" marker-end="url(#arr)"/><text x="62" y="185" font-size="15">a</text>
+        <text x="275" y="300" font-size="14" class="muted">Schottky gate controls depletion; source/drain are ohmic contacts.</text>
+      `);
+      svgSet('modfetSvg', `
+        <rect x="95" y="235" width="630" height="58" fill="rgba(255,255,255,0.08)" stroke="var(--border)"/><text x="330" y="270" font-size="17" class="muted">Semi-insulating GaAs</text>
+        <rect x="95" y="190" width="630" height="45" fill="rgba(138,125,255,0.08)" stroke="var(--border)"/><text x="334" y="218" font-size="16">Undoped GaAs channel</text>
+        <rect x="95" y="178" width="630" height="12" fill="rgba(52,201,255,0.85)"/><text x="410" y="170" font-size="16" class="accent">2DEG</text>
+        <rect x="95" y="150" width="630" height="28" fill="rgba(255,255,255,0.10)"/><text x="320" y="169" font-size="14">Undoped AlGaAs spacer</text>
+        <rect x="95" y="95" width="630" height="55" fill="rgba(52,201,255,0.10)" stroke="var(--accent)"/><text x="340" y="128" font-size="16">n-AlGaAs donor layer</text>
+        <rect x="140" y="52" width="120" height="43" rx="4" fill="var(--plot-axis)"/><text x="170" y="45" font-size="16">Source</text>
+        <rect x="345" y="40" width="130" height="55" rx="4" fill="rgba(52,201,255,0.55)"/><text x="390" y="32" font-size="16">Gate</text>
+        <rect x="565" y="52" width="120" height="43" rx="4" fill="var(--plot-axis)"/><text x="596" y="45" font-size="16">Drain</text>
+        <path d="M360,95 C375,125 445,125 460,95 Z" fill="rgba(255,111,174,0.22)" stroke="var(--accent3)"/>
+        <text x="120" y="318" font-size="14" class="muted">Donors and conducting electrons are spatially separated, reducing impurity scattering.</text>
+      `);
+    }
+    function schottkyParams(){
+      const mat = materials[$('semi').value];
+      const T = +$('temp').value;
+      const Vt = k*T/q;
+      const phiB = +$('phiB').value;
+      const ND = Math.pow(10, +$('ndLog').value);
+      const V = +$('bias').value;
+      const eps = mat.epsr * eps0_cm;
+      const Vn = Vt * Math.log(mat.Nc / ND);
+      const Vbi = Math.max(0.02, phiB - Vn);
+      const Veff = Math.max(1e-4, Vbi - V);
+      const W = Math.sqrt(2*eps*Veff/(q*ND));
+      const Em = q*ND*W/eps;
+      const C = eps/W;
+      const Js = mat.Astar*T*T*Math.exp(-phiB/Vt);
+      const J = Js*(Math.exp(clamp(V/Vt, -80, 40))-1);
+      return {mat,T,Vt,phiB,ND,V,eps,Vn,Vbi,Veff,W,Em,C,Js,J};
+    }
+    function updateSchottky(){
+      const p = schottkyParams();
+      $('phiBOut').textContent = `${p.phiB.toFixed(2)} V`;
+      $('ndOut').textContent = `10^${(+$('ndLog').value).toFixed(1)} cm⁻³`;
+      $('biasOut').textContent = `${p.V.toFixed(2)} V`;
+      $('tempOut').textContent = `${p.T.toFixed(0)} K`;
+      $('vbiRead').textContent = `${p.Vbi.toFixed(3)} V`;
+      $('wRead').textContent = `${(p.W*1e4).toFixed(3)} μm`;
+      $('emRead').textContent = `${fmt(p.Em,3)} V/cm`;
+      $('capRead').textContent = `${fmt(p.C,3)} F/cm²`;
+      drawSchottkyBand(p);
+      drawSchottkyBias(p);
+      drawCharge(p);
+      drawField(p);
+      drawPotential(p);
+    }
+    function drawSchottkyBand(p){
+      const wum = p.W*1e4;
+      const wpx = clamp(wum*155, 46, 205);
+      const bend = clamp(78*p.Veff/(p.Vbi+0.25), 16, 88);
+      const ecTop = 110 + bend;
+      const ecFlat = 108;
+      const evTop = ecTop + 64;
+      const evFlat = ecFlat + 64;
+      svgSet('schottkyBandSvg', `
+        <defs>
+          <marker id="schBandArr" viewBox="0 0 10 10" markerWidth="6" markerHeight="6" refX="8" refY="5" orient="auto-start-reverse">
+            <path d="M1,2 L8,5 L1,8" fill="none" stroke="var(--accent)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <rect x="70" y="72" width="140" height="162" fill="rgba(255,255,255,0.10)" stroke="var(--border)"/>
+        <rect x="210" y="72" width="420" height="162" fill="rgba(52,201,255,0.07)" stroke="var(--border)"/>
+        <rect x="210" y="72" width="${wpx}" height="162" fill="rgba(255,111,174,0.14)"/>
+        <text x="104" y="58" font-size="18" font-weight="800">Metal</text>
+        <text x="410" y="58" font-size="18" font-weight="800">n-type semiconductor</text>
+        <text x="225" y="92" font-size="13" class="muted">depletion</text>
+        <line x1="86" y1="150" x2="620" y2="150" stroke="var(--accent2)" stroke-width="2" stroke-dasharray="7 5"/>
+        <text x="629" y="154" font-size="14">E_F</text>
+        <path d="M210,${ecTop} C${235+wpx/4},${ecTop-20} ${265+wpx},${ecFlat+8} 620,${ecFlat}" fill="none" stroke="var(--accent)" stroke-width="3"/>
+        <path d="M210,${evTop} C${235+wpx/4},${evTop-18} ${265+wpx},${evFlat+7} 620,${evFlat}" fill="none" stroke="var(--plot-axis)" stroke-width="2.6"/>
+        <text x="628" y="${ecFlat+4}" font-size="14">E_C</text>
+        <text x="628" y="${evFlat+4}" font-size="14">E_V</text>
+        <line x1="210" y1="${ecTop}" x2="210" y2="150" stroke="#ffd166" stroke-width="2.1"/>
+        <text x="220" y="${(ecTop+150)/2}" font-size="14" fill="#ffd166">qφ<tspan baseline-shift="sub" font-size="10">B</tspan></text>
+        <line x1="210" y1="252" x2="${210+wpx}" y2="252" stroke="var(--accent)" stroke-width="2.2" marker-start="url(#schBandArr)" marker-end="url(#schBandArr)"/>
+        <text x="${210+wpx/2}" y="274" text-anchor="middle" font-size="14">W = ${wum.toFixed(2)} μm</text>
+        <text x="86" y="255" font-size="14" class="muted">V = ${p.V.toFixed(2)} V · ${$('semi').value}</text>
+      `);
+    }
+    function drawSchottkyBias(p){
+      const reverse = p.V < -1e-6;
+      const forward = p.V > 1e-6;
+      const label = reverse ? 'Reverse bias: depletion expands' : (forward ? 'Forward bias: depletion shrinks' : 'Zero-bias equilibrium');
+      const topNote = reverse ? 'A negative bias on the metal gate increases the depletion region.' : (forward ? 'A positive bias on the metal gate lowers the effective barrier.' : 'No external bias: the built-in potential sets the depletion width.');
+      const signMetal = reverse ? '−' : '+';
+      const signSemi = reverse ? '+' : '−';
+      const wpx = clamp(p.W*1e4*175, 42, 205);
+      const veffH = clamp(28 + 44*(p.Veff/Math.max(0.2,p.Vbi+0.15)), 30, 78);
+      svgSet('schottkyBiasSvg', `
+        <defs>
+          <linearGradient id="biasSemi" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(52,201,255,0.10)"/>
+            <stop offset="100%" stop-color="rgba(52,201,255,0.04)"/>
+          </linearGradient>
+          <marker id="schArrC" viewBox="0 0 10 10" markerWidth="6" markerHeight="6" refX="8" refY="5" orient="auto-start-reverse">
+            <path d="M1,2 L8,5 L1,8" fill="none" stroke="var(--accent2)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <text x="28" y="34" font-size="17" font-weight="800">${label}</text>
+        <text x="28" y="56" font-size="13" class="muted">${topNote}</text>
+        <rect x="70" y="142" width="110" height="22" rx="2" fill="rgba(255,255,255,0.12)" stroke="var(--border)"/>
+        <rect x="180" y="132" width="420" height="42" rx="2" fill="url(#biasSemi)" stroke="var(--border)"/>
+        <rect x="180" y="132" width="${wpx}" height="42" fill="rgba(255,111,174,0.16)" stroke="rgba(255,111,174,0.28)"/>
+        <line x1="70" y1="153" x2="600" y2="153" stroke="var(--accent2)" stroke-width="2.0" stroke-dasharray="7 5"/>
+        <text x="608" y="157" font-size="13">reference level</text>
+        <text x="92" y="128" font-size="15" font-weight="700">Metal gate</text>
+        <text x="355" y="128" font-size="15" font-weight="700">n-type semiconductor</text>
+        <text x="213" y="194" font-size="14">depletion width W</text>
+        <line x1="180" y1="187" x2="${180+wpx}" y2="187" stroke="var(--accent)" stroke-width="2.1" marker-start="url(#schArrC)" marker-end="url(#schArrC)"/>
+
+        <line x1="98" y1="86" x2="98" y2="142" stroke="var(--text)" stroke-width="2"/>
+        <line x1="82" y1="98" x2="114" y2="98" stroke="var(--text)" stroke-width="2"/>
+        <line x1="88" y1="88" x2="108" y2="88" stroke="var(--text)" stroke-width="2"/>
+        <text x="121" y="94" font-size="18">${signMetal}</text>
+        <text x="118" y="112" font-size="13" class="muted">gate terminal</text>
+
+        <line x1="540" y1="86" x2="540" y2="142" stroke="var(--text)" stroke-width="2"/>
+        <line x1="524" y1="98" x2="556" y2="98" stroke="var(--text)" stroke-width="2"/>
+        <line x1="530" y1="88" x2="550" y2="88" stroke="var(--text)" stroke-width="2"/>
+        <text x="563" y="94" font-size="18">${signSemi}</text>
+        <text x="505" y="112" font-size="13" class="muted">semiconductor terminal</text>
+
+        <line x1="70" y1="74" x2="540" y2="74" stroke="var(--plot-axis)" stroke-width="1.6"/>
+        <line x1="70" y1="74" x2="70" y2="82" stroke="var(--plot-axis)" stroke-width="1.6"/>
+        <line x1="540" y1="74" x2="540" y2="82" stroke="var(--plot-axis)" stroke-width="1.6"/>
+        <text x="280" y="68" font-size="15">Applied bias V = ${p.V.toFixed(2)} V</text>
+
+        <line x1="215" y1="${153-veffH}" x2="215" y2="153" stroke="var(--accent2)" stroke-width="2.1" marker-start="url(#schArrC)" marker-end="url(#schArrC)"/>
+        <text x="224" y="${153-veffH/2+4}" font-size="14">V<tspan baseline-shift="sub" font-size="10">eff</tspan> = ${p.Veff.toFixed(3)} V</text>
+
+        <rect x="28" y="218" width="604" height="36" rx="10" fill="rgba(255,255,255,0.05)" stroke="var(--border)"/>
+        <text x="42" y="241" font-size="13">V<tspan baseline-shift="sub" font-size="10">bi</tspan> = ${p.Vbi.toFixed(3)} V</text>
+        <text x="182" y="241" font-size="13">φ<tspan baseline-shift="sub" font-size="10">B</tspan> = ${p.phiB.toFixed(2)} V</text>
+        <text x="300" y="241" font-size="13">N<tspan baseline-shift="sub" font-size="10">D</tspan> = 10^${(Math.log10(p.ND)).toFixed(1)} cm⁻³</text>
+        <text x="480" y="241" font-size="13">W = ${(p.W*1e4).toFixed(3)} μm</text>
+      `);
+    }
+    function drawCharge(p){
+      const xMax = 1.2; // μm, fixed display window
+      const wum = p.W*1e4;
+      const w = Math.min(wum, xMax);
+      const data = [
+        {x:0,y:1},
+        {x:w,y:1},
+        {x:w,y:0},
+        {x:xMax,y:0}
+      ];
+      drawPlot($('chargePlot'), [{data, label:'ρ/(qN_D)', fillTo:0, fillAlpha:0.18, width:2.8}], {
+        title:'Space-charge density (fixed axes)',
+        xlabel:'Position x (μm)',
+        ylabel:'Normalized ρ/(qN_D)',
+        xmin:0,
+        xmax:xMax,
+        ymin:-0.1,
+        ymax:1.15,
+        xticks:[0,0.3,0.6,0.9,1.2],
+        yticks:[0,0.5,1.0],
+        xTickFormat:t=>t.toFixed(1),
+        yTickFormat:t=>t.toFixed(1),
+        vline:Math.min(wum,xMax), marker:{x:Math.min(wum,xMax), y:1}
+      });
+    }
+    function drawField(p){
+      const xMax = 1.2; // μm, fixed display window
+      const wum = p.W*1e4;
+      const data=[];
+      for(let i=0;i<=120;i++){
+        const x = xMax*i/120;
+        const En = x <= wum ? -(1 - x/wum) : 0;
+        data.push({x,y:En});
+      }
+      drawPlot($('fieldPlot'), [{data,label:'E/E_m', fillTo:0, fillAlpha:0.16, width:2.8}], {
+        title:'Electric field profile (fixed axes)',
+        xlabel:'Position x (μm)',
+        ylabel:'Normalized E/E_m',
+        xmin:0,
+        xmax:xMax,
+        ymin:-1.1,
+        ymax:0.1,
+        xticks:[0,0.3,0.6,0.9,1.2],
+        yticks:[-1,-0.5,0],
+        xTickFormat:t=>t.toFixed(1),
+        yTickFormat:t=>t.toFixed(1),
+        vline:Math.min(wum,xMax), marker:{x:Math.min(wum,xMax), y:0}
+      });
+    }
+    function drawPotential(p){
+      const xMax = 1.2; // μm, fixed display window
+      const wum = p.W*1e4;
+      const data=[];
+      for(let i=0;i<=120;i++){
+        const x = xMax*i/120;
+        const psin = x <= wum ? Math.pow(1-x/wum,2) : 0;
+        data.push({x,y:psin});
+      }
+      drawPlot($('potentialPlot'), [{data,label:'ψ/V_eff', fillTo:0, fillAlpha:0.12, width:2.8}], {
+        title:'Electrostatic potential profile (fixed axes)',
+        xlabel:'Position x (μm)',
+        ylabel:'Normalized ψ/V_eff',
+        xmin:0,
+        xmax:xMax,
+        ymin:-0.05,
+        ymax:1.1,
+        xticks:[0,0.3,0.6,0.9,1.2],
+        yticks:[0,0.5,1.0],
+        xTickFormat:t=>t.toFixed(1),
+        yTickFormat:t=>t.toFixed(1),
+        marker:{x:Math.min(wum,xMax), y:0}
+      });
+    }
+    function rcParams(){
+      const phi=+$('rcPhi').value, ND=Math.pow(10,+$('rcNd').value), area=Math.pow(10,+$('areaLog').value);
+      const thermal = Math.exp((phi-0.2)/0.045);
+      const tunnel = Math.exp(1.8e10*phi/Math.sqrt(ND));
+      const rel = 1e-7 * Math.min(thermal, tunnel) + 1e-8;
+      const R = rel/area;
+      return {phi,ND,area,rel,R,drop:R*1};
+    }
+    function updateRc(){
+      const p=rcParams();
+      const logN = +$('rcNd').value;
+      $('rcPhiOut').innerHTML = `${p.phi.toFixed(2)}&nbsp;V`;
+      $('rcNdOut').innerHTML = `10<sup>${logN.toFixed(2)}</sup>&nbsp;cm<sup>−3</sup>`;
+      $('areaOut').innerHTML = `10<sup>${(+$('areaLog').value).toFixed(2)}</sup>&nbsp;cm<sup>2</sup>`;
+      $('rcRead').innerHTML = `${fmt(p.rel,3)}&nbsp;Ω·cm<sup>2</sup>`;
+      $('dropRead').innerHTML = `${fmt(p.drop,3)}&nbsp;V`;
+
+      const data=[];
+      for(let logNd=16; logNd<=20; logNd+=0.04){
+        const ND=Math.pow(10,logNd);
+        const thermal=Math.exp((p.phi-0.2)/0.045);
+        const tunnel=Math.exp(1.8e10*p.phi/Math.sqrt(ND));
+        const rel=1e-7*Math.min(thermal,tunnel)+1e-8;
+        data.push({x:logNd,y:rel});
+      }
+      drawPlot($('rcPlot'), [{data,label:'ρ_c', width:2.8}], {
+        title:'Specific contact resistance ρ_c vs donor density N_D',
+        xlabel:'log₁₀(N_D / cm⁻³)',
+        ylabel:'ρ_c (Ω·cm²)',
+        logY:true,
+        xmin:16,
+        xmax:20,
+        ymin:-8,
+        ymax:-2,
+        xticks:[16,17,18,19,20],
+        yticks:[-8,-7,-6,-5,-4,-3,-2],
+        yFloor:1e-8,
+        xTickFormat:t=>t.toFixed(0),
+        yTickFormat:t=>'10^'+t.toFixed(0),
+        marker:{x:logN,y:p.rel},
+        vline:logN
+      });
+
+      const barrierW = clamp(190 - (logN-16)*37 + (p.phi-0.65)*55, 28, 195);
+      const barrierH = clamp(120 - (p.phi-0.20)/(0.95-0.20)*58, 58, 122);
+      const tunnelLift = clamp(12 + (logN-16)*10, 12, 48);
+      const tunnelCount = Math.max(1, Math.min(5, Math.round((logN-16)/0.9)));
+      const areaLog = (+$('areaLog').value).toFixed(2);
+      let arrows='';
+      for(let i=0;i<tunnelCount;i++){
+        const x1=300 + i*34;
+        const x2=x1+30;
+        const ym=195 - tunnelLift + i*2;
+        arrows += `<path d="M ${x1} ${215-i*3} C ${x1+10} ${ym} ${x2-12} ${ym} ${x2} ${218-i*3}" fill="none" stroke="var(--accent3)" stroke-width="3" marker-end="url(#tunArr)" opacity="${0.58+0.08*i}"/>`;
+      }
+      svgSet('ohmicSvg', `
+        <defs>
+          <linearGradient id="ohmicSemiGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(52,201,255,0.08)"/>
+            <stop offset="100%" stop-color="rgba(52,201,255,0.03)"/>
+          </linearGradient>
+          <marker id="tunArr" viewBox="0 0 10 10" markerWidth="5.6" markerHeight="5.6" refX="7.2" refY="5" orient="auto-start-reverse">
+            <path d="M1.2,2 L7.2,5 L1.2,8" fill="none" stroke="var(--accent3)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+          <marker id="tealArr" viewBox="0 0 10 10" markerWidth="5.6" markerHeight="5.6" refX="7.2" refY="5" orient="auto-start-reverse">
+            <path d="M1.2,2 L7.2,5 L1.2,8" fill="none" stroke="var(--accent)" stroke-width="1.0" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <text x="36" y="30" font-size="18" font-weight="800">Ohmic-contact band picture matched to the selected point</text>
+        <rect x="60" y="70" width="180" height="126" fill="rgba(255,255,255,0.11)" stroke="var(--border)"/>
+        <rect x="240" y="70" width="440" height="126" fill="url(#ohmicSemiGrad)" stroke="var(--border)"/>
+        <text x="116" y="138" font-size="19" font-weight="700">Metal</text>
+        <text x="415" y="138" font-size="19" font-weight="700">n⁺ semiconductor</text>
+
+        <path d="M 240 196 C ${240+barrierW*0.18} ${148+barrierH*0.2} ${240+barrierW*0.58} ${82+barrierH*0.18} 666 84" fill="none" stroke="var(--accent)" stroke-width="3.4" stroke-linecap="round"/>
+        <line x1="240" y1="196" x2="666" y2="196" stroke="var(--accent2)" stroke-width="2.2" stroke-dasharray="8 6"/>
+        <text x="675" y="89" font-size="16">E<tspan baseline-shift="sub" font-size="11">C</tspan></text>
+        <text x="675" y="200" font-size="16">E<tspan baseline-shift="sub" font-size="11">F</tspan></text>
+
+        <line x1="260" y1="84" x2="260" y2="196" stroke="#ffd166" stroke-width="2.1" marker-start="url(#tealArr)" marker-end="url(#tealArr)"/>
+        <text x="270" y="144" font-size="15" fill="#ffd166">qφ<tspan baseline-shift="sub" font-size="10">B</tspan></text>
+
+        <line x1="240" y1="228" x2="${240+barrierW}" y2="228" stroke="var(--accent)" stroke-width="2.1" marker-start="url(#tealArr)" marker-end="url(#tealArr)"/>
+        <text x="${240+barrierW/2}" y="248" text-anchor="middle" font-size="14">effective tunneling width W<tspan baseline-shift="sub" font-size="10">t</tspan></text>
+
+        ${arrows}
+        <text x="302" y="274" font-size="15" class="muted">Higher N<tspan baseline-shift="sub" font-size="10">D</tspan> makes the barrier thinner, increases tunneling probability, and lowers ρ<tspan baseline-shift="sub" font-size="10">c</tspan>.</text>
+
+        <rect x="44" y="284" width="656" height="28" rx="10" fill="rgba(255,255,255,0.05)" stroke="var(--border)"/>
+        <text x="60" y="303" font-size="13">φ<tspan baseline-shift="sub" font-size="10">B</tspan> = ${p.phi.toFixed(2)} V</text>
+        <text x="176" y="303" font-size="13">N<tspan baseline-shift="sub" font-size="10">D</tspan> = 10<tspan baseline-shift="super" font-size="9">${logN.toFixed(2)}</tspan> cm<tspan baseline-shift="super" font-size="9">−3</tspan></text>
+        <text x="342" y="303" font-size="13">ρ<tspan baseline-shift="sub" font-size="10">c</tspan> = ${fmt(p.rel,3)} Ω·cm²</text>
+        <text x="514" y="303" font-size="13">A = 10<tspan baseline-shift="super" font-size="9">${areaLog}</tspan> cm<tspan baseline-shift="super" font-size="9">2</tspan></text>
+      `);
+    }
+    function mesfetParams(){
+      const eps = 12.4*eps0_cm, Vbi=0.75;
+      const Vg=+$('vg').value, Vd=+$('vd').value, ND=Math.pow(10,+$('mesNd').value);
+      const a=+$('aUm').value*1e-4, L=+$('lUm').value*1e-4, Z=+$('zUm').value*1e-4, mu=+$('mu').value;
+      const Vp=q*ND*a*a/(2*eps);
+      const Ip=Z*mu*q*q*ND*ND*a*a*a/(2*eps*L);
+      const alpha=clamp((Vg+Vbi)/Math.max(Vp,1e-12),0,1);
+      const Vdsat=Math.max(0, Vp - Vg - Vbi);
+      const Id = mesfetIdAt(Vd,Vg,{Vp,Ip,Vbi});
+      const Idsat=mesfetIdAt(Vdsat,Vg,{Vp,Ip,Vbi});
+      const gm = (Ip/Math.max(Vp,1e-9))*(1 - Math.sqrt(alpha));
+      return {eps,Vbi,Vg,Vd,ND,a,L,Z,mu,Vp,Ip,Vdsat,Id,Idsat,gm};
+    }
+    function mesfetIdAt(Vd,Vg,p){
+      const Vp=Math.max(p.Vp,1e-9), Ip=p.Ip, Vbi=p.Vbi;
+      const beta0=clamp((Vg+Vbi)/Vp,0,1);
+      const Vdsat=Math.max(0,Vp - Vg - Vbi);
+      const vdEff=Math.max(0, Math.min(Vd,Vdsat));
+      const beta1=clamp((vdEff+Vg+Vbi)/Vp,0,1);
+      const val = Ip*(vdEff/Vp - (2/3)*Math.pow(beta1,1.5) + (2/3)*Math.pow(beta0,1.5));
+      return Math.max(0,val);
+    }
+    function updateMesfet(){
+      const p=mesfetParams();
+      $('vgOut').textContent=`${p.Vg.toFixed(2)} V`; $('vdOut').textContent=`${p.Vd.toFixed(2)} V`; $('mesNdOut').textContent=`10^${(+$('mesNd').value).toFixed(1)} cm⁻³`;
+      $('aOut').textContent=`${(p.a*1e4).toFixed(2)} μm`; $('lOut').textContent=`${(p.L*1e4).toFixed(2)} μm`; $('zOut').textContent=`${(p.Z*1e4).toFixed(0)} μm`; $('muOut').textContent=`${p.mu.toFixed(0)} cm²/Vs`;
+      $('vpRead').textContent=`${p.Vp.toFixed(2)} V`; $('vdsatRead').textContent=`${p.Vdsat.toFixed(2)} V`; $('idRead').textContent=`${fmt(p.Id*1e3,3)} mA`; $('gmRead').textContent=`${fmt(p.gm*1e3,3)} mS`;
+      drawChannelSvg(p); drawMesIv(p); drawGm(p); drawWPlot(p);
+    }
+    function drawChannelSvg(p){
+      const x0=80, y0=85, width=650, h=150;
+      const gateX=x0+190, gateW=270;
+      const aPx=110;
+      const n=80;
+      let path=`M ${gateX} ${y0+50}`;
+      for(let i=0;i<=n;i++){
+        const y=i/n*p.L;
+        const Vloc=p.Vd*i/n;
+        const W=Math.sqrt(2*p.eps*Math.max(0,p.Vbi+p.Vg+Vloc)/(q*p.ND));
+        const frac=clamp(W/p.a,0,1.2);
+        const xx=gateX + gateW*i/n;
+        const yy=y0+50 + frac*aPx;
+        path += ` L ${xx.toFixed(1)} ${yy.toFixed(1)}`;
+      }
+      path += ` L ${gateX+gateW} ${y0+50} Z`;
+      const pinch = p.Vd >= p.Vdsat && p.Vdsat>0;
+      svgSet('channelSvg', `
+        <text x="40" y="34" font-size="18" font-weight="900">MESFET channel cross-section</text>
+        <rect x="${x0}" y="${y0+50}" width="${width}" height="${aPx}" fill="rgba(52,201,255,0.12)" stroke="var(--accent)"/>
+        <rect x="${x0}" y="${y0+50+aPx}" width="${width}" height="45" fill="rgba(255,255,255,0.08)" stroke="var(--border)"/>
+        <rect x="${x0+40}" y="${y0+15}" width="110" height="35" rx="4" fill="var(--plot-axis)"/><text x="${x0+68}" y="${y0+5}" font-size="15">Source</text>
+        <rect x="${gateX}" y="${y0}" width="${gateW}" height="50" rx="4" fill="rgba(52,201,255,0.50)" stroke="var(--accent)"/><text x="${gateX+110}" y="${y0-9}" font-size="15">Gate ${p.Vg.toFixed(2)} V</text>
+        <rect x="${x0+width-150}" y="${y0+15}" width="110" height="35" rx="4" fill="var(--plot-axis)"/><text x="${x0+width-126}" y="${y0+5}" font-size="15">Drain</text>
+        <path d="${path}" fill="rgba(255,111,174,0.24)" stroke="var(--accent3)" stroke-width="2"/>
+        <line x1="${x0+40}" y1="${y0+50+aPx/2}" x2="${x0+width-45}" y2="${y0+50+aPx/2}" stroke="var(--good)" stroke-width="3" marker-end="url(#arr)"/>
+        <text x="${x0+width-140}" y="${y0+50+aPx/2-12}" font-size="14" fill="var(--good)">electron channel</text>
+        <text x="${x0+20}" y="${y0+245}" font-size="14" class="muted">${pinch ? 'Pinch-off reached near drain: saturation model is active.' : 'Before pinch-off: current increases with drain voltage.'}</text>
+        <text x="${x0+515}" y="${y0+245}" font-size="14" class="muted">V_D = ${p.Vd.toFixed(2)} V</text>
+      `);
+    }
+    function drawMesIv(p){
+      const Vgs=[0,-0.5,-1.0,-1.5,-2.0,-2.5].filter(v=>v>=-2.5);
+      const series=[];
+      for(const vg of Vgs){ const data=[]; for(let vd=0; vd<=8; vd+=0.05) data.push({x:vd,y:mesfetIdAt(vd,vg,p)*1e3}); series.push({data,label:`VG=${vg}V`}); }
+      drawPlot($('mesIvPlot'), series, {title:'MESFET output characteristics', xlabel:'V_D (V)', ylabel:'I_D (mA)', xmin:0, vline:p.Vd, marker:{x:p.Vd,y:p.Id*1e3}});
+    }
+    function drawGm(p){
+      const data=[];
+      for(let vg=-2.5; vg<=0; vg+=0.025){ const pp={...p,Vg:vg}; const alpha=clamp((vg+p.Vbi)/Math.max(p.Vp,1e-12),0,1); const gm=(p.Ip/Math.max(p.Vp,1e-9))*(1-Math.sqrt(alpha)); data.push({x:vg,y:Math.max(0,gm*1e3)}); }
+      drawPlot($('gmPlot'), [{data,label:'gm'}], {title:'Transconductance vs gate voltage', xlabel:'V_G (V)', ylabel:'g_m (mS)', marker:{x:p.Vg,y:p.gm*1e3}});
+    }
+    function drawWPlot(p){
+      const data=[];
+      for(let i=0;i<=100;i++){ const y=i/100*p.L; const Vloc=p.Vd*i/100; const W=Math.sqrt(2*p.eps*Math.max(0,p.Vbi+p.Vg+Vloc)/(q*p.ND)); data.push({x:i/100,y:W/p.a}); }
+      drawPlot($('wPlot'), [{data,label:'W/a'}], {title:'Normalized depletion width along channel', xlabel:'y/L', ylabel:'W/a', ymin:0, ymax:1.2});
+    }
+    function updateHf(){
+      const L=+$('hfL').value*1e-4, a=+$('hfA').value*1e-4, mu=+$('hfMu').value, vs=+$('vs').value*1e7;
+      const ND=Math.pow(10,+$('mesNd').value), eps=12.4*eps0_cm;
+      const ftMob=mu*q*ND*a*a/(2*pi*eps*L*L);
+      const ftVs=vs/(2*pi*L);
+      $('hfLOut').textContent=`${(L*1e4).toFixed(2)} μm`; $('hfAOut').textContent=`${(a*1e4).toFixed(2)} μm`; $('hfMuOut').textContent=`${mu.toFixed(0)} cm²/Vs`; $('vsOut').textContent=`${(vs/1e7).toFixed(2)}×10⁷ cm/s`;
+      $('ftMobRead').textContent=`${fmt(ftMob/1e9,3)} GHz`; $('ftVsRead').textContent=`${fmt(ftVs/1e9,3)} GHz`;
+      const d1=[],d2=[];
+      for(let lum=0.05; lum<=2; lum+=0.02){ const Lcm=lum*1e-4; d1.push({x:lum,y:mu*q*ND*a*a/(2*pi*eps*Lcm*Lcm)/1e9}); d2.push({x:lum,y:vs/(2*pi*Lcm)/1e9}); }
+      drawPlot($('ftPlot'), [{data:d1,label:'mobility estimate'},{data:d2,label:'velocity limit'}], {title:'Cutoff frequency vs gate length', xlabel:'L (μm)', ylabel:'f_T (GHz)', logY:true, yFloor:0.01, yTickFormat:t=>'10^'+t.toFixed(0), marker:{x:+$('hfL').value,y:Math.min(ftMob,ftVs)/1e9}});
+      svgSet('hfSvg', `
+        <text x="40" y="34" font-size="18" font-weight="900">High-frequency design message</text>
+        <rect x="70" y="95" width="620" height="65" rx="16" fill="rgba(52,201,255,0.10)" stroke="var(--accent)"/>
+        <text x="105" y="134" font-size="18">Shorter gate length L reduces transit time and raises f_T.</text>
+        <line x1="170" y1="190" x2="590" y2="190" stroke="var(--accent)" stroke-width="4" marker-end="url(#arr)"/>
+        <text x="220" y="220" font-size="15" class="muted">electron velocity v_s</text>
+        <text x="430" y="220" font-size="15" class="muted">f_T ≈ v_s/(2πL)</text>
+      `);
+    }
+    function modParams(){
+      const ND=Math.pow(10,+$('modNd').value), d1=+$('d1').value*1e-7, d0=+$('d0').value, T=+$('modT').value;
+      const eta=0.55*Math.exp(-d0/38);
+      const ns=eta*ND*d1;
+      const mu2deg=1.2e6/(1+(T/80)**2.2) + 7e3;
+      const spacerPenalty=1/(1+18/(d0+3));
+      const mu=mu2deg*(0.55+0.45*spacerPenalty);
+      const bulkMu=8500/(1+(T/180)**1.4)+800;
+      const Rs=1/(q*mu*ns);
+      return {ND,d1,d0,T,eta,ns,mu,bulkMu,Rs,gain:mu/bulkMu};
+    }
+    function updateModfet(){
+      const p=modParams();
+      $('modNdOut').textContent=`10^${(+$('modNd').value).toFixed(2)} cm⁻³`; $('d1Out').textContent=`${(p.d1*1e7).toFixed(0)} nm`; $('d0Out').textContent=`${p.d0.toFixed(0)} nm`; $('modTOut').textContent=`${p.T.toFixed(0)} K`;
+      $('nsRead').textContent=`${fmt(p.ns,3)} cm⁻²`; $('mobRead').textContent=`${fmt(p.mu,3)} cm²/Vs`; $('rsRead').textContent=`${fmt(p.Rs,3)} Ω/sq`; $('gainRead').textContent=`${p.gain.toFixed(1)}× mobility`;
+      drawModfetLive(p); drawMobility(p); drawSheet(p); drawDensity(p);
+    }
+    function drawModfetLive(p){
+      const nsWidth=clamp(Math.log10(p.ns)-10, 0.1, 3.5)*130;
+      svgSet('modfetLiveSvg', `
+        <text x="35" y="32" font-size="18" font-weight="900">Live MODFET heterostructure</text>
+        <rect x="80" y="210" width="660" height="46" fill="rgba(255,255,255,0.08)" stroke="var(--border)"/><text x="340" y="238" font-size="15" class="muted">Semi-insulating GaAs</text>
+        <rect x="80" y="160" width="660" height="50" fill="rgba(138,125,255,0.08)" stroke="var(--border)"/><text x="328" y="190" font-size="15">Undoped GaAs channel</text>
+        <rect x="80" y="150" width="${nsWidth}" height="10" fill="var(--accent)"/><text x="${90+nsWidth}" y="158" font-size="14" class="accent">2DEG n_s</text>
+        <rect x="80" y="${150-p.d0*1.6}" width="660" height="${p.d0*1.6}" fill="rgba(255,255,255,0.08)"/><text x="112" y="${142-p.d0*0.8}" font-size="13" class="muted">spacer d₀=${p.d0.toFixed(0)} nm</text>
+        <rect x="80" y="70" width="660" height="${Math.max(18,p.d1*1e7)}" fill="rgba(52,201,255,0.10)" stroke="var(--accent)"/><text x="330" y="98" font-size="15">n-AlGaAs donor layer</text>
+        <path d="M240,70 C270,120 320,128 370,150" fill="none" stroke="var(--good)" stroke-width="3" marker-end="url(#arr)"/>
+        <text x="245" y="55" font-size="14" fill="var(--good)">electrons transfer to channel</text>
+      `);
+    }
+    function drawMobility(p){
+      const dMod=[], dBulkLow=[], dBulkHigh=[];
+      for(let T=4; T<=300; T+=3){ dMod.push({x:T,y:1.2e6/(1+(T/80)**2.2)+7e3}); dBulkLow.push({x:T,y:2.8e5*Math.exp(-(((T-55)/55)**2))+3e4/(1+T/90)}); dBulkHigh.push({x:T,y:6500/(1+(T/165)**1.5)+900}); }
+      drawPlot($('mobilityPlot'), [{data:dMod,label:'modulation-doped 2D channel'},{data:dBulkLow,label:'lightly doped bulk'},{data:dBulkHigh,label:'heavily doped bulk'}], {title:'Mobility comparison vs temperature', xlabel:'Temperature (K)', ylabel:'Mobility (cm²/Vs)', logY:true, yFloor:1e3, yTickFormat:t=>'10^'+t.toFixed(0), marker:{x:p.T,y:p.mu}});
+    }
+    function drawSheet(p){
+      const data=[]; for(let d0=1; d0<=30; d0+=1){ const pp={...p,d0}; const eta=0.55*Math.exp(-d0/38); const ns=eta*p.ND*p.d1; const mu2deg=1.2e6/(1+(p.T/80)**2.2)+7e3; const spacerPenalty=1/(1+18/(d0+3)); const mu=mu2deg*(0.55+0.45*spacerPenalty); data.push({x:d0,y:1/(q*mu*ns)}); }
+      drawPlot($('sheetPlot'), [{data,label:'Rsheet'}], {title:'Sheet resistance vs spacer thickness', xlabel:'d₀ (nm)', ylabel:'Ω/sq', marker:{x:p.d0,y:p.Rs}});
+    }
+    function drawDensity(p){
+      const data=[]; for(let logN=17; logN<=19; logN+=0.03){ const ND=Math.pow(10,logN); const ns=0.55*Math.exp(-p.d0/38)*ND*p.d1; data.push({x:logN,y:ns}); }
+      drawPlot($('densityPlot'), [{data,label:'n_s'}], {title:'2DEG density vs donor density', xlabel:'log₁₀(ND)', ylabel:'n_s (cm⁻²)', logY:true, yFloor:1e10, yTickFormat:t=>'10^'+t.toFixed(0), marker:{x:+$('modNd').value,y:p.ns}});
+    }
+    function updateAll(){ updateSchottky(); updateRc(); updateMesfet(); updateHf(); updateModfet(); }
+    function toggleAnswer(btn){ btn.closest('.quiz-card').classList.toggle('show'); }
+    function addMsg(text, who='bot'){
+      const div=document.createElement('div'); div.className=`msg ${who}`; div.innerHTML=text; $('chatlog').appendChild(div); $('chatlog').scrollTop=$('chatlog').scrollHeight;
+      if(window.MathJax) MathJax.typesetPromise([div]);
+    }
+    function localTutor(query){
+      const s=query.toLowerCase();
+      if(s.includes('schottky') || s.includes('barrier')) return `A Schottky barrier is the energy hill at a metal–semiconductor contact. For an ideal n-type contact, <b>φ<sub>Bn</sub>=φ<sub>m</sub>−χ</b>. Forward bias lowers the semiconductor-side hill, while reverse bias widens the depletion region: \\(W=\\sqrt{2\\varepsilon_s(V_{bi}-V)/(qN_D)}\\).`;
+      if(s.includes('pinch')) return `Pinch-off occurs because the drain end has the largest reverse gate-to-channel voltage. As \\(V_D\\) rises, \\(W(y)\\) becomes largest near the drain. When \\(W=a\\), the conducting cross-section closes at that end. The ideal onset is \\(V_{Dsat}=V_P-V_G-V_{bi}\\).`;
+      if(s.includes('derive') || s.includes('drain current')) return `Derivation map: 1) channel slice resistance is \\(dR=dy/[q\\mu_nN_DZ(a-W(y))]\\); 2) use \\(dV=I_DdR\\); 3) express \\(W(y)=\\sqrt{2\\varepsilon_s[V(y)+V_G+V_{bi}]/(qN_D)}\\); 4) integrate from source to drain. This gives the MESFET I–V equation shown in Section 7.2.3.`;
+      if(s.includes('modfet') || s.includes('mobility') || s.includes('2deg')) return `A MODFET/HEMT improves mobility by separating dopant ions from mobile electrons. Donors sit in the AlGaAs layer, while electrons transfer into undoped GaAs, forming a 2DEG. Less ionized impurity scattering means higher mobility, especially at low temperature.`;
+      if(s.includes('quiz') || s.includes('problem')) return `Practice problem: A GaAs MESFET has \\(N_D=2\\times10^{15}\\,\\text{cm}^{-3}\\), \\(a=0.6\\,\\mu m\\), and \\(\\varepsilon_r=12.4\\). Estimate \\(V_P=qN_Da^2/(2\\varepsilon_s)\\). Then use \\(V_{Dsat}=V_P-V_G-V_{bi}\\) for \\(V_G=-0.5\\,V\\), \\(V_{bi}=0.75\\,V\\).`;
+      if(s.includes('compare')) return `Quick comparison: <br><b>Schottky contact</b>: rectifying, majority-carrier thermionic emission.<br><b>Ohmic contact</b>: low resistance, often high doping and tunneling.<br><b>MESFET</b>: Schottky gate depletes a doped channel.<br><b>MODFET/HEMT</b>: heterostructure forms a high-mobility 2DEG separated from dopants.`;
+      return `Good question. Try connecting it to one of four control ideas: barrier height \\(\\phi_B\\), depletion width \\(W\\), channel opening \\(a-W\\), or mobility \\(\\mu\\). The simulations show how changing one control variable changes the device behavior.`;
+    }
+    function askTutor(text){ addMsg(text,'user'); setTimeout(()=>addMsg(localTutor(text),'bot'), 180); }
+    function sendTutor(){ const v=$('chatInput').value.trim(); if(!v) return; $('chatInput').value=''; askTutor(v); }
+
+    function initSingleViewNavigation(){
+      const navLinks = Array.from(document.querySelectorAll('.nav a[href^="#"]'));
+      const views = Array.from(document.querySelectorAll('.view-block'));
+      function showView(targetId, updateHash=true){
+        const cleanId=(targetId||'overview').replace(/^#/,'');
+        const target=document.getElementById(cleanId) || document.getElementById('overview');
+        const actualId=target.id;
+        views.forEach(view=>view.classList.toggle('active-view',view===target));
+        navLinks.forEach(link=>link.classList.toggle('active',(link.getAttribute('href')||'').slice(1)===actualId));
+        requestAnimationFrame(()=>{
+          window.scrollTo({top:0,behavior:'auto'});
+          if(typeof updateAll==='function') updateAll();
+          if(updateHash) history.replaceState(null,'','#'+actualId);
+          if(window.MathJax) MathJax.typesetPromise([target]).catch(()=>{});
+          window.dispatchEvent(new CustomEvent('mesfet-page-changed',{detail:{id:actualId}}));
+        });
+      }
+      navLinks.forEach(link=>link.addEventListener('click',event=>{
+        event.preventDefault();
+        showView(link.getAttribute('href'));
+      }));
+      window.addEventListener('hashchange',()=>showView(location.hash||'#overview',false));
+      showView(location.hash||'#overview',false);
+      window.showView=showView;
+    }
+
+    function bindInputs(){
+      const ids=['phiB','ndLog','bias','temp','semi','rcPhi','rcNd','areaLog','vg','vd','mesNd','aUm','lUm','zUm','mu','hfL','hfA','hfMu','vs','modNd','d1','d0','modT'];
+      ids.forEach(id=>$(id).addEventListener('input', updateAll));
+      $('modeBtn').addEventListener('click', ()=>{ document.body.classList.toggle('light'); $('modeBtn').textContent=document.body.classList.contains('light')?'Dark':'Bright'; updateAll(); drawStaticDiagrams(); });
+      window.addEventListener('resize', ()=>{ clearTimeout(window.__rz); window.__rz=setTimeout(updateAll,140); });
+      $('chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendTutor(); }});
+    }
+    document.addEventListener('DOMContentLoaded', ()=>{ drawStaticDiagrams(); bindInputs(); initSingleViewNavigation(); updateAll(); });
+  </script>
+<script id="pnDiodeStyleBehavior">
+  document.addEventListener('DOMContentLoaded', function(){
+    const nav = document.querySelector('aside.nav');
+    const topTheme = document.getElementById('topThemeBtnPN');
+    const topPrint = document.getElementById('topPrintBtnPN');
+    const search = document.getElementById('chapterSearchPN');
+    const home = document.getElementById('ebookHomeBtn');
+    const modeBtn = document.getElementById('modeBtn');
+
+    const navTools = document.createElement('div');
+    navTools.className='navToolsPN';
+    navTools.innerHTML='<button class="navToolBtn" id="toggleSubnavPN" type="button">Shrink subsections</button><button class="navToolBtn" id="navPrintPN" type="button">Print chapter</button>';
+    const firstTitle = nav ? nav.querySelector('.small-title') : null;
+    if(nav && firstTitle) nav.insertBefore(navTools, firstTitle);
+    const empty = document.createElement('div');
+    empty.className='navSearchEmpty';
+    empty.textContent='No matching topics.';
+    if(nav) nav.appendChild(empty);
+
+    const entries=[
+      ['overview','Start here'],
+      ['contacts','7.1 Metal–Semiconductor Contacts'],
+      ['contact-metaphor-lab','Contact metaphor lab'],
+      ['schottky-sim','Schottky simulator'],
+      ['contact-resistance-sim','Ohmic contact simulator'],
+      ['thermionic-lab','Thermionic emission lab'],
+      ['mesfet','7.2 MESFET'],
+      ['frozen-metaphor-lab','Frozen-sluice metaphor'],
+      ['mesfet-sim','MESFET I–V simulator'],
+      ['dynamic-channel-lab','2D dynamic channel'],
+      ['hf-sim','High-frequency simulator'],
+      ['modfet','7.3 MODFET / HEMT'],
+      ['modfet-sim','2DEG simulator'],
+      ['quiz','Practice']
+    ];
+    let currentId=(location.hash||'#overview').replace('#','');
+    let fullMode=false;
+
+    function themeLabel(){
+      if(topTheme) topTheme.textContent=document.body.classList.contains('light')?'Dark':'Bright';
+    }
+    themeLabel();
+    if(topTheme) topTheme.addEventListener('click',function(){
+      if(modeBtn) modeBtn.click(); else document.body.classList.toggle('light');
+      localStorage.setItem('mesfetPnTheme',document.body.classList.contains('light')?'light':'dark');
+      themeLabel();
+    });
+    if(topPrint) topPrint.addEventListener('click',()=>window.print());
+    const navPrint=document.getElementById('navPrintPN');
+    if(navPrint) navPrint.addEventListener('click',()=>window.print());
+    if(home) home.addEventListener('click',()=>navigateTo('overview'));
+
+    const toggle=document.getElementById('toggleSubnavPN');
+    if(toggle) toggle.addEventListener('click',function(){
+      nav.classList.toggle('compactSubnav');
+      toggle.textContent=nav.classList.contains('compactSubnav')?'Show subsections':'Shrink subsections';
+    });
+
+    function activeIndex(){
+      let i=entries.findIndex(e=>e[0]===currentId);
+      if(i<0){
+        const active=document.querySelector('aside.nav a.active[href^="#"]');
+        i=active?entries.findIndex(e=>e[0]===active.getAttribute('href').slice(1)):1;
+      }
+      return Math.max(0,i);
+    }
+    function updateReading(id){
+      if(id) currentId=id;
+      const i=activeIndex();
+      const label=document.getElementById('readingModeLabelPN');
+      const progress=document.getElementById('readingProgressPN');
+      if(label) label.textContent=fullMode?'Full Chapter Mode':entries[i][1];
+      if(progress) progress.textContent=fullMode?'All sections visible':`Page ${i+1} of ${entries.length}`;
+      ['prevReadBtnPN','prevReadBtnBottomPN'].forEach(x=>{const b=document.getElementById(x);if(b)b.disabled=i===0;});
+      ['nextReadBtnPN','nextReadBtnBottomPN'].forEach(x=>{const b=document.getElementById(x);if(b)b.disabled=i===entries.length-1;});
+    }
+    function markActive(id){
+      document.querySelectorAll('aside.nav a[href^="#"]').forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+id));
+    }
+    function navigateTo(id){
+      currentId=id;
+      if(window.showView){ window.showView('#'+id); setTimeout(()=>updateReading(id),80); }
+      else location.hash=id;
+    }
+    function move(delta){
+      const i=activeIndex();
+      const ni=Math.max(0,Math.min(entries.length-1,i+delta));
+      navigateTo(entries[ni][0]);
+    }
+    ['prevReadBtnPN','prevReadBtnBottomPN'].forEach(id=>{const b=document.getElementById(id);if(b)b.addEventListener('click',()=>move(-1));});
+    ['nextReadBtnPN','nextReadBtnBottomPN'].forEach(id=>{const b=document.getElementById(id);if(b)b.addEventListener('click',()=>move(1));});
+
+    const readMode=document.getElementById('readModeBtnPN');
+    if(readMode){ readMode.style.display='none'; readMode.disabled=true; }
+
+    document.querySelectorAll('aside.nav a[href^="#"]').forEach(link=>{
+      link.addEventListener('click',function(e){ e.preventDefault(); e.stopImmediatePropagation(); navigateTo(link.getAttribute('href').slice(1)); },true);
+    });
+
+    if(search) search.addEventListener('input',function(){
+      const q=search.value.trim().toLowerCase();
+      let shown=0;
+      document.querySelectorAll('aside.nav a,aside.nav button.navbtn').forEach(item=>{
+        const ok=!q||item.textContent.toLowerCase().includes(q);
+        item.style.display=ok?'':'none';
+        if(ok && item.matches('a')) shown++;
+      });
+      document.querySelectorAll('aside.nav .small-title').forEach(t=>t.style.display=q?'none':'');
+      document.querySelectorAll('aside.nav .subnav').forEach(group=>{
+        const any=[...group.querySelectorAll('a')].some(a=>a.style.display!=='none');
+        group.style.display=(!q||any)?'':'none';
+      });
+      empty.style.display=q&&shown===0?'block':'none';
+    });
+
+    window.addEventListener('hashchange',function(){
+      currentId=(location.hash||'#overview').slice(1);
+      updateReading(currentId);
+    });
+    window.addEventListener('keydown',function(e){
+      if(e.target.matches('input,textarea,select')) return;
+      if(e.key==='ArrowRight') move(1);
+      if(e.key==='ArrowLeft') move(-1);
+    });
+    setTimeout(()=>updateReading(currentId),120);
+  });
+  </script>
+
+<!-- maestra-integration-v4 -->
+<link rel="stylesheet" href="../../../shared/maestra-toolbar.css">
+<script defer src="../../../shared/theme-sync-v2.js"></script>
+<script defer src="../../../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="mesfet" data-maestra-module-title="MESFET and Schottky Devices" data-maestra-topic-title="06 Complete Mesfet Tutor" data-maestra-canvas-template="mesfet-device"></script>
+</body>
+</html>

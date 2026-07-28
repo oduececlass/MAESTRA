@@ -1,0 +1,2048 @@
+<!doctype html>
+<!-- Standalone BJT metaphor simulator revised with the Poisson rubber-sheet classroom interface style. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BJT Metaphor Simulator & AI Tutor - Poisson Style</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'canvas']
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <style>
+    :root {
+      --bg: #efefea;
+      --panel: #f7f7f5;
+      --line: #b7b7b2;
+      --text: #1d1d1f;
+      --muted: #555;
+      --green: #2ed629;
+      --green-dark: #03a714;
+      --yellow: #f5cd45;
+      --blue: #cfe4ff;
+      --primary: #2563eb;
+      --button: #eeeeee;
+      --chat-user: #e0f2fe;
+      --chat-ai: #ffffff;
+      --danger-bg: #fee2e2;
+      --warn-bg: #fff7d6;
+      --good-bg: #dcfce7;
+      --right-panel-width: 480px;
+      --center-panel-width: minmax(760px, 1fr);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: auto;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: minmax(370px, 410px) var(--center-panel-width, minmax(760px, 1fr)) var(--right-panel-width, 480px);
+      gap: 12px;
+      width: 100vw;
+      height: 100vh;
+      padding: 12px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-title {
+      height: 44px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 700;
+      font-size: 21px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f1f1ed;
+    }
+    .panel-title small { font-size: 13px; color: var(--muted); font-weight: 700; }
+
+    .control-scroll { overflow-y: auto; padding: 14px 18px 20px 18px; flex: 1; }
+    .control-section { margin-bottom: 17px; }
+    .control-section h3 { margin: 0 0 11px 0; font-size: 18px; line-height: 1.3; }
+
+    .button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .button-grid.four { grid-template-columns: 1fr 1fr; }
+
+    .mode-btn, .secondary-btn, .preset-btn, .lesson-btn, select, .small-btn {
+      width: 100%; min-height: 48px; border: 1px solid #9d9d9a;
+      border-radius: 5px; font-size: 17px; margin: 4px 0; cursor: pointer;
+      background: var(--button); color: var(--text); font-weight: 700;
+    }
+    .mode-btn.active, .secondary-btn.active { background: var(--green-dark); color: white; border-color: var(--green-dark); }
+    .mode-btn.positive { background: var(--green); }
+    .mode-btn.inspect { background: var(--blue); }
+    .mode-btn.remove, .preset-btn.warn { background: var(--yellow); }
+    .preset-btn.danger { background: #fecaca; }
+    .secondary-btn.primary, .lesson-btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .small-btn { min-height: 42px; font-size: 16px; }
+
+    .slider-label {
+      display: flex; justify-content: space-between; align-items: baseline;
+      gap: 10px; font-size: 18px; font-weight: 700; margin: 18px 0 7px 0; line-height: 1.25;
+    }
+    .slider-label strong { min-width: 74px; text-align: right; color: #0f766e; }
+    input[type="range"] { width: 100%; margin: 0; accent-color: #348ee8; }
+    .tick-row { display: flex; justify-content: space-between; color: #333; font-size: 14px; padding: 4px 2px 0 2px; min-height: 19px; }
+
+    .instructions { border: 1px solid #c9c9c5; padding: 10px; background: #ffffffb8; font-size: 16px; line-height: 1.5; }
+    .instructions ol { margin: 0 0 8px 20px; padding: 0; }
+    .instructions p { margin: 0; color: #444; }
+
+    .simulation-panel {
+      position: relative;
+      display: grid;
+      grid-template-rows: 44px minmax(460px, 50vh) minmax(380px, 32vh) minmax(270px, 22vh);
+      min-height: 0;
+      overflow: hidden;
+    }
+    .plot-block { min-width: 0; min-height: 0; border-bottom: 1px solid var(--line); background: #ffffff; display: flex; flex-direction: column; }
+    .plot-header { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #ddd; font-size: 18px; font-weight: 700; color: #0f3f56; }
+    .plot-header span { font-size: 14px; color: #64748b; font-weight: 600; }
+    canvas { display: block; width: 100%; height: 100%; background: #fbfbfb; }
+    .legend { display: flex; gap: 20px; padding: 10px 14px; font-size: 18px; color: #334155; flex-wrap: wrap; align-items: center; border-top: 1px solid #e5e5e0; background: #fff; }
+    .legend .dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:8px; vertical-align:middle; }
+    .status-line { padding: 12px 14px; border-top: 1px solid #e5e5e0; background: #ffffff; color: #475569; font-size: 19px; line-height: 1.45; }
+
+    .right-panel { position: relative; min-width: 280px; }
+    .chat-resize-handle { position: absolute; left: -6px; top: 0; bottom: 0; width: 12px; cursor: col-resize; z-index: 50; background: transparent; }
+    .chat-resize-handle::after { content:""; position:absolute; left:5px; top:40%; width:2px; height:20%; border-radius:2px; background:rgba(37,99,235,.45); }
+    .chat-resize-handle:hover::after, body.resizing-chat .chat-resize-handle::after { background: rgba(37,99,235,.95); width: 3px; }
+    body.resizing-chat { cursor: col-resize; user-select: none; }
+
+    .panel-tabs { display: flex; border-bottom: 1px solid var(--line); flex-shrink: 0; background: #e5e5e0; }
+    .tab-btn { flex: 1; padding: 12px 10px; cursor: pointer; background: transparent; border: none; border-bottom: 2px solid transparent; font-weight: bold; font-size: 16px; color: var(--muted); }
+    .tab-btn.active { border-bottom: 2px solid var(--primary); color: var(--primary); background: var(--panel); }
+
+    #tab-data { display: flex; flex-direction: column; height: 100%; overflow-y: auto; padding: 10px; background: #fbfbfb; }
+    #tab-lesson { display: none; flex-direction: column; height: 100%; overflow-y: auto; padding: 14px; background: #fbfbfb; }
+    .readout-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .readout { background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px; min-height:70px; }
+    .readout .k { font-size:13px; color:#555; font-weight:800; text-transform:uppercase; letter-spacing:.03em; }
+    .readout .v { font-size:23px; color:#047857; font-weight:800; margin-top:4px; line-height:1.1; }
+    .readout .v small { font-size:14px; color:#64748b; font-weight:700; }
+    .readout.warn .v { color:#b45309; }
+    .readout.danger .v { color:#dc2626; }
+    .readout.purple .v { color:#7c3aed; }
+
+    .pill-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin: 10px 0; }
+    .pill { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 8px; font-size: 13px; font-weight: 800; text-align: center; color: #334155; }
+    .pill.good { background: var(--good-bg); color: #166534; border-color: #86efac; }
+    .pill.warn { background: var(--warn-bg); color: #92400e; border-color: #fde68a; }
+    .pill.danger { background: var(--danger-bg); color: #991b1b; border-color: #fecaca; }
+    .mode-chip.on, .pill.on { background: var(--good-bg); color: #166534; border-color: #86efac; }
+
+    .eq { background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px; margin-top:10px; font-size:16px; line-height:1.45; overflow-x:auto; }
+    .eq .lab { font-size: 12px; color:#475569; font-weight:800; text-transform:uppercase; margin-bottom:6px; }
+    .note { margin-top: 8px; padding: 10px; border-left: 4px solid var(--primary); background:#f8fafc; font-size:16px; line-height:1.45; color:#334155; }
+
+    .lesson-card, .concept-card { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 14px; margin-bottom: 14px; font-size: 16px; line-height: 1.55; }
+    .lesson-card h3, .concept-card h3 { margin: 0 0 6px 0; font-size: 18px; color: #0f3f56; }
+    .lesson-card p, .concept-card p { margin: 5px 0; }
+    .lesson-card ol, .lesson-card ul { margin: 6px 0 6px 22px; padding:0; }
+    .lesson-badge { display:inline-block; background:#e0f2fe; color:#075985; border:1px solid #bae6fd; border-radius:999px; padding:2px 8px; font-weight:800; font-size:14px; margin-bottom:6px; }
+    .lesson-actions { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px; }
+    .concept-grid { display:grid; grid-template-columns:1fr; gap:0; }
+    .concept-card .head { font-size: 13px; font-weight: 900; color:#64748b; text-transform:uppercase; margin-bottom:5px; }
+
+    .chat-header { display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#eef2ff; border:1px solid var(--line); border-bottom:none; border-radius:8px 8px 0 0; font-size:14px; font-weight:bold; }
+    .chat-header button { border:1px solid #ccc; background:white; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:13px; }
+    .chat-messages { min-height: 310px; max-height: 420px; overflow-y:auto; padding:10px; background:#fbfbfb; display:flex; flex-direction:column; gap:10px; border:1px solid var(--line); }
+    .msg { border:1px solid var(--line); border-radius:8px; padding:10px; font-size:15px; line-height:1.4; white-space:normal; overflow-wrap:anywhere; }
+    .msg .role { display:block; text-transform:uppercase; font-size:11px; font-weight:800; color:var(--muted); margin-bottom:4px; }
+    .msg.user { background:var(--chat-user); align-self:flex-end; width:90%; border-color:#bae6fd; }
+    .msg.assistant { background:var(--chat-ai); align-self:flex-start; width:95%; box-shadow:0 2px 4px rgba(0,0,0,.05); }
+    .chat-composer { padding:10px; background:#fff; border:1px solid var(--line); border-top:none; border-radius:0 0 8px 8px; display:flex; flex-direction:column; gap:8px; }
+    .chat-composer textarea { width:100%; resize:vertical; min-height:100px; border:1px solid var(--line); border-radius:6px; padding:8px; font-size:16px; font-family:inherit; }
+    .chat-actions { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .chat-actions label { font-size:13px; display:flex; gap:4px; align-items:center; }
+
+
+    .center-resize-handle {
+      position: absolute;
+      right: -6px;
+      top: 0;
+      bottom: 0;
+      width: 12px;
+      cursor: col-resize;
+      z-index: 60;
+      background: transparent;
+    }
+    .center-resize-handle::after {
+      content:"";
+      position:absolute;
+      left:5px;
+      top:40%;
+      width:2px;
+      height:20%;
+      border-radius:2px;
+      background:rgba(15,118,110,.45);
+    }
+    .center-resize-handle:hover::after,
+    body.resizing-center .center-resize-handle::after {
+      background:rgba(15,118,110,.95);
+      width:3px;
+    }
+    body.resizing-center, body.resizing-chat { cursor: col-resize; user-select:none; }
+
+    .project-selector-card {
+      background:#f8fafc;
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      box-shadow: 0 2px 5px rgba(15,23,42,0.06);
+    }
+    .project-card { display:none; }
+    .project-card.active { display:block; }
+
+    .modal { position:fixed; inset:0; background:rgba(0,0,0,.50); display:flex; align-items:center; justify-content:center; z-index:1000; }
+    .modal.hidden { display:none; }
+    .modal-card { background:#fff; width:430px; max-width:92vw; border-radius:10px; padding:20px; box-shadow:0 18px 40px rgba(0,0,0,.25); max-height:90vh; overflow-y:auto; }
+    .modal-card h2 { margin:0 0 12px 0; font-size:20px; color:#0f3f56; }
+    .modal-card label { display:block; font-weight:800; font-size:14px; margin:12px 0 5px; color:#334155; }
+    .modal-card input, .modal-card select, .modal-card textarea { width:100%; border:1px solid var(--line); border-radius:6px; padding:8px; font:inherit; font-size:14px; background:white; }
+    .modal-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+    .hidden { display:none !important; }
+
+    .toast {
+      position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+      background:rgba(22,22,22,.92); color:white; padding:9px 14px; border-radius:8px;
+      font-size:14px; opacity:0; pointer-events:none; transition:opacity .18s ease; max-width:70vw;
+      text-align:center; z-index:2000;
+    }
+    .toast.show { opacity:1; }
+
+    .thinking-wrapper { display:flex; align-items:center; height:18px; padding:4px 0; }
+    .dot-flashing { position:relative; width:7px; height:7px; border-radius:6px; background:var(--primary); animation:dot-flashing 1s infinite linear alternate; animation-delay:.5s; margin-left:14px; }
+    .dot-flashing::before, .dot-flashing::after { content:''; position:absolute; top:0; width:7px; height:7px; border-radius:6px; background:var(--primary); animation:dot-flashing 1s infinite alternate; }
+    .dot-flashing::before { left:-14px; animation-delay:0s; }
+    .dot-flashing::after { left:14px; animation-delay:1s; }
+    @keyframes dot-flashing { 0% { background-color: var(--primary); } 50%, 100% { background-color: rgba(37,99,235,.22); } }
+    .msg.error { background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+
+    mjx-container { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+    mjx-container[display="true"] { margin: .45em 0 !important; }
+
+    @media (max-width: 1250px) {
+      .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; grid-template-rows:auto auto minmax(900px, auto); }
+      .simulation-panel { min-height: 980px; }
+    }
+  
+
+    /* ===== Learning-hub return control ===== */
+    .hub-return-link {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid #1d4ed8;
+      background: #2563eb;
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, .24);
+    }
+    .hub-return-link:hover { filter: brightness(1.07); }
+    @media (max-width: 720px) {
+      .hub-return-link { right: 10px; bottom: 10px; padding: 9px 12px; }
+    }
+
+  </style>
+</head>
+<body>
+  <a class="hub-return-link" href="../index.html" target="_top" aria-label="Return to Semiconductor Learning Hub">⌂ Main Menu</a>
+  <div class="app-shell">
+    <aside class="panel controls-panel">
+      <div class="panel-title">BJT Metaphor Controls</div>
+      <div class="control-scroll">
+        <section class="control-section">
+          <h3>1) Transistor polarity</h3>
+          <div class="button-grid">
+            <button class="mode-btn active positive" id="btnNPN">NPN</button>
+            <button class="mode-btn inspect" id="btnPNP">PNP</button>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <h3>2) Choose metaphor lens</h3>
+          <button class="secondary-btn active" id="btnMetaCarrier">Carrier injection</button>
+          <button class="secondary-btn" id="btnMetaValve">Water valve analogy</button>
+          <button class="secondary-btn" id="btnMetaBias">Junction bias map</button>
+        </section>
+
+        <section class="control-section slider-section">
+          <h3>3) BJT operating parameters</h3>
+          <label class="slider-label" for="ibSlider"><span>Base current $I_B$</span><strong id="ibVal">20 µA</strong></label>
+          <input type="range" id="ibSlider" min="0" max="120" value="20" step="1">
+          <div class="tick-row"><span>0</span><span>30</span><span>60</span><span>90</span><span>120 µA</span></div>
+
+          <label class="slider-label" for="vceSlider"><span>Collector-emitter voltage $V_{CE}$</span><strong id="vceVal">5.0 V</strong></label>
+          <input type="range" id="vceSlider" min="0" max="100" value="50" step="1">
+          <div class="tick-row"><span>0</span><span>2.5</span><span>5</span><span>7.5</span><span>10 V</span></div>
+
+          <label class="slider-label" for="betaSlider"><span>Nominal gain $\beta$</span><strong id="betaVal">100</strong></label>
+          <input type="range" id="betaSlider" min="20" max="300" value="100" step="10">
+          <div class="tick-row"><span>20</span><span>100</span><span>180</span><span>240</span><span>300</span></div>
+
+          <label class="slider-label" for="baseWidthSlider"><span>Relative base width $W_B$</span><strong id="baseWidthVal">1.00×</strong></label>
+          <input type="range" id="baseWidthSlider" min="60" max="220" value="100" step="5">
+          <div class="tick-row"><span>thin</span><span>1×</span><span>wide</span></div>
+        </section>
+
+        <section class="control-section slider-section">
+          <h3>4) External collector circuit</h3>
+          <label class="slider-label" for="vccSlider"><span>Supply $V_{CC}$</span><strong id="vccVal">8.0 V</strong></label>
+          <input type="range" id="vccSlider" min="10" max="120" value="80" step="1">
+          <div class="tick-row"><span>1</span><span>4</span><span>8</span><span>12 V</span></div>
+
+          <label class="slider-label" for="rcSlider"><span>Collector resistor $R_C$</span><strong id="rcVal">2.0 kΩ</strong></label>
+          <input type="range" id="rcSlider" min="2" max="50" value="20" step="1">
+          <div class="tick-row"><span>0.2</span><span>1</span><span>2</span><span>3.5</span><span>5 kΩ</span></div>
+        </section>
+
+        <section class="control-section">
+          <h3>5) Guided presets</h3>
+          <div class="button-grid four">
+            <button class="preset-btn" id="presetCutoff">Cutoff</button>
+            <button class="preset-btn" id="presetActive">Active</button>
+            <button class="preset-btn warn" id="presetNearSat">Near knee</button>
+            <button class="preset-btn danger" id="presetSat">Saturation</button>
+          </div>
+        </section>
+
+        <section class="control-section instructions">
+          <h3>Simulation use</h3>
+          <ol>
+            <li>Start with <strong>Active</strong> and observe carrier injection.</li>
+            <li>Increase $I_B$ and watch $I_C$ rise.</li>
+            <li>Increase $W_B$ and observe more base recombination.</li>
+            <li>Lower $V_{CE}$ near $0.2\,\mathrm{V}$ to enter saturation.</li>
+            <li>Use the load line to connect transistor physics to the external circuit.</li>
+          </ol>
+        </section>
+      </div>
+    </aside>
+
+    <main class="panel simulation-panel">
+      <div id="centerResizeHandle" class="center-resize-handle" title="Drag to resize center simulator column"></div>
+      <div class="panel-title">BJT Metaphor Simulator <small id="clock">NPN · ACTIVE · carrier injection lens</small></div>
+      <section class="plot-block">
+        <div class="plot-header">Cross-section: <span id="metaLabel">carrier injection</span></div>
+        <canvas id="mainCanvas" width="1200" height="520"></canvas>
+        <div class="legend" id="legend"></div>
+        <div class="status-line" id="visualStatus">Base-emitter is forward biased; collector-base is reverse biased.</div>
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding:8px 10px; background:#fff; border-top:1px solid #e5e5e0;">
+          <div class="pill" id="chipCutoff">CUTOFF</div>
+          <div class="pill" id="chipActive">FORWARD-ACTIVE</div>
+          <div class="pill" id="chipSat">SATURATION</div>
+        </div>
+      </section>
+      <section class="plot-block">
+        <div class="plot-header">\(I_C\) vs \(V_{CE}\) and load line <span>families of \(I_B\) curves</span></div>
+        <canvas id="ivCanvas" width="1200" height="380"></canvas>
+        <div class="legend" id="ivLegend"></div>
+      </section>
+      <section class="plot-block" style="border-bottom:none;">
+        <div class="plot-header">Schematic energy-band / barrier view <span>not to scale</span></div>
+        <canvas id="bandCanvas" width="1200" height="300"></canvas>
+        <div class="status-line" id="bandStatus">In forward-active mode, the E-B barrier is lowered and the C-B junction field collects carriers.</div>
+      </section>
+    </main>
+
+    <aside class="panel right-panel">
+      <div id="chatResizeHandle" class="chat-resize-handle" title="Drag to resize right panel"></div>
+      <div class="panel-tabs">
+        <button id="btnTabData" class="tab-btn active">BJT Data & Maps</button>
+        <button id="btnTabLesson" class="tab-btn">BJT Projects + AI Chat</button>
+      </div>
+
+      <div id="tab-data">
+        <div class="readout-grid">
+          <div class="readout"><div class="k">Mode</div><div class="v" id="roMode">ACTIVE</div></div>
+          <div class="readout"><div class="k">$I_C$</div><div class="v" id="roIc">2.00<small> mA</small></div></div>
+          <div class="readout"><div class="k">$I_E$</div><div class="v" id="roIe">2.02<small> mA</small></div></div>
+          <div class="readout"><div class="k">$V_{BE}$</div><div class="v" id="roVbe">0.70<small> V</small></div></div>
+          <div class="readout purple"><div class="k">$\beta_{\mathrm{eff}}$</div><div class="v" id="roBetaEff">100</div></div>
+          <div class="readout"><div class="k">$\alpha=I_C/I_E$</div><div class="v" id="roAlpha">0.990</div></div>
+          <div class="readout warn"><div class="k">load-line $I_C$</div><div class="v" id="roLoadIc">1.50<small> mA</small></div></div>
+          <div class="readout"><div class="k">power $V_{CE}I_C$</div><div class="v" id="roPower">10.0<small> mW</small></div></div>
+        </div>
+
+        <div class="pill-row">
+          <div class="pill" id="pillEB">E-B: forward</div>
+          <div class="pill" id="pillCB">C-B: reverse</div>
+          <div class="pill" id="pillLoad">Load: check</div>
+        </div>
+
+        <div class="eq" id="eqBox"><div class="lab">Forward-active</div>$$ I_C=\beta_{\mathrm{eff}} I_B $$ $$ I_E=I_C+I_B $$</div>
+        <div class="note" id="metaphorNote"><strong>Reading this metaphor:</strong> the base-emitter junction injects carriers into a thin base; most are collected, while a small fraction recombines and becomes base current. In forward-active mode, \(I_C = \beta_{\mathrm{eff}} I_B\) and \(I_E = I_C + I_B\).</div>
+
+        <div class="concept-grid" style="margin-top:14px;">
+          <div class="concept-card"><div class="head">What $\beta$ means</div><p id="cardBeta"><strong>$\beta$ is not a magic valve ratio.</strong> It summarizes emitter injection efficiency, base transport, recombination, and device geometry.</p></div>
+          <div class="concept-card"><div class="head">Why active mode works</div><p id="cardActive"><strong>E-B forward + C-B reverse.</strong> The emitter supplies carriers; the collector electric field removes them before they recombine.</p></div>
+          <div class="concept-card"><div class="head">Why saturation breaks $\beta$</div><p id="cardSat"><strong>Both junctions forward biased.</strong> The collector cannot keep sweeping carriers strongly, so $I_C$ is limited by the external circuit.</p></div>
+          <div class="concept-card"><div class="head">Metaphor warning</div><p id="cardWarn"><strong>Water valve helps intuition</strong>, but a BJT is controlled by carrier injection and junction bias, not by a mechanical gate.</p></div>
+        </div>
+      </div>
+
+      <div id="tab-lesson">
+        <div class="lesson-card" style="border-left:4px solid #2563eb;">
+          <span class="lesson-badge">Main Goal</span>
+          <h3>BJT: carrier injection → base transport → collector sweep → load-line constraint</h3>
+          <p><strong>Principle:</strong> a BJT is not a mechanical valve. The useful physical chain is emitter injection \(\rightarrow\) thin-base diffusion \(\rightarrow\) recombination \(\rightarrow\) collector sweep field \(\rightarrow\) external load-line constraint.</p>
+          <p><strong>Equation map:</strong> \(I_B \rightarrow \beta_{\mathrm{eff}} \rightarrow I_C\) only in forward-active mode, with \(I_E=I_C+I_B\).</p>
+        </div>
+
+        <div class="lesson-card project-selector-card">
+          <label for="projectSelect" class="select-label">Project / learning activity</label>
+          <select id="projectSelect" aria-label="Project selector">
+            <option value="carrier">Project 1 — Carrier injection and base recombination</option>
+            <option value="regions">Project 2 — Cutoff, forward-active, and saturation</option>
+            <option value="loadline">Project 3 — Load line and Q-point</option>
+            <option value="polarity">Project 4 — NPN vs PNP carrier direction</option>
+            <option value="metaphor">Project 5 — Water-valve metaphor limits</option>
+          </select>
+        </div>
+
+        <div class="lesson-card project-card active" data-project="carrier">
+          <span class="lesson-badge">Project 1</span>
+          <h3>Carrier injection and base recombination</h3>
+          <ol>
+            <li>Choose <strong>Carrier injection</strong>.</li>
+            <li>Increase \(I_B\) and observe the injected carrier density.</li>
+            <li>Increase \(W_B\) and identify the increase in base recombination.</li>
+            <li>Explain why \(\beta_{\mathrm{eff}}\) decreases as recombination increases.</li>
+          </ol>
+          <div class="lesson-actions">
+            <button class="lesson-btn sim-action" data-action="active">Set Active</button>
+            <button class="lesson-btn prompt-btn" data-prompt="Ask me Socratic questions about how emitter injection, thin-base diffusion, base recombination, and collector sweep create IB, IC, and beta_eff in the current BJT simulator.">Ask AI</button>
+          </div>
+        </div>
+
+        <div class="lesson-card project-card" data-project="regions">
+          <span class="lesson-badge">Project 2</span>
+          <h3>Operating regions from junction bias</h3>
+          <p>Compare cutoff, forward-active, and saturation. Connect each region to the E-B junction and C-B junction rather than memorizing names.</p>
+          <div class="lesson-actions">
+            <button class="lesson-btn sim-action" data-action="cutoff">Cutoff</button>
+            <button class="lesson-btn sim-action" data-action="active">Active</button>
+            <button class="lesson-btn sim-action" data-action="sat">Saturation</button>
+            <button class="lesson-btn prompt-btn" data-prompt="Guide me through cutoff, forward-active, and saturation using junction bias: E-B junction, C-B junction, carrier injection, collector field, and stored charge.">Ask AI</button>
+          </div>
+        </div>
+
+        <div class="lesson-card project-card" data-project="loadline">
+          <span class="lesson-badge">Project 3</span>
+          <h3>Load line and Q-point</h3>
+          <p>Move \(V_{CC}\), \(R_C\), \(I_B\), and \(V_{CE}\). The red load line shows the external circuit constraint, and the Q-point is where the device curve and circuit line agree.</p>
+          <div class="lesson-actions">
+            <button class="lesson-btn sim-action" data-action="active">Reset Active</button>
+            <button class="lesson-btn prompt-btn" data-prompt="Explain the BJT load line and Q-point using the current simulator values. Connect VCC, RC, VCE, IC, IB, forward-active operation, and saturation.">Ask AI</button>
+          </div>
+        </div>
+
+        <div class="lesson-card project-card" data-project="polarity">
+          <span class="lesson-badge">Project 4</span>
+          <h3>NPN vs PNP carrier direction</h3>
+          <p>Switch transistor polarity and compare the carrier type, region labels, and current interpretation. In this simulator, the animated particles move from left to right for both NPN and PNP so the emitter-to-collector picture stays visually consistent.</p>
+          <div class="lesson-actions">
+            <button class="lesson-btn sim-action" data-action="active">Set Active</button>
+            <button class="lesson-btn prompt-btn" data-prompt="Compare NPN and PNP in the current simulator. Explain why both animations move left to right, while the carrier type, polarity, and current interpretation still differ.">Ask AI</button>
+          </div>
+        </div>
+
+        <div class="lesson-card project-card" data-project="metaphor">
+          <span class="lesson-badge">Project 5</span>
+          <h3>Metaphor limits</h3>
+          <p>The water-valve view helps show gain and current splitting, but it can hide the semiconductor mechanism. Explain what the metaphor captures and what it hides.</p>
+          <div class="lesson-actions">
+            <button class="lesson-btn prompt-btn" data-prompt="Ask me three conceptual questions about the water-valve metaphor for a BJT and the real semiconductor physics it hides.">3-Question Quiz</button>
+            <button class="lesson-btn prompt-btn" data-prompt="Give me an exit-ticket prompt: explain why a BJT is not literally a voltage-controlled water valve.">Exit Ticket</button>
+          </div>
+        </div>
+
+        <div class="lesson-card" style="flex:1 1 auto; min-height:420px; display:flex; flex-direction:column;">
+          <div class="chat-header">
+            <span id="chatStatusText">BJT AI Tutor</span>
+            <div style="display:flex; gap:6px;">
+              <button id="openChatSettingsBtn">⚙️ Settings</button>
+              <button id="clearChatBtn">Clear</button>
+            </div>
+          </div>
+          <div id="chatMessages" class="chat-messages" style="flex:1 1 auto; max-height:none;">
+            <div class="msg assistant">
+              <span class="role">AI Tutor</span>
+              <p>Hello! I am your BJT metaphor tutor.</p>
+              <p>Ask about \(I_B\), \(I_C\), \(\beta\), \(\beta_{\mathrm{eff}}\), cutoff, forward-active mode, saturation, recombination, junction bias, or the load line.</p>
+              <p><em>Tip: keep "Attach Sim State" checked so the reply uses the current sliders and readouts.</em></p>
+            </div>
+          </div>
+          <div class="chat-composer">
+            <textarea id="chatInput" rows="3" placeholder="Ask about BJT carrier injection, recombination, operating regions, load line, or metaphor limits... (Ctrl+Enter to send)"></textarea>
+            <div class="chat-actions">
+              <label><input type="checkbox" id="attachContextCheck" checked> 📎 Attach Sim State</label>
+              <button id="chatSendBtn" class="secondary-btn primary small-btn" style="width:auto; padding:0 20px;">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Chat Settings Modal -->
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-card">
+      <h2>AI Tutor Settings</h2>
+      <p style="font-size:13px; color:#666; margin-top:0;">API keys are saved locally in your browser.</p>
+
+      <label>Provider</label>
+      <select id="chatProvider">
+        <option value="google">Google AI Studio (Gemini)</option>
+        <option value="lmstudio">LM Studio (Local)</option>
+      </select>
+
+      <label>API Key</label>
+      <input type="password" id="chatApiKey" placeholder="Paste your API key here...">
+
+      <div id="lmUrlGroup" class="hidden">
+        <label>LM Studio URL</label>
+        <input type="text" id="chatLmUrl" value="http://localhost:1234/v1">
+      </div>
+
+      <label>Model Name</label>
+      <input type="text" id="chatModel" value="gemini-2.5-flash">
+
+      <div class="modal-row">
+        <div>
+          <label>Temperature (<span id="chatTempVal">0.6</span>)</label>
+          <input type="range" id="chatTemp" min="0" max="1.5" step="0.1" value="0.6">
+        </div>
+      </div>
+
+      <label>System Prompt</label>
+      <textarea id="chatSysPrompt" rows="5">You are a helpful BJT semiconductor-device tutor using the metaphor simulator. Explain clearly using standard text and LaTeX equations. Focus on BJT carrier injection, emitter-base forward bias, collector-base reverse bias, recombination, beta, alpha, cutoff, forward-active mode, saturation, load line, Q-point, NPN/PNP polarity, and metaphor limits. Use a Socratic style: ask for a prediction first, connect the slider changes to the physics, and keep answers concise and undergraduate-friendly.</textarea>
+
+      <div class="modal-row">
+        <button id="cancelSettingsBtn" class="secondary-btn">Cancel</button>
+        <button id="saveSettingsBtn" class="secondary-btn primary">Save Config</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+<script>
+(function(){
+  const state = {
+    type:'NPN',
+    metaphor:'carrier',
+    I_B_uA:20,
+    V_CE:5.0,
+    beta:100,
+    baseWidth:1.0,
+    V_CC:8.0,
+    R_C_k:2.0,
+    V_CEsat:0.2,
+    V_BE_on:0.70
+  };
+
+  const COLORS = {
+    panelLine:'#b7b7b2',
+    inkDim:'#555555',
+    ink:'#1d1d1f',
+    phosphor:'#03a714',
+    amber:'#e29e15',
+    danger:'#dc2626',
+    electron:'#2563eb',
+    hole:'#e11d48',
+    purple:'#7c3aed',
+    cyan:'#0284c7'
+  };
+
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+  function fmt(v,n){return Number(v).toFixed(n);}
+  function typesetMath(nodes){
+    if(window.MathJax && MathJax.typesetPromise){
+      MathJax.typesetPromise(nodes || [document.body]).catch(err => console.warn('MathJax typeset failed:', err));
+    }
+  }
+
+
+  function getRegion(){
+    const bw = 0.075 + (state.baseWidth-0.6)/(2.2-0.6)*0.13;
+    const eStart=0.06, eEnd=0.31, bStart=eEnd, bEnd=eEnd+bw, cStart=bEnd, cEnd=0.94;
+    return {eStart,eEnd,bStart,bEnd,cStart,cEnd,bw};
+  }
+
+  function getCarrierProps(){
+    const npn = state.type === 'NPN';
+    return {
+      npn,
+      majorityCarrier: npn ? 'electron' : 'hole',
+      carrierColor: npn ? COLORS.electron : COLORS.hole,
+      oppositeColor: npn ? COLORS.hole : COLORS.electron,
+      dopant:{
+        emitter: npn ? {label:'n+', color:'#2e5cff'} : {label:'p+', color:'#ff4a2e'},
+        base: npn ? {label:'p', color:'#f5a623'} : {label:'n', color:'#4affb0'},
+        collector: npn ? {label:'n', color:'#3d78d8'} : {label:'p', color:'#d87a68'}
+      },
+      dir: 1,
+      // flowDir: direction the animated metaphor particles travel across the canvas.
+      // For visual consistency in this simulator, both NPN and PNP move left-to-right
+      // from emitter to collector, while color and labels distinguish the carrier type.
+      flowDir: 1,
+      currentArrow: npn ? 'conventional current enters collector' : 'conventional current leaves collector',
+      carrierArrow: npn ? 'electrons move left→right across the device' : 'holes move left→right across the device'
+    };
+  }
+
+  function betaEffective(){
+    // base width acts as a metaphor for base transport factor; wider base means more recombination.
+    const widthPenalty = clamp(1.00 - 0.32*(state.baseWidth-1.0), 0.55, 1.18);
+    return Math.max(1, state.beta * widthPenalty);
+  }
+
+  function getOperatingMode(){
+    if (state.I_B_uA <= 0.5) return 'cutoff';
+    if (state.V_CE <= state.V_CEsat + 0.02) return 'saturation';
+    return 'active';
+  }
+
+  function computeCurrents(){
+    const mode = getOperatingMode();
+    const bEff = betaEffective();
+    const I_B_mA = state.I_B_uA/1000;
+    const activeIC = bEff*I_B_mA;
+    let I_C_mA;
+    if(mode==='cutoff'){
+      I_C_mA = 0;
+    }else if(mode==='saturation'){
+      const knee = Math.max(state.V_CE,0)/state.V_CEsat;
+      I_C_mA = activeIC * clamp(0.08 + 0.86*knee, 0.04, 0.94);
+    }else{
+      I_C_mA = activeIC;
+    }
+    const I_E_mA = I_C_mA + I_B_mA;
+    const alpha = I_E_mA>0 ? I_C_mA/I_E_mA : 0;
+    const forcedBeta = I_B_mA>0 ? I_C_mA/I_B_mA : 0;
+    const V_BE = mode==='cutoff' ? 0.42 : 0.60 + 0.10*clamp(Math.log10(1+state.I_B_uA)/2.1,0,1);
+    const V_CB = state.V_CE - V_BE;
+    const loadIC = Math.max(0,(state.V_CC-state.V_CE)/state.R_C_k);
+    const power_mW = state.V_CE*I_C_mA;
+    const q = predictedLoadQ(activeIC);
+    return {mode,bEff,I_B_mA,I_C_mA,I_E_mA,alpha,forcedBeta,V_BE,V_CB,loadIC,power_mW,activeIC,q};
+  }
+
+  function predictedLoadQ(activeIC){
+    if(state.I_B_uA<=0.5){return {VCE:state.V_CC, IC:0, mode:'cutoff'};}
+    const vIfActive = state.V_CC - activeIC*state.R_C_k;
+    if(vIfActive >= state.V_CEsat){return {VCE:clamp(vIfActive,0,state.V_CC), IC:activeIC, mode:'active'};}
+    const satIC = Math.max(0,(state.V_CC-state.V_CEsat)/state.R_C_k);
+    return {VCE:state.V_CEsat, IC:satIC, mode:'saturation'};
+  }
+
+  // ---------- particles ----------
+  let particles=[];
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function spawnParticle(){
+    const r = getRegion();
+    const props = getCarrierProps();
+    const dir = props.flowDir;
+    const x0 = dir>0 ? (r.eStart+0.018) : (r.cEnd-0.018);
+    particles.push({x:x0, y:0.15+Math.random()*0.70, recombined:false, born:performance.now(), phase:Math.random()*Math.PI*2, dir});
+  }
+  function inBaseRegion(x){const r=getRegion(); return x>=r.bStart && x<=r.bEnd;}
+  function recombProbFor(mode){
+    if(mode==='cutoff') return 1;
+    const t = clamp((betaEffective()-20)/(330-20),0,1);
+    let prob = 0.62 - t*0.48 + (state.baseWidth-1.0)*0.12;
+    if(mode==='saturation') prob += 0.10;
+    return clamp(prob,0.035,0.70);
+  }
+  function speedFactorFor(mode){
+    if(mode==='cutoff') return 0;
+    const ibFactor=state.I_B_uA/120;
+    const vceFactor=Math.min(state.V_CE,8)/8;
+    let speed=0.16 + ibFactor*0.86 + vceFactor*0.45;
+    if(mode==='saturation') speed*=0.48;
+    return speed;
+  }
+  function updateParticles(dt){
+    const {mode}=computeCurrents();
+    const spawnRate = mode==='cutoff' ? 0 : 3 + (state.I_B_uA/120)*68;
+    let toSpawn = spawnRate*dt;
+    while(toSpawn>0){ if(Math.random()<Math.min(toSpawn,1)) spawnParticle(); toSpawn-=1; }
+    const speed=speedFactorFor(mode), recomb=recombProbFor(mode);
+    particles.forEach(p=>{
+      if(p.recombined){p.fade=(p.fade??1)-dt*1.6; return;}
+      const dir = p.dir ?? getCarrierProps().flowDir;
+      p.x += dir*speed*dt;
+      p.y += Math.sin(performance.now()/300+p.phase)*dt*0.012;
+      if(inBaseRegion(p.x) && !p.flaggedBase){ p.flaggedBase=true; if(Math.random()<recomb) p.recombined=true; }
+    });
+    particles = particles.filter(p=> p.recombined ? (p.fade===undefined || p.fade>0) : ((p.dir ?? 1) > 0 ? p.x<1.05 : p.x>-0.05));
+    if(particles.length>520) particles.splice(0,particles.length-520);
+  }
+
+  function drawArrow(ctx,x1,y1,x2,y2,color,label,above=true, lineWidth=2.8, fontSize=14){
+    ctx.save();
+    ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=lineWidth; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    const ang=Math.atan2(y2-y1,x2-x1), ah=12;
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-ah*Math.cos(ang-.42), y2-ah*Math.sin(ang-.42));
+    ctx.lineTo(x2-ah*Math.cos(ang+.42), y2-ah*Math.sin(ang+.42));
+    ctx.closePath(); ctx.fill();
+    if(label){
+      ctx.font=`700 ${fontSize}px Inter, Segoe UI, Arial, sans-serif`;
+      ctx.textAlign='center';
+      ctx.fillText(label,(x1+x2)/2,(y1+y2)/2+(above?-10:20));
+    }
+    ctx.restore();
+  }
+
+  function strokeRoundRect(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function drawBadge(ctx,x,y,text,fill,stroke,color){
+    ctx.save();
+    ctx.font='700 16px Inter, Segoe UI, Arial, sans-serif';
+    const w=ctx.measureText(text).width+22, h=28;
+    ctx.shadowColor='rgba(15,23,42,0.08)'; ctx.shadowBlur=8; ctx.shadowOffsetY=2;
+    ctx.fillStyle=fill; ctx.strokeStyle=stroke; ctx.lineWidth=1.4;
+    strokeRoundRect(ctx,x,y,w,h,10); ctx.fill(); ctx.shadowColor='transparent'; ctx.stroke();
+    ctx.fillStyle=color; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText(text,x+11,y+h/2+0.5);
+    ctx.restore();
+  }
+
+  function drawGlossyParticle(ctx,x,y,r,coreColor,edgeColor,alpha=1){
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const g = ctx.createRadialGradient(x-r*0.35, y-r*0.45, r*0.15, x, y, r);
+    g.addColorStop(0, 'rgba(255,255,255,0.96)');
+    g.addColorStop(0.22, coreColor);
+    g.addColorStop(1, edgeColor || coreColor);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+    ctx.lineWidth = Math.max(0.8, r*0.12);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawParticleStream(ctx,x1,y1,x2,y2,count,r,coreColor,edgeColor,speed=0.18,jitter=0){
+    const t0 = performance.now()/1000;
+    for(let i=0;i<count;i++){
+      const t = (t0*speed + i/count) % 1;
+      const x = x1 + (x2-x1)*t;
+      const y = y1 + (y2-y1)*t + Math.sin(t0*2.6 + i*1.3)*jitter;
+      drawGlossyParticle(ctx, x, y, r, coreColor, edgeColor, 0.96);
+    }
+  }
+
+  function drawFlowPath(ctx, points, width, fillColor, outlineColor, dash=[]){
+    if(!points || points.length<2) return;
+    ctx.save();
+    ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.setLineDash(dash);
+    ctx.strokeStyle = outlineColor; ctx.lineWidth = width + 4;
+    ctx.beginPath(); ctx.moveTo(points[0][0], points[0][1]);
+    for(let i=1;i<points.length;i++) ctx.lineTo(points[i][0], points[i][1]);
+    ctx.stroke();
+    ctx.strokeStyle = fillColor; ctx.lineWidth = width;
+    ctx.beginPath(); ctx.moveTo(points[0][0], points[0][1]);
+    for(let i=1;i<points.length;i++) ctx.lineTo(points[i][0], points[i][1]);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function labelText(ctx, txt, x, y, color='#334155', size=16, align='center'){
+    ctx.save();
+    ctx.font=`700 ${size}px Inter, Segoe UI, Arial, sans-serif`;
+    ctx.fillStyle=color; ctx.textAlign=align; ctx.textBaseline='middle';
+    ctx.fillText(txt,x,y);
+    ctx.restore();
+  }
+
+  function drawContactNode(ctx, x, y, label, side='left'){
+    ctx.save();
+    ctx.lineCap='round'; ctx.strokeStyle='#111827'; ctx.lineWidth=3;
+    if(side==='left'){
+      ctx.beginPath(); ctx.moveTo(x-46,y); ctx.lineTo(x-10,y); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x,y,9,0,Math.PI*2); ctx.fillStyle='#ffffff'; ctx.fill(); ctx.stroke();
+      labelText(ctx,label,x-6,y-22,'#374151',16,'center');
+    }else if(side==='right'){
+      ctx.beginPath(); ctx.moveTo(x+10,y); ctx.lineTo(x+46,y); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x,y,9,0,Math.PI*2); ctx.fillStyle='#ffffff'; ctx.fill(); ctx.stroke();
+      labelText(ctx,label,x+6,y-22,'#374151',16,'center');
+    }else{
+      ctx.beginPath(); ctx.moveTo(x,y+10); ctx.lineTo(x,y+40); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x,y,9,0,Math.PI*2); ctx.fillStyle='#ffffff'; ctx.fill(); ctx.stroke();
+      labelText(ctx,label,x+18,y+2,'#374151',16,'left');
+    }
+    ctx.restore();
+  }
+
+  function drawMixedText(ctx, parts, x, y, options={}){
+    const fontSize = options.fontSize || 16;
+    const subSize = Math.round(fontSize*0.72);
+    const color = options.color || '#334155';
+    const align = options.align || 'center';
+    const family = "Inter, Segoe UI, Arial, sans-serif";
+    let totalW = 0;
+    const widths = [];
+    ctx.save();
+    for(const part of parts){
+      if(typeof part === 'string'){
+        ctx.font = `700 ${fontSize}px ${family}`;
+        const w = ctx.measureText(part).width;
+        widths.push(w); totalW += w;
+      }else{
+        ctx.font = `700 ${fontSize}px ${family}`;
+        const w1 = ctx.measureText(part.base).width;
+        ctx.font = `700 ${subSize}px ${family}`;
+        const w2 = ctx.measureText(part.sub).width;
+        const w = w1 + w2 + 1;
+        widths.push(w); totalW += w;
+      }
+    }
+    let curX = align==='center' ? x-totalW/2 : x;
+    for(let i=0;i<parts.length;i++){
+      const part = parts[i];
+      ctx.fillStyle = color;
+      if(typeof part === 'string'){
+        ctx.font = `700 ${fontSize}px ${family}`;
+        ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.fillText(part, curX, y);
+        curX += widths[i];
+      }else{
+        ctx.font = `700 ${fontSize}px ${family}`;
+        ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.fillText(part.base, curX, y);
+        const w1 = ctx.measureText(part.base).width;
+        ctx.font = `700 ${subSize}px ${family}`;
+        ctx.fillText(part.sub, curX + w1, y + fontSize*0.24);
+        curX += widths[i];
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawDeviceRegions(W,H){
+    const props=getCarrierProps(), r=getRegion();
+    const top=H*.20, height=H*.56;
+    const left=r.eStart*W, eEnd=r.eEnd*W, bEnd=r.bEnd*W, right=r.cEnd*W;
+
+    ctx.save();
+    ctx.fillStyle='#eef2f7';
+    ctx.fillRect(left-8, top-8, (right-left)+16, height+16);
+    ctx.strokeStyle='#111111'; ctx.lineWidth=6.0;
+    ctx.strokeRect(left, top, right-left, height);
+
+    const npn = props.npn;
+    const emitterFill = npn ? '#bcd8ee' : '#f4d3b2';
+    const baseFill    = npn ? '#98dc96' : '#bcd8ee';
+    const collectorFill = npn ? '#bcd8ee' : '#f4d3b2';
+
+    ctx.fillStyle=emitterFill; ctx.fillRect(left, top, eEnd-left, height);
+    ctx.fillStyle=baseFill; ctx.fillRect(eEnd, top, bEnd-eEnd, height);
+    ctx.fillStyle=collectorFill; ctx.fillRect(bEnd, top, right-bEnd, height);
+
+    ctx.strokeStyle='#111111'; ctx.lineWidth=3.2;
+    ctx.beginPath(); ctx.moveTo(eEnd,top); ctx.lineTo(eEnd,top+height); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bEnd,top); ctx.lineTo(bEnd,top+height); ctx.stroke();
+
+    const bCx=(eEnd+bEnd)/2;
+    ctx.fillStyle=npn ? '#89cf87' : '#b3d0ef';
+    ctx.fillRect(eEnd+6, top-12, Math.max(10,bEnd-eEnd-12), 14);
+    ctx.strokeStyle='#111111'; ctx.lineWidth=2.4;
+    ctx.strokeRect(eEnd+6, top-12, Math.max(10,bEnd-eEnd-12), 14);
+
+    labelText(ctx, npn ? 'n++' : 'p++', (left+eEnd)/2, top-18, '#334155', 20);
+    labelText(ctx, npn ? 'p+' : 'n+', bCx, top-18, '#334155', 20);
+    labelText(ctx, npn ? 'n' : 'p', (bEnd+right)/2, top-18, '#334155', 20);
+
+    labelText(ctx, 'EMITTER', (left+eEnd)/2 - 54, H*.92, '#4b5563', 17);
+    labelText(ctx, 'THIN BASE', bCx, H*.92, '#4b5563', 17);
+    labelText(ctx, 'COLLECTOR', (bEnd+right)/2 + 92, H*.92, '#4b5563', 17);
+
+    ctx.restore();
+  }
+
+  function drawCarrierMetaphor(){
+    const W=canvas.width,H=canvas.height; ctx.clearRect(0,0,W,H);
+    const props=getCarrierProps(), r=getRegion(); const c=computeCurrents();
+    const dir = props.flowDir;
+    drawDeviceRegions(W,H);
+
+    const top=H*.20, height=H*.56;
+    const left=r.eStart*W, eEnd=r.eEnd*W, bEnd=r.bEnd*W, right=r.cEnd*W;
+    const eCx=(left+eEnd)/2, bCx=(eEnd+bEnd)/2, cCx=(bEnd+right)/2;
+
+    // clean terminal/contact line style outside the device only
+    ctx.save();
+    ctx.strokeStyle='#64748b'; ctx.lineWidth=2.4; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(eCx, top+height); ctx.lineTo(eCx, H*.955); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cCx, top+height); ctx.lineTo(cCx, H*.955); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bCx, top-12); ctx.lineTo(bCx, H*.055); ctx.stroke();
+    ctx.restore();
+
+    // metal contact pads
+    ctx.save();
+    ctx.fillStyle='rgba(226,232,240,0.96)'; ctx.strokeStyle='rgba(100,116,139,0.55)'; ctx.lineWidth=1.2;
+    strokeRoundRect(ctx,eCx-19,top+height+8,38,10,4); ctx.fill(); ctx.stroke();
+    strokeRoundRect(ctx,cCx-19,top+height+8,38,10,4); ctx.fill(); ctx.stroke();
+    ctx.restore();
+
+    labelText(ctx, 'B', bCx, H*.03, '#4b5563', 18);
+    labelText(ctx, 'E', eCx, H*.985, '#4b5563', 18);
+    labelText(ctx, 'C', cCx, H*.985, '#4b5563', 18);
+
+    // collector-side sweep particles
+    if(c.mode!=='cutoff'){
+      const streamColor = c.mode==='saturation' ? ['rgba(251,191,36,0.95)','rgba(180,83,9,0.98)'] : ['rgba(125,211,252,0.98)','rgba(2,132,199,0.98)'];
+      for(let i=0;i<5;i++){
+        const y=top + height*(0.18 + i*0.14);
+        const x1 = dir>0 ? (bEnd+26) : (right-34);
+        const x2 = dir>0 ? (right-34) : (bEnd+26);
+        drawParticleStream(ctx, x1, y, x2, y, 8, 4.5, streamColor[0], streamColor[1], 0.22, 1.2);
+      }
+      const sweepBadgeX = dir>0 ? ((bEnd+right)/2-92) : (left+54);
+      drawBadge(ctx, sweepBadgeX, top+16, c.mode==='saturation'?'weak collector sweep particles':'collector sweep particles', '#fff7ed', 'rgba(245,158,11,.45)', '#9a3412');
+    }
+
+    // main animated particles: for visual consistency they move left-to-right for both NPN and PNP
+    particles.forEach(p=>{
+      const x=p.x*W, y=clamp(p.y,0.08,0.92)*H;
+      if(!p.recombined){
+        drawGlossyParticle(ctx, x, y, 5.4, 'rgba(96,165,250,0.96)', props.carrierColor, 1);
+      }else{
+        drawGlossyParticle(ctx, x, y, 6.5, 'rgba(251,146,60,0.96)', 'rgba(220,38,38,0.98)', Math.max(p.fade??1,0));
+        drawGlossyParticle(ctx, x+5, y-4, 3.3, 'rgba(254,215,170,0.92)', 'rgba(249,115,22,0.96)', Math.max((p.fade??1)*0.85,0));
+        drawGlossyParticle(ctx, x-4, y+4, 2.9, 'rgba(254,205,211,0.90)', 'rgba(239,68,68,0.95)', Math.max((p.fade??1)*0.75,0));
+      }
+    });
+
+    if(c.mode!=='cutoff'){
+      // recombination stream rises out of the base for both NPN and PNP in this shared metaphor view.
+      if(dir>0){
+        drawParticleStream(ctx, bCx, top+18, bCx, top-18, 7, 4.1, 'rgba(253,186,116,0.98)', 'rgba(217,119,6,0.98)', 0.30, 1.5);
+      } else {
+        drawParticleStream(ctx, bCx, top-18, bCx, top+18, 7, 4.1, 'rgba(253,186,116,0.98)', 'rgba(217,119,6,0.98)', 0.30, 1.5);
+      }
+      // emitter-side injection and collector-side collection both run left-to-right for NPN and PNP.
+      drawParticleStream(ctx, dir>0 ? (left+18) : (eEnd-18), top+height*0.52, dir>0 ? (eEnd-18) : (left+18), top+height*0.52, 9, 4.8, 'rgba(96,165,250,0.98)', props.carrierColor, 0.24, 1.3);
+      drawParticleStream(ctx, dir>0 ? (bEnd+18) : (right-26), top+height*0.52, dir>0 ? (right-26) : (bEnd+18), top+height*0.52, 10, 4.8, 'rgba(125,211,252,0.98)', props.carrierColor, 0.25, 1.3);
+
+      drawBadge(ctx, bCx-12, H*.048, 'recombination current', '#fffbeb', 'rgba(245,158,11,.30)', '#b45309');
+      if(dir>0){
+        drawBadge(ctx, left+42, top+height*0.52-12, 'injection particles', '#eff6ff', 'rgba(59,130,246,.24)', '#1d4ed8');
+        drawBadge(ctx, bEnd+100, top+height*0.62, 'collected carriers', '#eef2ff', 'rgba(59,130,246,.20)', '#2563eb');
+      } else {
+        drawBadge(ctx, right-250, top+height*0.52-12, 'injection particles', '#eff6ff', 'rgba(59,130,246,.24)', '#1d4ed8');
+        drawBadge(ctx, left+54, top+height*0.62, 'collected carriers', '#eef2ff', 'rgba(59,130,246,.20)', '#2563eb');
+      }
+    }
+
+    if(c.mode==='cutoff'){
+      labelText(ctx, 'base-emitter not forward biased — no significant injection', W/2, H*.50, '#ef4444', 20);
+    }
+  }
+
+  function drawValveMetaphor(){
+    const W=canvas.width,H=canvas.height; ctx.clearRect(0,0,W,H);
+    const c=computeCurrents(), props=getCarrierProps();
+    const dir = props.dir;
+
+    const pipeX=W*.07, pipeY=H*.62, pipeW=W*.86, pipeH=H*.18;
+    const gateX=W*.50;
+    const pilotTop=H*.17, pilotBot=pipeY;
+    const splitX=gateX;
+
+    // title and equation card
+    ctx.save();
+    ctx.shadowColor='rgba(15,23,42,0.08)'; ctx.shadowBlur=12; ctx.shadowOffsetY=3;
+    ctx.fillStyle='rgba(255,255,255,0.95)'; ctx.strokeStyle='rgba(148,163,184,0.38)'; ctx.lineWidth=1.4;
+    strokeRoundRect(ctx, W*.028, H*.045, W*.47, H*.255, 18); ctx.fill(); ctx.shadowColor='transparent'; ctx.stroke();
+    ctx.restore();
+
+    drawMixedText(ctx, ['Current split: emitter flow divides into collector + base'], W*.052, H*.075, {fontSize:23, color:'#334155', align:'left'});
+    ctx.fillStyle='#334155'; ctx.font='700 17px Inter, Segoe UI, Arial, sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('Use current magnitudes:', W*.052, H*.125);
+    drawMixedText(ctx, ['|', {base:'I', sub:'E'}, '|  =  |', {base:'I', sub:'C'}, '|  +  |', {base:'I', sub:'B'}, '|'], W*.052, H*.180, {fontSize:30, color:'#0f3f56', align:'left'});
+    ctx.font='600 14px Inter, Segoe UI, Arial, sans-serif'; ctx.fillStyle='#64748b';
+    ctx.fillText('In this visual metaphor, particles move from emitter (left) to collector (right) for both NPN and PNP.', W*.052, H*.230);
+
+    // pipes
+    ctx.fillStyle='#0d1215'; ctx.fillRect(pipeX,pipeY,pipeW,pipeH);
+    ctx.strokeStyle=COLORS.panelLine; ctx.lineWidth=2.2; ctx.strokeRect(pipeX,pipeY,pipeW,pipeH);
+    const openFrac=c.mode==='cutoff'?0.02:clamp(state.I_B_uA/120,0.04,1);
+    const effFrac=clamp(c.bEff/300,0.08,1);
+    ctx.fillStyle='rgba(94,230,168,.18)';
+    ctx.fillRect(pipeX,pipeY+pipeH*(1-effFrac)/2,pipeW,pipeH*effFrac);
+
+    ctx.fillStyle='#0d1215';
+    ctx.fillRect(gateX-17,pilotTop,34,pilotBot-pilotTop);
+    ctx.strokeStyle=COLORS.panelLine; ctx.lineWidth=2.2;
+    ctx.strokeRect(gateX-17,pilotTop,34,pilotBot-pilotTop);
+    ctx.strokeStyle=COLORS.phosphor; ctx.lineWidth=2.4;
+    ctx.strokeRect(gateX-10,pipeY,20,pipeH);
+    ctx.fillStyle=COLORS.phosphor;
+    ctx.fillRect(gateX-9,pipeY+pipeH*(1-openFrac)/2,18,Math.max(3,pipeH*openFrac));
+
+    ctx.strokeStyle=COLORS.amber; ctx.lineWidth=2.4; ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(gateX-10,pipeY+pipeH*(1-openFrac)/2); ctx.lineTo(gateX-17,pilotBot);
+    ctx.moveTo(gateX+10,pipeY+pipeH*(1-openFrac)/2); ctx.lineTo(gateX+17,pilotBot);
+    ctx.stroke();
+
+    // in this valve metaphor, particles also move left-to-right for both NPN and PNP to match the main cross-section view
+    const t=performance.now()/1000;
+    const ieCount=c.mode==='cutoff'?0:Math.round(5+openFrac*20);
+    for(let i=0;i<ieCount;i++){
+      const frac=((t*(.30+openFrac*.8)+i/Math.max(ieCount,1))%1);
+      const span=(splitX-pipeX-W*.035);
+      const x=dir>0 ? (pipeX+W*.015+frac*span) : (pipeX+pipeW-W*.015-frac*span);
+      const y=pipeY+pipeH/2+Math.sin(i*9+t)*pipeH*.23;
+      drawGlossyParticle(ctx,x,y,5.2,'rgba(165,243,252,0.96)','rgba(14,165,233,0.98)',0.98);
+    }
+    const icCount=c.mode==='cutoff'?0:Math.round(6+openFrac*26*effFrac);
+    for(let i=0;i<icCount;i++){
+      const frac=((t*(.30+openFrac*.75)+i/Math.max(icCount,1))%1);
+      const span=(pipeX+pipeW-splitX-W*.04);
+      const x=dir>0 ? (splitX+W*.018+frac*span) : (splitX-W*.018-frac*span);
+      const y=pipeY+pipeH/2+Math.sin(i*11+t)*pipeH*.25;
+      drawGlossyParticle(ctx,x,y,5.0,'rgba(165,243,252,0.96)','rgba(14,165,233,0.98)',0.98);
+    }
+    const ibCount=c.mode==='cutoff'?0:Math.round(3+openFrac*12);
+    for(let i=0;i<ibCount;i++){
+      const frac=((t*(.52+openFrac)+i/Math.max(ibCount,1))%1);
+      const y=dir>0 ? (pilotBot - frac*(pilotBot-pilotTop)) : (pilotTop + frac*(pilotBot-pilotTop));
+      drawGlossyParticle(ctx,gateX,y,4.2,'rgba(253,186,116,0.96)','rgba(217,119,6,0.98)',0.98);
+    }
+
+    function valueBox(x,y,w,h,title,parts,color,bg){
+      ctx.save();
+      ctx.shadowColor='rgba(15,23,42,0.08)'; ctx.shadowBlur=10; ctx.shadowOffsetY=2;
+      ctx.fillStyle=bg; ctx.strokeStyle=color; ctx.lineWidth=1.6;
+      strokeRoundRect(ctx,x,y,w,h,14); ctx.fill(); ctx.shadowColor='transparent'; ctx.stroke();
+      ctx.fillStyle=color; ctx.font='800 13px Inter, Segoe UI, Arial, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(title,x+w/2,y+16);
+      ctx.restore();
+      drawMixedText(ctx, parts, x+w/2, y+43, {fontSize:25, color:color, align:'center'});
+    }
+
+    if(dir>0){
+      valueBox(pipeX+18, pipeY-84, 188, 66, 'incoming emitter flow', [{base:'I',sub:'E'}], '#0f766e', '#ecfeff');
+      valueBox(pipeX+pipeW-208, pipeY-84, 192, 66, 'collected output flow', [{base:'I',sub:'C'}], '#0369a1', '#eff6ff');
+      drawBadge(ctx, pipeX+36, pipeY+pipeH+18, 'flow before split = |I_E|', '#ecfeff', 'rgba(6,182,212,.25)', '#0f766e');
+      drawBadge(ctx, splitX+36, pipeY+pipeH+18, 'after split: |I_C| + |I_B|', '#eff6ff', 'rgba(37,99,235,.22)', '#0369a1');
+    } else {
+      valueBox(pipeX+pipeW-206, pipeY-84, 188, 66, 'incoming emitter flow', [{base:'I',sub:'E'}], '#0f766e', '#ecfeff');
+      valueBox(pipeX+18, pipeY-84, 192, 66, 'collected output flow', [{base:'I',sub:'C'}], '#0369a1', '#eff6ff');
+      drawBadge(ctx, pipeX+pipeW-270, pipeY+pipeH+18, 'flow before split = |I_E|', '#ecfeff', 'rgba(6,182,212,.25)', '#0f766e');
+      drawBadge(ctx, pipeX+36, pipeY+pipeH+18, 'after split: |I_C| + |I_B|', '#eff6ff', 'rgba(37,99,235,.22)', '#0369a1');
+    }
+    valueBox(gateX+38, pilotTop+16, 150, 62, 'base branch flow', [{base:'I',sub:'B'}], '#b45309', '#fffbeb');
+
+    ctx.save();
+    ctx.strokeStyle='rgba(15,118,110,0.72)'; ctx.lineWidth=2.4; ctx.setLineDash([8,7]);
+    ctx.beginPath(); ctx.moveTo(splitX,pipeY-18); ctx.lineTo(splitX,pipeY+pipeH+20); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#0f766e'; ctx.font='800 15px Inter, Segoe UI, Arial, sans-serif'; ctx.textAlign='center';
+    ctx.fillText('split point', splitX, pipeY+pipeH+42);
+    ctx.restore();
+
+    if(c.mode==='cutoff'){
+      ctx.fillStyle='rgba(255,84,112,.90)'; ctx.font='700 15px Inter, Segoe UI, Arial, sans-serif'; ctx.textAlign='center';
+      ctx.fillText('pilot closed — main path has no significant flow', W/2, H*.41);
+    }
+  }
+
+  function drawBiasMap(){
+    const W=canvas.width,H=canvas.height; ctx.clearRect(0,0,W,H);
+    const props=getCarrierProps(), c=computeCurrents(); const r=getRegion();
+
+    // Dynamic quantities driven by sliders
+    const ibNorm = clamp(state.I_B_uA/120,0,1);
+    const vceNorm = clamp(state.V_CE/10,0,1);
+    const injectionStrength = c.mode==='cutoff' ? 0.04 : clamp(0.12 + ibNorm*0.88,0,1);
+    const collectorStrength = c.mode==='active' ? clamp(0.25 + vceNorm*0.75,0.15,1)
+                           : (c.mode==='saturation' ? clamp(0.10 + state.V_CE/0.7,0.10,0.45) : 0.08);
+    const recombStrength = clamp((state.baseWidth-0.5)/1.5 + ibNorm*0.25,0,1);
+    const ebBarrierValue = c.mode==='cutoff' ? 0.92 : clamp(0.70 - 0.48*injectionStrength,0.18,0.70);
+    const cbFieldValue = c.mode==='active' ? clamp(0.35 + 0.55*vceNorm,0.35,0.90)
+                         : (c.mode==='saturation' ? 0.18 + 0.18*vceNorm : 0.12);
+
+    const pad=34;
+    const leftX=pad, leftY=48, leftW=W*0.46, leftH=H*0.64;
+    const rightX=leftX+leftW+34, rightY=48, rightW=W-leftX-leftW-34-pad, rightH=H*0.64;
+    const bottomY=leftY+leftH+28, bottomH=H-bottomY-34;
+
+    function panel(x,y,w,h,title){
+      ctx.save();
+      ctx.shadowColor='rgba(15,23,42,0.08)'; ctx.shadowBlur=12; ctx.shadowOffsetY=3;
+      ctx.fillStyle='rgba(255,255,255,0.96)';
+      ctx.strokeStyle='rgba(148,163,184,0.45)'; ctx.lineWidth=1.5;
+      strokeRoundRect(ctx,x,y,w,h,16); ctx.fill(); ctx.shadowColor='transparent'; ctx.stroke();
+      ctx.fillStyle='#0f3f56'; ctx.font='800 18px Inter, Segoe UI, Arial, sans-serif';
+      ctx.textAlign='left'; ctx.textBaseline='top';
+      ctx.fillText(title,x+16,y+13);
+      ctx.restore();
+    }
+
+    function pill(x,y,w,h,text,color,bg){
+      ctx.save();
+      ctx.fillStyle=bg; ctx.strokeStyle=color; ctx.lineWidth=1.6;
+      strokeRoundRect(ctx,x,y,w,h,13); ctx.fill(); ctx.stroke();
+      ctx.fillStyle=color; ctx.font='800 14px Inter, Segoe UI, Arial, sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(text,x+w/2,y+h/2);
+      ctx.restore();
+    }
+
+    function barGauge(x,y,w,h,value,color,label){
+      ctx.save();
+      ctx.fillStyle='rgba(241,245,249,0.95)'; ctx.strokeStyle='rgba(148,163,184,0.50)'; ctx.lineWidth=1.2;
+      strokeRoundRect(ctx,x,y,w,h,8); ctx.fill(); ctx.stroke();
+      ctx.fillStyle=color;
+      strokeRoundRect(ctx,x+2,y+2,(w-4)*clamp(value,0,1),h-4,6); ctx.fill();
+      ctx.fillStyle='#334155'; ctx.font='700 12px Inter, Segoe UI, Arial, sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.fillText(label,x,y-8);
+      ctx.restore();
+    }
+
+    panel(leftX,leftY,leftW,leftH,'Device bias picture');
+    panel(rightX,rightY,rightW,rightH,'Energy-barrier plot');
+
+    // ---------- Left panel: dynamic device schematic ----------
+    const devX=leftX+38, devY=leftY+88, devW=leftW-76, devH=128;
+    const eW=devW*0.32, bW=devW*0.16, cW=devW-eW-bW;
+    const eX=devX, bX=devX+eW, cX=bX+bW;
+    const ebColor = c.mode==='cutoff' ? COLORS.danger : COLORS.phosphor;
+    const cbColor = c.mode==='active' ? COLORS.cyan : (c.mode==='saturation' ? COLORS.amber : COLORS.inkDim);
+
+    ctx.save();
+    ctx.lineWidth=4.0; ctx.strokeStyle='#111827';
+    ctx.fillStyle='#cfe3f6'; ctx.fillRect(eX,devY,eW,devH);
+    ctx.fillStyle='#98dc96'; ctx.fillRect(bX,devY,bW,devH);
+    ctx.fillStyle='#cfe3f6'; ctx.fillRect(cX,devY,cW,devH);
+    ctx.strokeRect(devX,devY,devW,devH);
+    ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.moveTo(bX,devY); ctx.lineTo(bX,devY+devH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cX,devY); ctx.lineTo(cX,devY+devH); ctx.stroke();
+
+    // dynamic junction highlights
+    ctx.fillStyle=`rgba(34,197,94,${0.08+0.26*injectionStrength})`; ctx.fillRect(bX-9,devY,18,devH);
+    ctx.fillStyle=c.mode==='active'
+      ? `rgba(14,165,233,${0.08+0.26*collectorStrength})`
+      : (c.mode==='saturation' ? `rgba(245,158,11,${0.12+0.25*(1-collectorStrength)})` : 'rgba(100,116,139,0.10)');
+    ctx.fillRect(cX-9,devY,18,devH);
+    ctx.strokeStyle=ebColor; ctx.lineWidth=2.8 + 2.0*injectionStrength; ctx.beginPath(); ctx.moveTo(bX,devY-10); ctx.lineTo(bX,devY+devH+10); ctx.stroke();
+    ctx.strokeStyle=cbColor; ctx.lineWidth=2.4 + 2.4*collectorStrength; ctx.beginPath(); ctx.moveTo(cX,devY-10); ctx.lineTo(cX,devY+devH+10); ctx.stroke();
+
+    // labels
+    ctx.font='800 20px Inter, Segoe UI, Arial, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='#334155';
+    ctx.fillText(props.npn?'n++':'p++',eX+eW/2,devY-18);
+    ctx.fillText(props.npn?'p+':'n+',bX+bW/2,devY-18);
+    ctx.fillText(props.npn?'n':'p',cX+cW/2,devY-18);
+    ctx.font='800 15px Inter, Segoe UI, Arial, sans-serif';
+    ctx.fillText('EMITTER',eX+eW/2,devY+devH+28);
+    ctx.fillText('THIN BASE',bX+bW/2,devY+devH+28);
+    ctx.fillText('COLLECTOR',cX+cW/2,devY+devH+28);
+    ctx.restore();
+
+    pill(leftX+32,leftY+42,210,34,'E-B: '+(c.mode==='cutoff'?'not forward':'forward biased'),ebColor,c.mode==='cutoff'?'#fef2f2':'#f0fdf4');
+    pill(leftX+252,leftY+42,220,34,'C-B: '+(c.mode==='active'?'reverse biased':(c.mode==='saturation'?'weak / forward':'mostly off')),cbColor,c.mode==='active'?'#ecfeff':(c.mode==='saturation'?'#fff7ed':'#f8fafc'));
+
+    // live gauges
+    barGauge(leftX+38, leftY+leftH-60, 160, 12, injectionStrength, '#22c55e', 'injection');
+    barGauge(leftX+220, leftY+leftH-60, 160, 12, collectorStrength, '#0ea5e9', 'collector field');
+    barGauge(leftX+402, leftY+leftH-60, 140, 12, recombStrength, '#f59e0b', 'recombination');
+
+    // dynamic transport dots in the device panel move left-to-right for both transistor polarities
+    const dotCount = c.mode==='cutoff' ? 3 : Math.round(6 + 22*injectionStrength);
+    const t=performance.now()/1000;
+    for(let i=0;i<dotCount;i++){
+      const frac=(t*0.18 + i/Math.max(dotCount,1))%1;
+      const x=props.flowDir<0 ? (eX+devW-24-frac*(devW-48)) : (eX+24+frac*(devW-48));
+      const y=devY+devH*(0.42 + 0.16*Math.sin(i*1.7+t));
+      const col = props.flowDir<0
+        ? (x>bX ? props.carrierColor : (c.mode==='saturation'?'#f59e0b':'#0284c7'))
+        : (x<cX ? props.carrierColor : (c.mode==='saturation'?'#f59e0b':'#0284c7'));
+      drawGlossyParticle(ctx,x,y,3.6+2.0*injectionStrength,'rgba(255,255,255,0.95)',col,0.95);
+    }
+    // recombination dots in base grow with base width and IB
+    const recDots = Math.round(1 + 8*recombStrength);
+    for(let i=0;i<recDots;i++){
+      const y=devY+18+(i/(Math.max(recDots-1,1)))*(devH-36);
+      drawGlossyParticle(ctx,bX+bW*0.50+Math.sin(i+t)*3,y,3.6,'rgba(253,186,116,0.95)','#d97706',0.85);
+    }
+
+    // ---------- Right panel: dynamic energy barrier plot ----------
+    const plotX=rightX+52, plotY=rightY+78, plotW=rightW-88, plotH=rightH-132;
+    ctx.save();
+    ctx.strokeStyle='rgba(100,116,139,0.55)'; ctx.lineWidth=1.6;
+    ctx.strokeRect(plotX,plotY,plotW,plotH);
+    ctx.strokeStyle='rgba(148,163,184,0.22)'; ctx.lineWidth=1;
+    for(let i=1;i<5;i++){
+      const yy=plotY+i*plotH/5; ctx.beginPath(); ctx.moveTo(plotX,yy); ctx.lineTo(plotX+plotW,yy); ctx.stroke();
+    }
+    for(let i=1;i<4;i++){
+      const xx=plotX+i*plotW/4; ctx.beginPath(); ctx.moveTo(xx,plotY); ctx.lineTo(xx,plotY+plotH); ctx.stroke();
+    }
+
+    const ebF=0.32, cbF=0.53;
+    const ebPx=plotX+ebF*plotW, cbPx=plotX+cbF*plotW;
+    ctx.fillStyle=`rgba(34,197,94,${0.08+0.18*injectionStrength})`; ctx.fillRect(ebPx-16,plotY,32,plotH);
+    ctx.fillStyle=c.mode==='active'
+      ? `rgba(14,165,233,${0.08+0.18*collectorStrength})`
+      : (c.mode==='saturation' ? 'rgba(245,158,11,0.16)' : 'rgba(100,116,139,0.07)');
+    ctx.fillRect(cbPx-16,plotY,32,plotH);
+
+    const cbDip = c.mode==='active' ? -0.18 - 0.34*collectorStrength
+                : (c.mode==='saturation' ? 0.08 + 0.14*(1-collectorStrength) : 0.08);
+    const pts=[];
+    for(let i=0;i<=180;i++){
+      const f=i/180;
+      let energy=0.58;
+      energy -= ebBarrierValue*Math.exp(-Math.pow((f-ebF)/0.075,2));
+      energy += cbDip*Math.exp(-Math.pow((f-cbF)/0.08,2));
+      energy += c.mode==='active' ? -0.10*vceNorm*f : 0;
+      const x=plotX+f*plotW;
+      const y=plotY+energy*plotH;
+      pts.push([x,y]);
+    }
+    ctx.strokeStyle=props.npn?COLORS.electron:COLORS.hole; ctx.lineWidth=4; ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.beginPath(); pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.stroke();
+
+    ctx.fillStyle='#334155'; ctx.font='800 15px Inter, Segoe UI, Arial, sans-serif'; ctx.textAlign='center';
+    ctx.fillText('Emitter',plotX+plotW*0.16,plotY+plotH+24);
+    ctx.fillText('Base',plotX+plotW*0.43,plotY+plotH+24);
+    ctx.fillText('Collector',plotX+plotW*0.75,plotY+plotH+24);
+    ctx.save(); ctx.translate(plotX-28,plotY+plotH/2); ctx.rotate(-Math.PI/2); ctx.fillText('carrier energy barrier',0,0); ctx.restore();
+
+    pill(plotX+20,plotY+12,190,30, c.mode==='cutoff'?'high E-B barrier':'lower E-B barrier', ebColor,c.mode==='cutoff'?'#fef2f2':'#f0fdf4');
+    pill(plotX+plotW-220,plotY+12,190,30,c.mode==='active'?'strong collector field':(c.mode==='saturation'?'weak collector field':'collector off'),cbColor,c.mode==='active'?'#ecfeff':(c.mode==='saturation'?'#fff7ed':'#f8fafc'));
+    ctx.restore();
+
+    // ---------- Bottom summary ----------
+    ctx.save();
+    ctx.fillStyle='rgba(255,255,255,0.96)'; ctx.strokeStyle='rgba(148,163,184,0.38)'; ctx.lineWidth=1.5;
+    strokeRoundRect(ctx,pad,bottomY,W-2*pad,bottomH,16); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#0f3f56'; ctx.font='800 19px Inter, Segoe UI, Arial, sans-serif'; ctx.textAlign='center';
+    const modeTitle = c.mode==='active'?'Forward-active condition':(c.mode==='saturation'?'Saturation condition':'Cutoff condition');
+    ctx.fillText(modeTitle,W/2,bottomY+28);
+    ctx.font='600 16px Inter, Segoe UI, Arial, sans-serif'; ctx.fillStyle='#475569';
+    const msg = c.mode==='active'
+      ? `IB = ${state.I_B_uA.toFixed(0)} µA lowers the E-B barrier; VCE = ${state.V_CE.toFixed(1)} V gives a strong C-B collector field.`
+      : (c.mode==='saturation'
+        ? `VCE = ${state.V_CE.toFixed(1)} V is too small for strong collection; stored charge and recombination increase.`
+        : `IB ≈ 0 keeps the E-B barrier high, so carrier injection is negligible.`);
+    wrapText(ctx,msg,W/2,bottomY+54,W-120,22,'#475569');
+    ctx.restore();
+  }
+
+  function wrapText(ctx,text,x,y,maxWidth,lineHeight,color){
+    ctx.save(); ctx.fillStyle=color||COLORS.inkDim; ctx.textAlign='center';
+    const words=text.split(' '); let line='', lines=[];
+    for(const w of words){const test=line?line+' '+w:w; if(ctx.measureText(test).width>maxWidth && line){lines.push(line); line=w;}else line=test;}
+    if(line) lines.push(line);
+    lines.forEach((ln,i)=>ctx.fillText(ln,x,y+i*lineHeight)); ctx.restore();
+  }
+
+  function drawMain(){
+    if(state.metaphor==='carrier') drawCarrierMetaphor();
+    else if(state.metaphor==='valve') drawValveMetaphor();
+    else drawBiasMap();
+  }
+
+  // ---------- IV canvas ----------
+  const ivCanvas=document.getElementById('ivCanvas'), ivCtx=ivCanvas.getContext('2d');
+  function curveICfor(ib_uA,v){
+    if(ib_uA<=0.5) return 0;
+    const activeIC = betaEffective()*(ib_uA/1000);
+    const vv = Math.max(0,v);
+    // Textbook-like BJT output family: fast rise at low V_CE, then a nearly flat active region.
+    const normalized = clamp(activeIC/Math.max(1e-6, betaEffective()*0.12), 0.08, 1.0);
+    const kneeV = 0.18 + 0.55*normalized;   // slightly larger knee for larger I_B curves
+    const rise = activeIC*(1 - Math.exp(-vv/kneeV));
+    const early = activeIC*0.006*Math.max(vv-kneeV,0); // very small Early-effect slope
+    return Math.min(activeIC*1.035, rise + early);
+  }
+  function drawIV(){
+    const W=ivCanvas.width,H=ivCanvas.height; ivCtx.clearRect(0,0,W,H);
+    const padL=74,padR=24,padT=18,padB=76, plotW=W-padL-padR, plotH=H-padT-padB;
+    const c=computeCurrents();
+    const familySteps=[0,20,40,60,80,100,120];
+    const maxV=Math.max(12, Math.ceil(state.V_CC));
+    const exactCurvePeak = curveICfor(state.I_B_uA, maxV);
+    const maxI=Math.max(betaEffective()*0.125, state.V_CC/state.R_C_k*1.22, exactCurvePeak*1.08, 8);
+    const xOf=v=>padL+(v/maxV)*plotW;
+    const yOf=i=>padT+plotH-(i/maxI)*plotH;
+    const satX=xOf(state.V_CEsat);
+    const kneeRegionV=Math.max(1.0, state.V_CEsat*5.0);
+    const kneeX=xOf(kneeRegionV);
+    const xB=xOf(state.V_CC);
+
+    // background focused on saturation + active only
+    ivCtx.fillStyle='#fcfdff'; ivCtx.fillRect(padL,padT,plotW,plotH);
+    ivCtx.fillStyle='rgba(245, 226, 178, 0.88)'; ivCtx.fillRect(padL,padT,kneeX-padL,plotH);
+    ivCtx.fillStyle='rgba(210, 224, 240, 0.72)'; ivCtx.fillRect(kneeX,padT,xB-kneeX,plotH);
+    ivCtx.strokeStyle='rgba(100,116,139,0.42)'; ivCtx.lineWidth=1.4; ivCtx.strokeRect(padL,padT,plotW,plotH);
+
+    // grid
+    const yStep = maxI<=10 ? 1 : (maxI<=20 ? 2 : (maxI<=50 ? 5 : 10));
+    ivCtx.font='600 13px Inter, Segoe UI, Arial, sans-serif';
+    for(let v=0; v<=maxV+0.001; v+=2){
+      const x=xOf(v);
+      ivCtx.strokeStyle='rgba(148,163,184,0.20)'; ivCtx.lineWidth=1;
+      ivCtx.beginPath(); ivCtx.moveTo(x,padT); ivCtx.lineTo(x,padT+plotH); ivCtx.stroke();
+      ivCtx.fillStyle='#475569'; ivCtx.textAlign='center'; ivCtx.textBaseline='top';
+      ivCtx.fillText(v.toFixed(0), x, padT+plotH+10);
+    }
+    for(let i=0; i<=maxI+0.001; i+=yStep){
+      const y=yOf(i);
+      ivCtx.strokeStyle='rgba(34,197,94,0.15)'; ivCtx.lineWidth=1;
+      ivCtx.beginPath(); ivCtx.moveTo(padL,y); ivCtx.lineTo(padL+plotW,y); ivCtx.stroke();
+      ivCtx.fillStyle='#475569'; ivCtx.textAlign='right'; ivCtx.textBaseline='middle';
+      ivCtx.fillText(i.toFixed(0), padL-8, y);
+    }
+
+    // axes
+    ivCtx.strokeStyle='#111827'; ivCtx.lineWidth=2.6;
+    ivCtx.beginPath();
+    ivCtx.moveTo(padL,padT); ivCtx.lineTo(padL,padT+plotH); ivCtx.lineTo(padL+plotW,padT+plotH);
+    ivCtx.stroke();
+    ivCtx.fillStyle='#111827'; ivCtx.font='700 16px Inter, Segoe UI, Arial, sans-serif';
+    ivCtx.textAlign='right'; ivCtx.textBaseline='top'; ivCtx.fillText('V₍CE₎ (V)', padL+plotW+6, padT+plotH+28);
+    ivCtx.save(); ivCtx.translate(22, padT+plotH/2); ivCtx.rotate(-Math.PI/2); ivCtx.textAlign='center'; ivCtx.textBaseline='bottom'; ivCtx.fillText('I₍C₎ (mA)', 0, 0); ivCtx.restore();
+
+    // region labels only
+    ivCtx.fillStyle='#92400e'; ivCtx.font='700 14px Inter, Segoe UI, Arial, sans-serif'; ivCtx.textAlign='center';
+    ivCtx.fillText('Saturation / knee region', padL+(kneeX-padL)/2+4, padT+18);
+    ivCtx.fillStyle='#1d4ed8'; ivCtx.fillText('Forward-active region', kneeX+(xB-kneeX)/2, padT+18);
+
+    // true saturation voltage marker
+    ivCtx.strokeStyle='rgba(245,158,11,0.95)'; ivCtx.lineWidth=2.2; ivCtx.setLineDash([7,6]);
+    ivCtx.beginPath(); ivCtx.moveTo(satX,padT); ivCtx.lineTo(satX,padT+plotH); ivCtx.stroke(); ivCtx.setLineDash([]);
+    ivCtx.fillStyle='#92400e'; ivCtx.font='700 12px Inter, Segoe UI, Arial, sans-serif'; ivCtx.textAlign='left';
+    ivCtx.fillText('VCE(sat)', satX+8, padT+38);
+
+    // background family curves
+    ivCtx.lineCap='round'; ivCtx.lineJoin='round';
+    function drawFamilyCurve(ib, stroke, width){
+      if(ib===0){
+        ivCtx.strokeStyle=stroke; ivCtx.lineWidth=width;
+        ivCtx.beginPath(); ivCtx.moveTo(padL,yOf(0)); ivCtx.lineTo(xB,yOf(0)); ivCtx.stroke();
+        return;
+      }
+      ivCtx.strokeStyle = stroke;
+      ivCtx.lineWidth = width;
+      ivCtx.beginPath();
+      const n=320;
+      for(let k=0;k<=n;k++){
+        const v=(k/n)*maxV;
+        const ic=curveICfor(ib,v);
+        const x=xOf(v), y=yOf(ic);
+        if(k===0) ivCtx.moveTo(x,y); else ivCtx.lineTo(x,y);
+      }
+      ivCtx.stroke();
+    }
+    familySteps.forEach(ib=>drawFamilyCurve(ib, ib===0 ? '#1e3a8a' : '#2f67b2', ib===0 ? 2.2 : 3.0));
+
+    // exact current IB curve so slider changes clearly affect the plot
+    if(state.I_B_uA > 0.2){
+      drawFamilyCurve(state.I_B_uA, '#0b5ed7', 4.4);
+      const labelY=yOf(curveICfor(state.I_B_uA, maxV*0.86));
+      ivCtx.fillStyle='#0b5ed7';
+      ivCtx.font='700 15px Inter, Segoe UI, Arial, sans-serif';
+      ivCtx.textAlign='left'; ivCtx.textBaseline='middle';
+      ivCtx.fillText(`I_B = ${state.I_B_uA.toFixed(0)} µA`, Math.min(xB-98, padL+plotW-116), labelY-2);
+    }
+
+    // load line from external circuit
+    const xA=padL, yA=yOf(state.V_CC/state.R_C_k);
+    ivCtx.strokeStyle='#ef4444'; ivCtx.lineWidth=3.8;
+    ivCtx.beginPath(); ivCtx.moveTo(xA,yA); ivCtx.lineTo(xB,yOf(0)); ivCtx.stroke();
+    ivCtx.fillStyle='#ef4444'; ivCtx.font='700 15px Inter, Segoe UI, Arial, sans-serif'; ivCtx.textAlign='left'; ivCtx.textBaseline='bottom';
+    ivCtx.fillText('DC load line', xOf(state.V_CC*0.52), yOf((state.V_CC/state.R_C_k)*0.56)-10);
+
+    // CURRENT operating point from current slider values
+    const opX=xOf(state.V_CE), opY=yOf(c.I_C_mA);
+    ivCtx.strokeStyle='rgba(245,158,11,0.95)'; ivCtx.lineWidth=2.0; ivCtx.setLineDash([8,8]);
+    ivCtx.beginPath(); ivCtx.moveTo(opX,padT+plotH); ivCtx.lineTo(opX,opY); ivCtx.moveTo(padL,opY); ivCtx.lineTo(opX,opY); ivCtx.stroke(); ivCtx.setLineDash([]);
+    ivCtx.fillStyle='#f59e0b'; ivCtx.beginPath(); ivCtx.arc(opX,opY,6.8,0,Math.PI*2); ivCtx.fill();
+    ivCtx.strokeStyle='#92400e'; ivCtx.lineWidth=1.2; ivCtx.stroke();
+    ivCtx.fillStyle='#92400e'; ivCtx.font='700 15px Inter, Segoe UI, Arial, sans-serif'; ivCtx.textAlign='left'; ivCtx.textBaseline='bottom';
+    ivCtx.fillText('current state', opX+10, opY-8);
+
+    // Predicted Q-point from the load line intersection
+    const qX=xOf(c.q.VCE), qY=yOf(c.q.IC);
+    ivCtx.strokeStyle='rgba(51,65,85,0.82)'; ivCtx.lineWidth=2.0; ivCtx.setLineDash([10,8]);
+    ivCtx.beginPath(); ivCtx.moveTo(qX,padT+plotH); ivCtx.lineTo(qX,qY); ivCtx.moveTo(padL,qY); ivCtx.lineTo(qX,qY); ivCtx.stroke(); ivCtx.setLineDash([]);
+    ivCtx.fillStyle='#ffffff'; ivCtx.beginPath(); ivCtx.arc(qX,qY,5.8,0,Math.PI*2); ivCtx.fill();
+    ivCtx.strokeStyle='#2f2f2f'; ivCtx.lineWidth=2.4; ivCtx.stroke();
+    ivCtx.fillStyle='#111827'; ivCtx.font='700 15px Inter, Segoe UI, Arial, sans-serif'; ivCtx.textAlign='left'; ivCtx.textBaseline='top';
+    ivCtx.fillText('load-line Q', qX+10, qY+6);
+
+    document.getElementById('ivLegend').innerHTML = `<span><span class="dot" style="background:#2f67b2"></span>families of \(I_B\) curves</span><span><span class="dot" style="background:#ef4444"></span>DC load line</span><span><span class="dot" style="background:#f59e0b"></span>current state</span><span><span class="dot" style="background:#2f2f2f"></span>predicted Q-point</span>`;
+    typesetMath([document.getElementById('ivLegend')]);
+  }
+
+
+  // ---------- band canvas ----------  // ---------- band canvas ----------  // ---------- band canvas ----------  // ---------- band canvas ----------
+  const bandCanvas=document.getElementById('bandCanvas'), bctx=bandCanvas.getContext('2d');
+  function drawBand(){
+    const W=bandCanvas.width,H=bandCanvas.height; bctx.clearRect(0,0,W,H);
+    const c=computeCurrents(), props=getCarrierProps();
+    const pad=54, x0=pad, x1=W-pad, midY=H*.54, top=34, bottom=H-52;
+    const ibNorm = clamp(state.I_B_uA/120,0,1);
+    const wbNorm = clamp((state.baseWidth-0.5)/1.5,0,1);
+    const vceNorm = clamp(state.V_CE/Math.max(10,state.V_CC,1),0,1);
+
+    bctx.fillStyle='#ffffff'; bctx.fillRect(x0, top, x1-x0, bottom-top);
+    bctx.strokeStyle='rgba(15,63,86,.28)'; bctx.lineWidth=1.6; bctx.strokeRect(x0, top, x1-x0, bottom-top);
+    const xs=[x0, x0+(x1-x0)*.30, x0+(x1-x0)*(.30 + 0.13*clamp(state.baseWidth/1.15,0.70,1.25)), x1];
+    const labels=['Emitter','Base','Collector'];
+    for(let i=0;i<3;i++){
+      bctx.fillStyle=i===1?'rgba(245,166,35,.13)': (i===0?'rgba(59,130,246,.05)':'rgba(2,132,199,.05)');
+      bctx.fillRect(xs[i], top, xs[i+1]-xs[i], bottom-top);
+      bctx.strokeStyle='rgba(148,163,184,.36)'; bctx.lineWidth=1.4; bctx.setLineDash([6,6]);
+      bctx.beginPath(); bctx.moveTo(xs[i+1], top); bctx.lineTo(xs[i+1], bottom); bctx.stroke(); bctx.setLineDash([]);
+      bctx.fillStyle='#475569'; bctx.font='700 15px Inter, Segoe UI, Arial, sans-serif'; bctx.textAlign='center';
+      bctx.fillText(labels[i],(xs[i]+xs[i+1])/2,H-20);
+    }
+
+    drawBadge(bctx, x0+10, 10, props.npn?'schematic conduction-band barrier for electrons':'schematic valence-band path for holes', '#eff6ff', 'rgba(59,130,246,.28)', props.npn?COLORS.electron:COLORS.hole);
+    drawBadge(bctx, x1-180, 10, `mode: ${c.mode}`, '#f8fafc', 'rgba(148,163,184,.45)', '#64748b');
+
+    const ebBarrier = c.mode==='cutoff' ? 54 : clamp(34 - 20*ibNorm + 8*wbNorm, 10, 42);
+    const cbBarrier = c.mode==='active' ? (-18 - 40*vceNorm) : (c.mode==='saturation' ? clamp(6 + 16*(1-vceNorm), 6, 22) : 18);
+    const tilt = c.mode==='active' ? -18*vceNorm : (c.mode==='saturation' ? -4*vceNorm : 0);
+    const pts=[];
+    for(let i=0;i<=240;i++){
+      const f=i/240; const x=x0+f*(x1-x0);
+      let y=midY;
+      y -= ebBarrier*Math.exp(-Math.pow((f-.30)/(.045+0.010*wbNorm),2));
+      y += cbBarrier*Math.exp(-Math.pow((f-.43)/(.060+0.016*wbNorm),2));
+      y += tilt*f;
+      pts.push([x,y]);
+    }
+
+    bctx.strokeStyle='rgba(100,116,139,.70)'; bctx.lineWidth=2.0; bctx.setLineDash([10,7]);
+    bctx.beginPath(); bctx.moveTo(x0,midY+42); bctx.lineTo(x1,midY+42); bctx.stroke(); bctx.setLineDash([]);
+    bctx.fillStyle='#64748b'; bctx.font='700 14px Inter, Segoe UI, Arial, sans-serif'; bctx.textAlign='left';
+    bctx.fillText('quasi-Fermi reference / carrier supply',x0+10,midY+64);
+
+    bctx.strokeStyle=props.npn?COLORS.electron:COLORS.hole; bctx.lineWidth=4.0; bctx.lineJoin='round'; bctx.lineCap='round';
+    bctx.beginPath(); pts.forEach((p,i)=>i?bctx.lineTo(p[0],p[1]):bctx.moveTo(p[0],p[1])); bctx.stroke();
+
+    drawBadge(bctx, xs[1]-60, top+8, c.mode==='cutoff'?'high E-B barrier':'lowered E-B barrier', c.mode==='cutoff'?'#fef2f2':'#f0fdf4', c.mode==='cutoff'?'#fca5a5':'#86efac', c.mode==='cutoff'?'#b91c1c':'#15803d');
+    drawBadge(bctx, xs[2]+6, top+24, c.mode==='active'?'C-B field collects':'C-B no longer strongly reverse biased', c.mode==='active'?'#ecfeff':'#fff7ed', c.mode==='active'?'#67e8f9':'#fdba74', c.mode==='active'?'#0e7490':'#9a3412');
+
+    if(c.mode!=='cutoff'){
+      bctx.strokeStyle=COLORS.amber; bctx.lineWidth=2.4;
+      bctx.beginPath(); bctx.moveTo(xs[1]-25, top+60); bctx.lineTo(xs[1]-25, pts[Math.floor(240*.30)][1]-10); bctx.stroke();
+      bctx.beginPath(); bctx.moveTo(xs[2]+80, top+70); bctx.lineTo(xs[2]+80, pts[Math.floor(240*.43)][1]-10); bctx.stroke();
+    }
+
+    bctx.fillStyle='#475569'; bctx.font='700 14px Inter, Segoe UI, Arial, sans-serif'; bctx.textAlign='left';
+    bctx.fillText(`I_B = ${state.I_B_uA.toFixed(0)} µA`, x0+14, bottom+26);
+    bctx.fillText(`V_CE = ${state.V_CE.toFixed(1)} V`, x0+160, bottom+26);
+    bctx.fillText(`W_B = ${state.baseWidth.toFixed(2)}×`, x0+300, bottom+26);
+    bctx.fillText(`${props.npn ? 'NPN' : 'PNP'} ${props.npn ? 'electron' : 'hole'} picture`, x0+440, bottom+26);
+  }
+
+  // ---------- UI wiring ----------
+  const el=id=>document.getElementById(id);
+  const ibSlider=el('ibSlider'), vceSlider=el('vceSlider'), betaSlider=el('betaSlider'), baseWidthSlider=el('baseWidthSlider'), vccSlider=el('vccSlider'), rcSlider=el('rcSlider');
+  function syncSliders(){
+    ibSlider.value=state.I_B_uA; vceSlider.value=Math.round(state.V_CE*10); betaSlider.value=state.beta; baseWidthSlider.value=Math.round(state.baseWidth*100); vccSlider.value=Math.round(state.V_CC*10); rcSlider.value=Math.round(state.R_C_k*10);
+    el('ibVal').textContent=state.I_B_uA+' µA';
+    el('vceVal').textContent=fmt(state.V_CE,1)+' V';
+    el('betaVal').textContent=state.beta;
+    el('baseWidthVal').textContent=fmt(state.baseWidth,2)+'×';
+    el('vccVal').textContent=fmt(state.V_CC,1)+' V';
+    el('rcVal').textContent=fmt(state.R_C_k,1)+' kΩ';
+  }
+  ibSlider.addEventListener('input',()=>{state.I_B_uA=+ibSlider.value; syncSliders();});
+  vceSlider.addEventListener('input',()=>{state.V_CE=(+vceSlider.value)/10; syncSliders();});
+  betaSlider.addEventListener('input',()=>{state.beta=+betaSlider.value; syncSliders();});
+  baseWidthSlider.addEventListener('input',()=>{state.baseWidth=(+baseWidthSlider.value)/100; particles=[]; syncSliders();});
+  vccSlider.addEventListener('input',()=>{state.V_CC=(+vccSlider.value)/10; syncSliders();});
+  rcSlider.addEventListener('input',()=>{state.R_C_k=(+rcSlider.value)/10; syncSliders();});
+
+  el('btnNPN').addEventListener('click',()=>setType('NPN'));
+  el('btnPNP').addEventListener('click',()=>setType('PNP'));
+  el('btnMetaCarrier').addEventListener('click',()=>setMetaphor('carrier'));
+  el('btnMetaValve').addEventListener('click',()=>setMetaphor('valve'));
+  el('btnMetaBias').addEventListener('click',()=>setMetaphor('bias'));
+
+  function setType(t){state.type=t; el('btnNPN').classList.toggle('active',t==='NPN'); el('btnPNP').classList.toggle('active',t==='PNP'); particles=[]; updateLegend();}
+  function setMetaphor(m){
+    state.metaphor=m;
+    el('btnMetaCarrier').classList.toggle('active',m==='carrier');
+    el('btnMetaValve').classList.toggle('active',m==='valve');
+    el('btnMetaBias').classList.toggle('active',m==='bias');
+    el('metaLabel').textContent=m==='carrier'?'carrier injection':m==='valve'?'water valve analogy':'junction bias map';
+    updateLegend(); updateTeachingText();
+  }
+
+  function applyPreset(kind){
+    if(kind==='cutoff'){state.I_B_uA=0; state.V_CE=6.0; state.beta=100; state.baseWidth=1.0; state.V_CC=8.0; state.R_C_k=2.0;}
+    if(kind==='active'){state.I_B_uA=20; state.V_CE=5.0; state.beta=100; state.baseWidth=1.0; state.V_CC=8.0; state.R_C_k=2.0;}
+    if(kind==='near'){state.I_B_uA=35; state.V_CE=0.35; state.beta=120; state.baseWidth=1.0; state.V_CC=5.0; state.R_C_k=1.5;}
+    if(kind==='sat'){state.I_B_uA=70; state.V_CE=0.12; state.beta=120; state.baseWidth=0.9; state.V_CC=5.0; state.R_C_k=1.0;}
+    particles=[]; syncSliders(); updateLegend();
+  }
+  el('presetCutoff').addEventListener('click',()=>applyPreset('cutoff'));
+  el('presetActive').addEventListener('click',()=>applyPreset('active'));
+  el('presetNearSat').addEventListener('click',()=>applyPreset('near'));
+  el('presetSat').addEventListener('click',()=>applyPreset('sat'));
+
+  function updateLegend(){
+    const props=getCarrierProps();
+    if(state.metaphor==='carrier'){
+      el('legend').innerHTML=`<span><span class="dot" style="background:${props.carrierColor}"></span>${props.majorityCarrier}s crossing base</span><span><span class="dot" style="background:${COLORS.danger}"></span>recombination in base</span><span><span class="dot" style="background:${COLORS.cyan}"></span>collector sweep particles</span>`;
+    }else if(state.metaphor==='valve'){
+      el('legend').innerHTML=`<span><span class="dot" style="background:${props.carrierColor}"></span>main-flow droplets \\(I_C\\)</span><span><span class="dot" style="background:${COLORS.amber}"></span>pilot droplets \\(I_B\\)</span><span><span class="dot" style="background:${COLORS.phosphor}"></span>effective opening</span>`;
+    }else{
+      el('legend').innerHTML=`<span><span class="dot" style="background:${COLORS.phosphor}"></span>forward-biased junction</span><span><span class="dot" style="background:${COLORS.cyan}"></span>reverse-biased collector junction</span><span><span class="dot" style="background:${COLORS.danger}"></span>off/high barrier</span>`;
+    }
+    typesetMath([el('legend')]);
+  }
+
+  let lastTeachingKey = '';
+  function updateTeachingText(force=false){
+    const c=computeCurrents();
+    const eq=el('eqBox'), note=el('metaphorNote');
+    const key = c.mode + '|' + state.metaphor;
+    if(force || key !== lastTeachingKey){
+      if(c.mode==='cutoff'){
+        eq.innerHTML=String.raw`<div class="lab">Cutoff</div>
+\[ I_B \approx 0 \quad \Rightarrow \quad I_C \approx 0,\; I_E \approx 0 \]
+\[ V_{BE}<V_{BE(\mathrm{on})} \Rightarrow \text{carrier injection is negligible} \]`;
+        note.innerHTML=String.raw`<b>Observe:</b> the depletion barrier blocks the emitter-base path. No matter how high \(\beta\) is, there is no gain without carrier injection.`;
+      }else if(c.mode==='saturation'){
+        eq.innerHTML=String.raw`<div class="lab">Saturation</div>
+\[ V_{CE}\approx V_{CE(\mathrm{sat})}\approx 0.2\,\mathrm{V} \]
+\[ I_C < \beta_{\mathrm{eff}} I_B \quad \text{because the external circuit limits current} \]`;
+        note.innerHTML=String.raw`<b>Observe:</b> the base drive is strong, but \(V_{CE}\) is too small. Stored charge builds up, the collector-base junction is no longer strongly reverse biased, and the \(\beta\) rule breaks.`;
+      }else{
+        eq.innerHTML=String.raw`<div class="lab">Forward-active</div>
+\[ I_C=\beta_{\mathrm{eff}} I_B \]
+\[ I_E=I_C+I_B \]
+\[ \alpha=\frac{I_C}{I_E}\approx \frac{\beta}{\beta+1} \]`;
+        if(state.metaphor==='valve'){
+          note.innerHTML=String.raw`<b>Valve analogy map:</b> in the picture, the incoming main-flow side represents \(I_E\), the outgoing collected side represents \(I_C\), and the pilot line represents \(I_B\). The current relation is \[ I_E = I_C + I_B \]. <br><b>Metaphor limit:</b> the water valve picture shows gain quickly, but it can hide the semiconductor mechanism. In a real BJT, the base current is mostly recombination current, not a mechanical control rod.`;
+        }else if(state.metaphor==='bias'){
+          note.innerHTML=String.raw`<b>Bias condition:</b> forward-active means the emitter-base junction is forward biased while the collector-base junction is reverse biased. That combination injects carriers and then sweeps most of them into the collector.`;
+        }else{
+          note.innerHTML=String.raw`<b>Reading this metaphor:</b> the emitter injects carriers into a thin base. Most cross the base and are collected; a small fraction recombines, producing \(I_B\). Less recombination means larger \(\beta_{\mathrm{eff}}\).`;
+        }
+      }
+      lastTeachingKey = key;
+      typesetMath([eq,note]);
+    }
+
+    const status = c.mode==='cutoff' ? 'Cutoff: E-B is not forward biased, so carrier injection is nearly zero.' : c.mode==='saturation' ? 'Saturation: C-B is no longer reverse biased enough; stored charge increases and the external circuit limits current.' : 'Forward-active: E-B forward bias injects carriers and C-B reverse bias collects them.';
+    el('visualStatus').textContent=status;
+    el('bandStatus').textContent=c.mode==='active'?'E-B barrier is low and C-B field sweeps carriers. This is the amplifier region.':c.mode==='saturation'?'Both junctions are effectively forward biased; the collector field is weak and stored charge appears.':'The E-B barrier remains high; injection is negligible.';
+  }
+
+  function updateReadouts(){
+    const c=computeCurrents(), mode=c.mode;
+    el('roMode').textContent=mode==='active'?'ACTIVE':mode.toUpperCase();
+    el('roIc').innerHTML=fmt(c.I_C_mA,2)+'<small> mA</small>';
+    el('roIe').innerHTML=fmt(c.I_E_mA,2)+'<small> mA</small>';
+    el('roVbe').innerHTML=fmt(c.V_BE,2)+'<small> V</small>';
+    el('roBetaEff').innerHTML=fmt(c.bEff,0);
+    el('roAlpha').innerHTML=fmt(c.alpha,3);
+    el('roLoadIc').innerHTML=fmt(c.loadIC,2)+'<small> mA</small>';
+    el('roPower').innerHTML=fmt(c.power_mW,1)+'<small> mW</small>';
+    el('chipCutoff').classList.toggle('on',mode==='cutoff');
+    el('chipActive').classList.toggle('on',mode==='active');
+    el('chipSat').classList.toggle('on',mode==='saturation');
+    el('clock').textContent=state.type+' · '+(mode==='active'?'FORWARD-ACTIVE':mode.toUpperCase())+' · '+(state.metaphor==='carrier'?'carrier injection lens':state.metaphor==='valve'?'valve metaphor lens':'junction bias lens');
+
+    const eb=el('pillEB'), cb=el('pillCB'), load=el('pillLoad');
+    eb.className='pill '+(mode==='cutoff'?'danger':'good'); eb.innerHTML='E-B: '+(mode==='cutoff'?'not forward':'forward');
+    cb.className='pill '+(mode==='active'?'good':mode==='saturation'?'warn':'danger'); cb.innerHTML='C-B: '+(mode==='active'?'reverse':mode==='saturation'?'forward/weak':'off');
+    const mismatch = c.loadIC - c.I_C_mA;
+    load.className='pill '+(Math.abs(mismatch)<0.25?'good':mismatch<0?'warn':'');
+    load.innerHTML = mismatch< -0.25 ? 'Load: transistor asks too much' : Math.abs(mismatch)<0.25 ? 'Load: near Q-point' : 'Load: supply has margin';
+
+    updateTeachingText();
+  }
+
+  function loop(now){
+    const dt=Math.min((now-(loop.last||now))/1000,.05); loop.last=now;
+    updateParticles(dt); drawMain(); drawIV(); drawBand(); updateReadouts();
+    requestAnimationFrame(loop);
+  }
+
+  window.getBJTSimStateForTutor = function(){
+    const c = computeCurrents();
+    return {
+      transistor: state.type,
+      view: state.metaphor,
+      mode: c.mode,
+      IB_uA: state.I_B_uA,
+      VCE_V: Number(state.V_CE.toFixed(2)),
+      beta_nominal: state.beta,
+      beta_eff: Number(c.bEff.toFixed(1)),
+      base_width_relative: Number(state.baseWidth.toFixed(2)),
+      IC_mA: Number(c.I_C_mA.toFixed(3)),
+      IE_mA: Number(c.I_E_mA.toFixed(3)),
+      VBE_V: Number(c.V_BE.toFixed(3)),
+      VCB_V: Number(c.V_CB.toFixed(3)),
+      alpha: Number(c.alpha.toFixed(4)),
+      VCC_V: state.V_CC,
+      RC_kohm: state.R_C_k,
+      load_line_IC_mA: Number(c.loadIC.toFixed(3)),
+      predicted_Q: {VCE_V:Number(c.q.VCE.toFixed(3)), IC_mA:Number(c.q.IC.toFixed(3)), mode:c.q.mode}
+    };
+  };
+
+  syncSliders(); updateLegend(); updateTeachingText(true); typesetMath([document.body]); requestAnimationFrame(loop);
+})();
+</script>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const tabData = document.getElementById('tab-data');
+      const tabLesson = document.getElementById('tab-lesson');
+      const btnTabData = document.getElementById('btnTabData');
+      const btnTabLesson = document.getElementById('btnTabLesson');
+      const rightPanel = document.querySelector('.right-panel');
+      const simPanel = document.querySelector('.simulation-panel');
+      const rightHandle = document.getElementById('chatResizeHandle');
+      const centerHandle = document.getElementById('centerResizeHandle');
+
+      const chatState = {
+        chatHistory: [],
+        provider: "google",
+        apiKey: "",
+        lmUrl: "http://localhost:1234/v1",
+        model: "gemini-2.5-flash",
+        temperature: 0.6,
+        sysPrompt: ""
+      };
+
+      const els = {
+        projectSelect: document.getElementById('projectSelect'),
+        chatMessages: document.getElementById('chatMessages'),
+        chatInput: document.getElementById('chatInput'),
+        chatSendBtn: document.getElementById('chatSendBtn'),
+        clearChatBtn: document.getElementById('clearChatBtn'),
+        attachContextCheck: document.getElementById('attachContextCheck'),
+        chatStatusText: document.getElementById('chatStatusText'),
+        openChatSettingsBtn: document.getElementById('openChatSettingsBtn'),
+        settingsModal: document.getElementById('settingsModal'),
+        chatProvider: document.getElementById('chatProvider'),
+        chatApiKey: document.getElementById('chatApiKey'),
+        lmUrlGroup: document.getElementById('lmUrlGroup'),
+        chatLmUrl: document.getElementById('chatLmUrl'),
+        chatModel: document.getElementById('chatModel'),
+        chatTemp: document.getElementById('chatTemp'),
+        chatTempVal: document.getElementById('chatTempVal'),
+        chatSysPrompt: document.getElementById('chatSysPrompt'),
+        cancelSettingsBtn: document.getElementById('cancelSettingsBtn'),
+        saveSettingsBtn: document.getElementById('saveSettingsBtn'),
+        toast: document.getElementById('toast')
+      };
+
+      function typeset(node) {
+        if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(node ? [node] : [document.body]).catch(()=>{});
+      }
+
+      function showToast(text) {
+        if (!els.toast) return;
+        els.toast.textContent = text;
+        els.toast.classList.add('show');
+        clearTimeout(showToast._timer);
+        showToast._timer = setTimeout(() => els.toast.classList.remove('show'), 2600);
+      }
+
+      function switchTab(tab) {
+        tabData.style.display = tab === 'data' ? 'flex' : 'none';
+        tabLesson.style.display = tab === 'lesson' ? 'flex' : 'none';
+        btnTabData.classList.toggle('active', tab === 'data');
+        btnTabLesson.classList.toggle('active', tab === 'lesson');
+        typeset(tab === 'data' ? tabData : tabLesson);
+      }
+
+      function setRightWidth(px) {
+        const minW = 320;
+        const maxW = Math.max(360, Math.min(850, window.innerWidth - 760));
+        const w = Math.max(minW, Math.min(maxW, px));
+        document.documentElement.style.setProperty('--right-panel-width', w + 'px');
+        localStorage.setItem('bjtRightPanelWidth', String(Math.round(w)));
+      }
+
+      function setCenterWidth(px) {
+        const leftW = document.querySelector('.controls-panel')?.getBoundingClientRect().width || 400;
+        const rightW = rightPanel?.getBoundingClientRect().width || 480;
+        const minW = 680;
+        const maxW = Math.max(minW, window.innerWidth - leftW - rightW - 70);
+        const w = Math.max(minW, Math.min(maxW, px));
+        document.documentElement.style.setProperty('--center-panel-width', w + 'px');
+        localStorage.setItem('bjtCenterPanelWidth', String(Math.round(w)));
+        window.dispatchEvent(new Event('resize'));
+      }
+
+      const savedRightW = Number(localStorage.getItem('bjtRightPanelWidth'));
+      if (Number.isFinite(savedRightW)) setRightWidth(savedRightW);
+      const savedCenterW = Number(localStorage.getItem('bjtCenterPanelWidth'));
+      if (Number.isFinite(savedCenterW)) setCenterWidth(savedCenterW);
+
+      if (rightHandle) {
+        rightHandle.addEventListener('mousedown', ev => {
+          ev.preventDefault();
+          const startX = ev.clientX;
+          const startW = rightPanel.getBoundingClientRect().width;
+          document.body.classList.add('resizing-chat');
+          const onMove = mev => setRightWidth(startW + (startX - mev.clientX));
+          const onUp = () => { document.body.classList.remove('resizing-chat'); window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+          window.addEventListener('mousemove', onMove);
+          window.addEventListener('mouseup', onUp);
+        });
+      }
+
+      if (centerHandle) {
+        centerHandle.addEventListener('mousedown', ev => {
+          ev.preventDefault();
+          const startX = ev.clientX;
+          const startW = simPanel.getBoundingClientRect().width;
+          document.body.classList.add('resizing-center');
+          const onMove = mev => setCenterWidth(startW + (mev.clientX - startX));
+          const onUp = () => { document.body.classList.remove('resizing-center'); window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+          window.addEventListener('mousemove', onMove);
+          window.addEventListener('mouseup', onUp);
+        });
+      }
+
+      function updateProjectCards() {
+        const val = els.projectSelect?.value || 'carrier';
+        document.querySelectorAll('.project-card').forEach(card => card.classList.toggle('active', card.dataset.project === val));
+        typeset(tabLesson);
+      }
+
+      if (els.projectSelect) {
+        els.projectSelect.addEventListener('change', updateProjectCards);
+        updateProjectCards();
+      }
+
+      btnTabData.addEventListener('click', () => switchTab('data'));
+      btnTabLesson.addEventListener('click', () => switchTab('lesson'));
+
+      document.querySelectorAll('.prompt-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          switchTab('lesson');
+          els.chatInput.value = btn.dataset.prompt || '';
+          els.chatInput.focus();
+          els.chatInput.scrollIntoView({behavior:'smooth', block:'center'});
+        });
+      });
+
+      document.querySelectorAll('.sim-action').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.dataset.action;
+          const map = {cutoff:'presetCutoff', active:'presetActive', sat:'presetSat'};
+          const target = document.getElementById(map[action] || 'presetActive');
+          if (target) target.click();
+          switchTab('data');
+        });
+      });
+
+      // ---------- Poisson-style AI configuration ----------
+      function loadChatSettings() {
+        try {
+          const s = JSON.parse(localStorage.getItem('bjtMetaphorChatConfig') || localStorage.getItem('rubberSheetChatConfig') || '{}');
+          chatState.provider = s.provider || "google";
+          chatState.apiKey = s.apiKey || "";
+          chatState.lmUrl = s.lmUrl || "http://localhost:1234/v1";
+          chatState.model = s.model || "gemini-2.5-flash";
+          chatState.temperature = s.temperature !== undefined ? s.temperature : 0.6;
+          chatState.sysPrompt = s.sysPrompt || els.chatSysPrompt.value;
+        } catch(e) {}
+      }
+
+      function openSettingsModal() {
+        els.chatProvider.value = chatState.provider;
+        els.chatApiKey.value = chatState.apiKey;
+        els.chatLmUrl.value = chatState.lmUrl;
+        els.chatModel.value = chatState.model;
+        els.chatTemp.value = chatState.temperature;
+        els.chatTempVal.textContent = Number(chatState.temperature).toFixed(1);
+        els.chatSysPrompt.value = chatState.sysPrompt;
+        els.lmUrlGroup.classList.toggle("hidden", chatState.provider !== "lmstudio");
+        els.settingsModal.classList.remove("hidden");
+      }
+
+      function closeSettingsModal() {
+        els.settingsModal.classList.add("hidden");
+      }
+
+      function saveChatSettings() {
+        chatState.provider = els.chatProvider.value;
+        chatState.apiKey = els.chatApiKey.value.trim();
+        chatState.lmUrl = els.chatLmUrl.value.trim();
+        chatState.model = els.chatModel.value.trim();
+        chatState.temperature = Number(els.chatTemp.value);
+        chatState.sysPrompt = els.chatSysPrompt.value.trim();
+        localStorage.setItem('bjtMetaphorChatConfig', JSON.stringify({
+          provider: chatState.provider,
+          apiKey: chatState.apiKey,
+          lmUrl: chatState.lmUrl,
+          model: chatState.model,
+          temperature: chatState.temperature,
+          sysPrompt: chatState.sysPrompt
+        }));
+        closeSettingsModal();
+        showToast("BJT AI Tutor settings saved.");
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function formatInline(str) {
+        return str.replace(/`([^`]+)`/g, '<code>$1</code>')
+                  .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      }
+
+      function renderMarkdown(text) {
+        const lines = escapeHtml(text).split('\n');
+        let html = '';
+        let inMath = false; let mathLines = [];
+        let inCode = false; let codeLines = [];
+        for (let line of lines) {
+          const t = line.trim();
+          if (inMath) { mathLines.push(line); if(t.endsWith('$$')||t.endsWith('\\]')) { html += `<div class="mathBlock">${mathLines.join('\n')}</div>`; inMath=false; } continue; }
+          if (t.startsWith('$$') || t.startsWith('\\[')) {
+            if((t.startsWith('$$')&&t.endsWith('$$')&&t.length>2) || (t.startsWith('\\[')&&t.endsWith('\\]')&&t.length>4)) html += `<div class="mathBlock">${line}</div>`;
+            else { inMath=true; mathLines=[line]; }
+            continue;
+          }
+          if (t.startsWith('```')) {
+            if (inCode) { html += `<pre><code>${codeLines.join('\n')}</code></pre>`; inCode=false; }
+            else { inCode=true; codeLines=[]; }
+            continue;
+          }
+          if (inCode) { codeLines.push(line); continue; }
+          if (!t) continue;
+          let m = t.match(/^###?\s+(.+)/); if (m) { html += `<strong>${formatInline(m[1])}</strong><br/>`; continue; }
+          m = t.match(/^[-*]\s+(.+)/); if (m) { html += `• ${formatInline(m[1])}<br/>`; continue; }
+          html += `<p>${formatInline(line)}</p>`;
+        }
+        return html;
+      }
+
+      function appendMessage(role, text) {
+        const div = document.createElement("div");
+        div.className = `msg ${role}`;
+        let displayRole = role === "user" ? "You" : role === "assistant" ? "AI Tutor" : "Error";
+        let contentHtml = role === "error" ? escapeHtml(text) : renderMarkdown(text);
+        div.innerHTML = `<span class="role">${displayRole}</span>${contentHtml}`;
+        els.chatMessages.appendChild(div);
+        els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+        if (role !== "error") typeset(div);
+        return div;
+      }
+
+      function buildBJTAIContext() {
+        const s = window.getBJTSimStateForTutor ? window.getBJTSimStateForTutor() : {};
+        return [
+          `Transistor polarity: ${s.transistor || 'unknown'}`,
+          `View/lens: ${s.view || 'unknown'}`,
+          `Operating mode: ${s.mode || 'unknown'}`,
+          `IB = ${s.IB_uA} microamp`,
+          `IC = ${s.IC_mA} mA`,
+          `IE = ${s.IE_mA} mA`,
+          `VCE = ${s.VCE_V} V`,
+          `VBE = ${s.VBE_V} V`,
+          `VCB = ${s.VCB_V} V`,
+          `beta nominal = ${s.beta_nominal}`,
+          `beta_eff = ${s.beta_eff}`,
+          `base width relative = ${s.base_width_relative}`,
+          `VCC = ${s.VCC_V} V`,
+          `RC = ${s.RC_kohm} kohm`,
+          `load-line IC = ${s.load_line_IC_mA} mA`,
+          `predicted Q point: VCE = ${s.predicted_Q?.VCE_V} V, IC = ${s.predicted_Q?.IC_mA} mA, mode = ${s.predicted_Q?.mode}`
+        ].join('\n');
+      }
+
+      async function handleChatSend() {
+        const rawText = els.chatInput.value.trim();
+        if (!rawText) return;
+
+        if (!chatState.apiKey && chatState.provider === "google") {
+          showToast("Please configure your Google API Key in AI Tutor Settings first.");
+          openSettingsModal();
+          return;
+        }
+
+        let userPrompt = rawText;
+        if (els.attachContextCheck.checked) {
+          const context = buildBJTAIContext();
+          userPrompt = `[BJT Simulation Context]\n${context}\n\n[User Question]\n${rawText}`;
+        }
+
+        els.chatInput.value = "";
+        appendMessage("user", rawText);
+        chatState.chatHistory.push({ role: "user", content: userPrompt });
+
+        els.chatStatusText.textContent = "AI is thinking...";
+        els.chatSendBtn.disabled = true;
+
+        const loadingDiv = document.createElement("div");
+        loadingDiv.className = "msg assistant";
+        loadingDiv.innerHTML = '<span class="role">AI Tutor</span><div class="thinking-wrapper"><div class="dot-flashing"></div></div>';
+        els.chatMessages.appendChild(loadingDiv);
+        els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+
+        try {
+          const aiResponse = chatState.provider === "google" ? await fetchGoogleAPI() : await fetchLMStudioAPI();
+          loadingDiv.remove();
+          appendMessage("assistant", aiResponse);
+          chatState.chatHistory.push({ role: "model", content: aiResponse });
+          els.chatStatusText.textContent = "Ready";
+        } catch (err) {
+          loadingDiv.remove();
+          appendMessage("error", String(err.message));
+          els.chatStatusText.textContent = "Error occurred.";
+        } finally {
+          els.chatSendBtn.disabled = false;
+        }
+      }
+
+      async function fetchGoogleAPI() {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(chatState.model)}:generateContent`;
+        const contents = chatState.chatHistory.map(m => ({
+          role: m.role === 'model' ? 'model' : 'user',
+          parts: [{ text: m.content }]
+        }));
+        const body = {
+          contents,
+          systemInstruction: { parts: [{ text: chatState.sysPrompt }] },
+          generationConfig: {
+            temperature: chatState.temperature,
+            maxOutputTokens: 2048
+          }
+        };
+        const res = await fetch(`${url}?key=${encodeURIComponent(chatState.apiKey)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+        return data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+      }
+
+      async function fetchLMStudioAPI() {
+        const url = `${chatState.lmUrl.replace(/\/$/, '')}/chat/completions`;
+        const messages = [{ role: 'system', content: chatState.sysPrompt }];
+        chatState.chatHistory.forEach(m => messages.push({ role: m.role==='model'?'assistant':'user', content: m.content }));
+        const headers = { 'Content-Type': 'application/json' };
+        if (chatState.apiKey) headers.Authorization = `Bearer ${chatState.apiKey}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ model: chatState.model, messages, temperature: chatState.temperature })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+        return data?.choices?.[0]?.message?.content || '';
+      }
+
+      els.openChatSettingsBtn.addEventListener("click", openSettingsModal);
+      els.cancelSettingsBtn.addEventListener("click", closeSettingsModal);
+      els.saveSettingsBtn.addEventListener("click", saveChatSettings);
+      els.chatProvider.addEventListener("change", () => {
+        els.lmUrlGroup.classList.toggle("hidden", els.chatProvider.value !== "lmstudio");
+        if(els.chatProvider.value === "google") els.chatModel.value = "gemini-2.5-flash";
+        if(els.chatProvider.value === "lmstudio") els.chatModel.value = "local-model";
+      });
+      els.chatTemp.addEventListener("input", () => els.chatTempVal.textContent = Number(els.chatTemp.value).toFixed(1));
+      els.settingsModal.addEventListener("click", ev => { if (ev.target === els.settingsModal) closeSettingsModal(); });
+
+      els.chatSendBtn.addEventListener('click', handleChatSend);
+      els.chatInput.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); handleChatSend(); }
+      });
+      els.clearChatBtn.addEventListener('click', () => {
+        chatState.chatHistory = [];
+        els.chatMessages.innerHTML = '<div class="msg assistant"><span class="role">AI Tutor</span><p>Chat cleared. Ask me about BJT operating regions, carrier injection, recombination, \\(\\beta\\), or the load line.</p></div>';
+        typeset(els.chatMessages);
+      });
+
+      loadChatSettings();
+      setTimeout(() => typeset(document.body), 300);
+    })();
+  </script>
+
+<!-- maestra-integration-v4 -->
+<link rel="stylesheet" href="../shared/maestra-toolbar.css">
+<script defer src="../shared/theme-sync-v2.js"></script>
+<script defer src="../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="bjt" data-maestra-module-title="Bipolar Junction Transistors" data-maestra-topic-title="Bjt Metaphor" data-maestra-canvas-template="bjt-structure"></script>
+</body>
+</html>

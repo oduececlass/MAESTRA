@@ -1,0 +1,2405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Basic Semiconductor Interactive Tutor</title>
+
+<script>
+(function(){
+  try{
+    const saved=localStorage.getItem("basicSemiTheme");
+    const preferred=window.matchMedia && window.matchMedia("(prefers-color-scheme:dark)").matches ? "dark":"light";
+    document.documentElement.setAttribute("data-theme",saved||preferred);
+  }catch(e){document.documentElement.setAttribute("data-theme","dark");}
+})();
+</script>
+
+<script>
+window.MathJax={
+  tex:{
+    inlineMath:[['\\(','\\)'],['$','$']],
+    displayMath:[['\\[','\\]']],
+    processEscapes:true
+  },
+  svg:{fontCache:'global'}
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+:root{
+  --accent:#23c7f4;
+  --accent2:#7c7cff;
+  --app-bg:#eef7fc;
+  --sidebar-bg:#f8fcff;
+  --surface:#ffffff;
+  --surface2:#f5fbff;
+  --surface3:#e8f7ff;
+  --text-strong:#102033;
+  --text-body:#2c465e;
+  --text-soft:#597286;
+  --stroke:#cfe2ee;
+  --stroke2:#8dcced;
+  --eq-bg:#f4fbff;
+  --eq-border:#8fd8f8;
+  --shadow:0 18px 45px rgba(23,55,84,.10);
+  --hero:linear-gradient(135deg,#ffffff 0%,#f2fbff 55%,#e8f7ff 100%);
+  --card:linear-gradient(180deg,#ffffff 0%,#f7fbff 100%);
+  color-scheme:light;
+}
+html[data-theme="dark"]{
+  --accent:#38d7ff;
+  --accent2:#8068ff;
+  --app-bg:#0d1b26;
+  --sidebar-bg:#0b1822;
+  --surface:#102333;
+  --surface2:#132b3b;
+  --surface3:#173447;
+  --text-strong:#f4fbff;
+  --text-body:#b9d5ea;
+  --text-soft:#93aebf;
+  --stroke:#263f52;
+  --stroke2:#31566f;
+  --eq-bg:linear-gradient(180deg,#143247 0%,#122c3f 100%);
+  --eq-border:#4fb8de;
+  --shadow:0 22px 65px rgba(0,0,0,.32);
+  --hero:linear-gradient(135deg,#102e40 0%,#102535 60%,#0e202d 100%);
+  --card:linear-gradient(180deg,#132838 0%,#102330 100%);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--app-bg);color:var(--text-body);font-family:Inter,Arial,Helvetica,sans-serif}
+button,input,select{font-family:inherit}
+.topbar{
+  height:58px;position:sticky;top:0;z-index:20;display:grid;grid-template-columns:68px 300px minmax(220px,1fr) auto;
+  align-items:center;gap:12px;background:var(--sidebar-bg);border-bottom:1px solid var(--stroke)
+}
+.logo{
+  width:46px;height:46px;margin-left:12px;border-radius:15px;display:grid;place-items:center;color:#fff;font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 10px 24px rgba(56,215,255,.20)
+}
+.siteTitle{font-weight:900;color:var(--text-strong);letter-spacing:-.02em}
+.searchBox{height:38px;border:1px solid var(--stroke);background:var(--surface2);color:var(--text-body);border-radius:12px;padding:0 14px}
+.topActions{display:flex;gap:10px;align-items:center;padding-right:14px}
+.themeBtn,.printBtn{
+  border:1px solid var(--stroke2);background:var(--surface2);color:var(--text-strong);border-radius:14px;padding:10px 16px;font-weight:850;cursor:pointer
+}
+.themeBtn:hover,.printBtn:hover{border-color:var(--accent);color:var(--accent)}
+.layout{display:grid;grid-template-columns:315px minmax(0,1fr);min-height:calc(100vh - 58px)}
+.sidebar{
+  position:sticky;top:58px;max-height:calc(100vh - 58px);overflow:auto;background:linear-gradient(180deg,var(--sidebar-bg),var(--app-bg));
+  border-right:1px solid var(--stroke);padding:18px 12px 28px
+}
+.chapterLabel{padding:6px 12px 18px;color:var(--text-strong);font-weight:900;line-height:1.45}
+.badge{
+  display:inline-grid;place-items:center;width:48px;height:48px;margin-right:12px;border-radius:15px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:900
+}
+.navTitle{color:var(--text-soft);font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:900;padding:12px 12px}
+.navItem{
+  width:100%;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--text-soft);
+  padding:11px 13px;margin:3px 0;text-align:left;cursor:pointer;font-size:15px;line-height:1.3
+}
+.navItem:hover{background:var(--surface2);border-color:var(--stroke);color:var(--text-strong)}
+.navItem.active{
+  background:linear-gradient(90deg,rgba(56,215,255,.20),rgba(56,215,255,.05));border-color:var(--stroke2);
+  color:var(--text-strong);font-weight:900;box-shadow:inset 5px 0 0 var(--accent)
+}
+.content{padding:42px 32px 80px;max-width:1320px}
+.hero{
+  border:1px solid var(--stroke);border-radius:30px;background:var(--hero);box-shadow:var(--shadow);overflow:hidden;margin-bottom:24px
+}
+.heroInner{padding:34px 40px}
+.hero h1{margin:0 0 12px;color:var(--text-strong);font-size:44px;line-height:1.05;letter-spacing:-.04em}
+.hero p{margin:0;color:var(--text-body);font-size:18px;line-height:1.65;max-width:980px}
+.heroChips{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.chip{border:1px solid var(--stroke2);background:var(--surface2);color:var(--text-strong);border-radius:999px;padding:8px 12px;font-weight:850;font-size:13px}
+.readerBar{
+  display:flex;align-items:center;gap:12px;justify-content:space-between;padding:14px 18px;border-top:1px solid var(--stroke);background:var(--surface)
+}
+.readerBar button{
+  border:1px solid var(--stroke2);background:var(--surface2);color:var(--text-strong);border-radius:14px;padding:10px 16px;font-weight:850;cursor:pointer
+}
+.status{display:flex;flex-direction:column;gap:2px;font-weight:750;color:var(--text-soft)}
+#modeLabel{color:var(--accent)}
+.section{display:none}
+.section.active{display:block}
+.card{
+  background:var(--card);border:1px solid var(--stroke);border-radius:20px;padding:24px 28px;margin:22px 0;box-shadow:0 12px 35px rgba(0,0,0,.08)
+}
+.section h2{color:var(--text-strong);font-size:34px;line-height:1.15;margin:8px 0 14px;letter-spacing:-.03em}
+.section h3{color:var(--text-strong);font-size:24px;margin:26px 0 12px}
+.section p,.section li{font-size:18px;line-height:1.72}
+.section ul,.section ol{padding-left:25px}
+.eq{
+  background:var(--eq-bg);border:1.5px solid var(--eq-border);border-left:4px solid var(--accent);border-radius:16px;
+  padding:16px 20px;margin:18px 0;overflow-x:auto;color:var(--text-strong);font-size:18px
+}
+.note{
+  background:var(--surface2);border:1px solid var(--stroke);border-left:4px solid var(--accent);border-radius:16px;padding:16px 18px;margin:18px 0;
+  font-size:17px;line-height:1.65
+}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.mini{background:var(--surface2);border:1px solid var(--stroke);border-radius:16px;padding:16px}
+.mini b{color:var(--text-strong)}
+.sim{
+  background:var(--surface);border:1px solid var(--stroke);border-radius:20px;padding:18px;margin:20px 0;box-shadow:var(--shadow)
+}
+.simHeader{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px}
+.simHeader h3{margin:0;color:var(--text-strong)}
+.simHeader p{margin:5px 0 0;color:var(--text-soft);font-size:15px;line-height:1.5}
+.controls{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin:12px 0 16px}
+.control{background:var(--surface2);border:1px solid var(--stroke);border-radius:14px;padding:12px}
+.control label{display:flex;justify-content:space-between;gap:10px;color:var(--text-strong);font-size:13px;font-weight:850;margin-bottom:8px}
+.control output{color:var(--accent);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select{width:100%;height:34px;border:1px solid var(--stroke);background:var(--surface);color:var(--text-body);border-radius:10px;padding:0 8px}
+canvas{width:100%;height:auto;background:#ffffff;border:1px solid var(--stroke);border-radius:16px;display:block}
+html[data-theme="dark"] canvas{background:#0f2230}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.metric{background:var(--surface2);border:1px solid var(--stroke);border-radius:13px;padding:10px}
+.metric b{display:block;color:var(--text-soft);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.metric span{display:block;color:var(--text-strong);font-size:16px;font-weight:900;margin-top:4px}
+.tableWrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:15px}
+th,td{border:1px solid var(--stroke);padding:11px 12px;text-align:left;vertical-align:top;line-height:1.45}
+th{background:var(--surface3);color:var(--text-strong)}
+tr:nth-child(odd) td{background:var(--surface2)}
+.practiceBox{border:1px solid var(--stroke);background:var(--surface2);border-radius:16px;padding:16px;margin:14px 0}
+.practiceBox summary{cursor:pointer;color:var(--text-strong);font-weight:900}
+footer{color:var(--text-soft);font-size:14px;margin-top:36px}
+@media(max-width:1050px){
+  .layout{grid-template-columns:1fr}.sidebar{position:static;max-height:none}.content{padding:28px 18px}.controls{grid-template-columns:1fr 1fr}.grid2,.grid3{grid-template-columns:1fr}.topbar{grid-template-columns:58px 1fr auto}.searchBox{display:none}.siteTitle{font-size:14px}.hero h1{font-size:34px}
+}
+@media(max-width:650px){.controls,.metrics{grid-template-columns:1fr}.readerBar{flex-wrap:wrap}.heroInner{padding:25px 22px}.content{padding:20px 12px}}
+@media print{
+  .topbar,.sidebar,.readerBar{display:none!important}.layout{display:block}.section{display:block!important}.content{padding:0;color:#111}.card,.sim,.hero{box-shadow:none;border-color:#ccc}
+}
+
+/* ===== v2: compact top area after overview page ===== */
+.hero.compact{
+  border-radius:20px !important;
+  margin-bottom:20px !important;
+}
+.hero.compact .heroInner{
+  display:none !important;
+}
+.hero.compact .readerBar{
+  border-top:0 !important;
+  padding:12px 18px !important;
+}
+.hero.compact .readerBar button{
+  padding:9px 15px !important;
+}
+.hero.compact .status{
+  flex-direction:row !important;
+  gap:10px !important;
+  align-items:center !important;
+}
+.hero.compact #modeLabel::after{
+  content:"•";
+  color:var(--text-soft);
+  margin-left:10px;
+}
+@media(max-width:650px){
+  .hero.compact .status{
+    flex-direction:column !important;
+    align-items:flex-start !important;
+    gap:2px !important;
+  }
+  .hero.compact #modeLabel::after{
+    content:"";
+    margin-left:0;
+  }
+}
+
+
+/* ===== v3: Boltzmann physical-meaning simulator ===== */
+.meaningGrid{display:grid;grid-template-columns:1.2fr .95fr;gap:16px;margin-top:14px}
+.meaningCard{
+  background:var(--surface2);border:1px solid var(--stroke);border-radius:16px;
+  padding:14px 16px
+}
+.meaningCard h4{
+  margin:0 0 8px;color:var(--text-strong);font-size:18px
+}
+.meaningCard p,.meaningCard li{font-size:16px;line-height:1.6;color:var(--text-body)}
+.meaningCard ul{margin:8px 0 0;padding-left:20px}
+.meaningLead{
+  background:var(--eq-bg);border:1px solid var(--eq-border);border-left:4px solid var(--accent);
+  border-radius:14px;padding:12px 14px;margin:10px 0 12px;color:var(--text-strong);font-size:16px;line-height:1.6
+}
+.smallCanvas{
+  width:100%;height:auto;background:#ffffff;border:1px solid var(--stroke);border-radius:14px;display:block
+}
+html[data-theme="dark"] .smallCanvas{background:#0f2230}
+@media(max-width:1050px){.meaningGrid{grid-template-columns:1fr}}
+
+
+/* ===== v7: fix dynamic LaTeX sizing in Fermi-Dirac panel ===== */
+#fdDynamicMeaningPanel mjx-container{
+  font-size:105% !important;
+  max-width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+#fdMeaningCount mjx-container,
+#fdMeaningScale mjx-container{
+  font-size:95% !important;
+}
+
+
+/* ===== v8: robust FD dynamic MathJax and overlap fixes ===== */
+#fdMeaningLead, #fdMeaningText, #fdMeaningBullets, #fdMeaningCount, #fdMeaningScale{
+  overflow-wrap:anywhere;
+}
+#fdMeaningLead mjx-container,
+#fdMeaningText mjx-container,
+#fdMeaningBullets mjx-container,
+#fdMeaningCount mjx-container,
+#fdMeaningScale mjx-container{
+  display:inline-block !important;
+  max-width:100% !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  vertical-align:middle !important;
+}
+#fdMeaningLead mjx-container[jax="SVG"] svg,
+#fdMeaningText mjx-container[jax="SVG"] svg,
+#fdMeaningCount mjx-container[jax="SVG"] svg,
+#fdMeaningScale mjx-container[jax="SVG"] svg{
+  max-width:100% !important;
+}
+
+
+/* ===== v9: stable dynamic equation display without slider MathJax breakage ===== */
+.fdFormula{
+  display:block;
+  font-family: "Times New Roman", Cambria, Georgia, serif;
+  font-size:20px;
+  line-height:1.45;
+  text-align:center;
+  margin:4px 0 10px;
+  color:var(--text-strong);
+}
+.fdInlineMath{
+  font-family:"Times New Roman", Cambria, Georgia, serif;
+  font-style:italic;
+  white-space:nowrap;
+}
+.fdMiniEq{
+  font-family:"Times New Roman", Cambria, Georgia, serif;
+  font-size:17px;
+  line-height:1.5;
+}
+.frac{
+  display:inline-block;
+  vertical-align:middle;
+  text-align:center;
+}
+.frac .top{
+  display:block;
+  border-bottom:1.5px solid currentColor;
+  padding:0 3px 1px;
+}
+.frac .bottom{
+  display:block;
+  padding:1px 3px 0;
+}
+
+
+/* ===== v11: textbook-style DOS band picture ===== */
+#dosCanvas{
+  min-height:520px;
+}
+@media(max-width:900px){
+  #dosCanvas{min-height:430px;}
+}
+
+
+/* ===== v17: derivation simulator ===== */
+.deriveGrid{align-items:start;}
+.deriveStep{margin-top:14px;}
+.deriveStep .eq{margin:12px 0 8px;}
+.deriveMetrics{margin-top:14px;}
+#deriveCanvas{width:100%;height:auto;border-radius:18px;background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--stroke);}
+
+
+/* ===== v18: cleaner derivation layout ===== */
+.deriveGrid{
+  display:grid;
+  grid-template-columns:1.03fr 1fr;
+  gap:18px;
+  align-items:start;
+}
+.deriveRightCard canvas{
+  display:block;
+  width:100%;
+  height:auto;
+}
+.deriveSummary{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin-top:14px;
+}
+.latexMetric span{
+  line-height:1.5;
+}
+.deriveInterp{
+  margin-top:12px;
+}
+#deriveMeaning{
+  margin-top:12px;
+}
+@media (max-width: 1100px){
+  .deriveGrid{grid-template-columns:1fr;}
+  .deriveSummary{grid-template-columns:1fr;}
+}
+
+
+/* ===== v19: robust LaTeX rendering for derivation cards ===== */
+.latexMetric{
+  min-height:104px;
+  overflow:hidden;
+}
+.latexMetric span{
+  display:block;
+  line-height:1.35;
+  font-size:15px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding-top:4px;
+}
+.latexMetric mjx-container{
+  max-width:100% !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+}
+#deriveMeaning mjx-container,
+#deriveInterp mjx-container{
+  max-width:100% !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+}
+#deriveMeaning{
+  line-height:1.65;
+}
+
+
+/* ===== v20: robust slider-updated LaTeX in derivation steps ===== */
+#deriveEq1 mjx-container,
+#deriveEq2 mjx-container,
+#deriveEq3 mjx-container,
+#deriveEq4 mjx-container,
+#deriveEq5 mjx-container{
+  max-width:100% !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+}
+.latexMetric mjx-container{
+  font-size:92% !important;
+}
+.deriveStep p mjx-container{
+  font-size:98% !important;
+}
+
+
+/* ===== v22: slider-release update behavior ===== */
+.releaseNote{
+  display:inline-block;
+  margin-top:6px;
+  color:var(--text-soft);
+  font-size:13px;
+  line-height:1.35;
+}
+
+
+.movedFoundationCard{
+  border:1.5px solid var(--stroke2);
+  box-shadow:0 18px 45px rgba(35,199,244,.10);
+}
+.movedFoundationCard .eq{font-size:16px;}
+
+/* ===== imported Fermi-DOS simulator iframe ===== */
+.embeddedSimulatorCard{
+  padding:12px;
+}
+.embeddedSimulatorFrame{
+  width:100%;
+  min-height:1200px;
+  height:92vh;
+  border:1px solid var(--stroke2);
+  border-radius:18px;
+  background:#06101d;
+  display:block;
+}
+@media(max-width:800px){
+  .embeddedSimulatorFrame{height:78vh;min-height:720px;}
+}
+
+</style>
+
+<style id="hubMainMenuStyle">
+.hubMainMenuButton{
+  position:fixed;
+  right:18px;
+  top:76px;
+  z-index:999999;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:11px 15px;
+  border-radius:999px;
+  border:1px solid rgba(56,215,255,.65);
+  background:linear-gradient(135deg,#38d7ff,#7f7cff);
+  color:#06131d !important;
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  font-size:14px;
+  font-weight:950;
+  text-decoration:none !important;
+  box-shadow:0 14px 34px rgba(0,0,0,.34);
+}
+.hubMainMenuButton:hover{
+  transform:translateY(-1px);
+  filter:brightness(1.06);
+}
+@media(max-width:760px){
+  .hubMainMenuButton{
+    top:auto;
+    right:14px;
+    bottom:14px;
+    font-size:13px;
+    padding:10px 13px;
+  }
+}
+@media print{
+  .hubMainMenuButton{display:none!important;}
+}
+</style>
+
+</head>
+
+<body>
+<header class="topbar">
+  <div class="logo">Si</div>
+  <div class="siteTitle">Basic Semiconductor Interactive Tutor</div>
+  <input id="search" class="searchBox" placeholder="Search topic"/>
+  <div class="topActions">
+    <button id="themeBtn" class="themeBtn" type="button">Bright</button>
+    <button class="printBtn" onclick="window.print()">Print</button>
+  </div>
+</header>
+
+<div class="layout">
+<aside class="sidebar">
+  <div class="chapterLabel"><span class="badge">B</span>Basic Semiconductor<br/>Probability → Carriers → Fermi Level</div>
+  <div class="navTitle">Navigation</div>
+  <div id="nav"></div>
+</aside>
+
+<main class="content">
+  <div class="hero">
+    <div class="heroInner">
+      <h1 id="title">Basic Semiconductor Physics</h1>
+      <p id="subtitle">A probability-centered home for semiconductor foundations: intrinsic and doped material, Boltzmann factor, Fermi-Dirac occupation, density of states, carrier concentration, and Fermi level.</p>
+      <div class="heroChips">
+        <span class="chip">Boltzmann probability</span>
+        <span class="chip">Fermi-Dirac function</span>
+        <span class="chip">DOS × occupation</span>
+        <span class="chip">Carrier concentration</span>
+        <span class="chip">Fermi level</span>
+        <span class="chip">Advanced simulator</span>
+      </div>
+    </div>
+    <div class="readerBar">
+      <button id="prevBtn" type="button">← Previous</button>
+      <div class="status"><span id="modeLabel">Single Section Mode</span><span id="progress">Page 1 of 10</span></div>
+      <button id="modeBtn" type="button">Full Chapter</button>
+      <button id="nextBtn" type="button">Next →</button>
+    </div>
+  </div>
+
+  <div id="sections">
+
+<section class="section" id="overview" data-title="1. Overview: The Probability Story">
+  <h2>1. Overview: The Probability Story</h2>
+
+<div class="card movedFoundationCard">
+  <h3>Moved from the PN Diode chapter: semiconductor foundations</h3>
+  <p>This Basic Semiconductor tutor is now the home for prerequisite concepts that were previously inside the PN diode chapter. Study these before PN-junction formation and bias.</p>
+  <div class="grid2">
+    <div class="mini">
+      <b>Intrinsic semiconductor</b>
+      <div class="eq">\[
+      n=p=n_i,\qquad
+      n_i=\sqrt{N_C N_V}\exp\!\left(-\frac{E_g}{2kT}\right)
+      \]</div>
+      <p>Pure material has equal thermally generated electrons and holes.</p>
+    </div>
+    <div class="mini">
+      <b>Doped semiconductor</b>
+      <div class="eq">\[
+      n\approx N_D,\quad p=\frac{n_i^2}{N_D},
+      \qquad
+      p\approx N_A,\quad n=\frac{n_i^2}{N_A}
+      \]</div>
+      <p>Doping makes one carrier type the majority carrier and suppresses the minority carrier.</p>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="mini">
+      <b>Fermi-Dirac probability</b>
+      <div class="eq">\[
+      f(E)=\frac{1}{1+\exp\!\left(\frac{E-E_F}{kT}\right)}
+      \]</div>
+      <p>The Fermi level controls the probability that a state is occupied.</p>
+    </div>
+    <div class="mini">
+      <b>Carrier concentration from probability</b>
+      <div class="eq">\[
+      n=\int_{E_C}^{\infty} g_C(E)f(E)\,dE,
+      \qquad
+      p=\int_{-\infty}^{E_V}g_V(E)[1-f(E)]\,dE
+      \]</div>
+      <p>Carrier concentration is density of states times occupation probability, integrated over energy.</p>
+    </div>
+  </div>
+</div>
+
+  <div class="card">
+    <p>The central idea of basic semiconductor physics is simple: <b>available energy states</b> tell us where electrons could go, and <b>probability</b> tells us how likely those states are occupied.</p>
+    <div class="eq">\[
+    \text{carrier concentration}=\int(\text{density of available states})(\text{occupation probability})\,dE
+    \]</div>
+    <p>For electrons in the conduction band, the concentration is found from the product \(g_C(E)f(E)\). For holes in the valence band, the concentration is found from \(g_V(E)[1-f(E)]\).</p>
+    <div class="grid3">
+      <div class="mini"><b>Density of states</b><br/>How many quantum states are available at energy \(E\).</div>
+      <div class="mini"><b>Occupation probability</b><br/>The probability that a state at energy \(E\) is occupied by an electron.</div>
+      <div class="mini"><b>Fermi level</b><br/>The energy reference that controls the occupation probability.</div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Learning path</h3>
+    <ol>
+      <li>Start with thermal energy \(kT\) and the Boltzmann factor.</li>
+      <li>Use probability to understand why high-energy states are less likely occupied.</li>
+      <li>Introduce Fermi-Dirac occupation for electrons.</li>
+      <li>Multiply occupation probability by density of states.</li>
+      <li>Integrate to obtain \(n\), \(p\), and \(n_i\).</li>
+      <li>Use charge neutrality to locate the Fermi level in doped semiconductors.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="section" id="thermal" data-title="2. Thermal Energy and the Boltzmann Factor">
+  <h2>2. Thermal Energy and the Boltzmann Factor</h2>
+  <div class="card">
+    <p>At temperature \(T\), particles exchange energy with the thermal environment. The natural energy scale is \(kT\), where \(k\) is Boltzmann's constant.</p>
+    <div class="eq">\[
+    kT \approx 0.0259\ \text{eV at }T=300\ \text{K}
+    \]</div>
+    <p>If a particle must gain an energy \(\Delta E\), the relative probability of that thermal excitation is approximately the Boltzmann factor:</p>
+    <div class="eq">\[
+    P(\Delta E)\propto \exp\!\left(-\frac{\Delta E}{kT}\right)
+    \]</div>
+    <div class="note"><b>Probability meaning:</b> every additional energy cost of about \(kT\) multiplies the probability by \(e^{-1}\approx0.37\). A gap of \(10kT\) is much less likely than a gap of \(1kT\).</div>
+  </div>
+
+  <div class="sim">
+    <div class="simHeader">
+      <div>
+        <h3>Interactive: Boltzmann factor</h3>
+        <p>Move temperature and energy separation. The plot shows why thermal excitation across larger energy gaps becomes exponentially unlikely.</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="control"><label>Temperature \(T\) <output id="boltzTOut">300 K</output></label><input id="boltzT" type="range" min="100" max="700" value="300" step="10"/></div>
+      <div class="control"><label>Energy gap \(\Delta E\) <output id="boltzEOut">0.20 eV</output></label><input id="boltzE" type="range" min="0.01" max="1.2" value="0.20" step="0.01"/></div>
+      <div class="control"><label>Compare mode <output id="boltzModeOut">Probability</output></label><select id="boltzMode"><option value="prob">Probability</option><option value="log">Log probability</option></select></div>
+      <div class="control"><label>Physical picture <output id="boltzCaseOut">Barrier crossing</output></label><select id="boltzCase"><option value="barrier">Barrier crossing</option><option value="levels">Two energy levels</option><option value="semiconductor">Electron excitation in semiconductor</option></select></div>
+    </div>
+    <canvas id="boltzCanvas" width="1100" height="430"></canvas>
+    <div class="metrics">
+      <div class="metric"><b>kT</b><span id="boltzKT">0.0259 eV</span></div>
+      <div class="metric"><b>ΔE/kT</b><span id="boltzRatio">7.73</span></div>
+      <div class="metric"><b>exp(-ΔE/kT)</b><span id="boltzProb">4.38e-4</span></div>
+      <div class="metric"><b>Interpretation</b><span id="boltzText">small</span></div>
+    </div>
+
+    <div class="meaningGrid">
+      <div class="meaningCard">
+        <h4>Physical meaning</h4>
+        <div id="boltzMeaningLead" class="meaningLead">
+          The Boltzmann factor is the fraction of particles that have enough thermal energy to reach a state that is \(\Delta E\) higher.
+        </div>
+        <p id="boltzMeaningText">At this setting, only a small fraction of particles can make the jump.</p>
+        <ul id="boltzMeaningBullets">
+          <li>Population ratio between higher and lower energy states</li>
+          <li>Chance of surmounting an energy barrier</li>
+          <li>Thermal excitation becomes exponentially harder as \(\Delta E\) increases</li>
+        </ul>
+      </div>
+      <div class="meaningCard">
+        <h4>Particle picture</h4>
+        <canvas id="boltzMeaningCanvas" class="smallCanvas" width="540" height="300"></canvas>
+        <p id="boltzMeaningCount" style="margin:10px 0 0;font-weight:700;"></p><p id="boltzMeaningScale" style="margin:4px 0 0;color:var(--text-soft);font-size:14px;line-height:1.45;"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="fermi-dirac" data-title="3. Fermi-Dirac Function">
+  <h2>3. Fermi-Dirac Function</h2>
+  <div class="card">
+    <p>Electrons are fermions, so each quantum state can hold only a limited number of electrons. The probability that an electron state at energy \(E\) is occupied is the Fermi-Dirac function:</p>
+    <div class="eq">\[
+    f(E)=\frac{1}{1+\exp\!\left(\frac{E-E_F}{kT}\right)}
+    \]</div>
+    <p>At \(E=E_F\), the probability is always \(f(E_F)=1/2\). Below \(E_F\), states are likely occupied. Above \(E_F\), states are less likely occupied.</p>
+    <div class="note"><b>Important correction:</b> the Fermi level is not a physical band by itself. It is an energy reference that controls electron occupation probability.</div>
+  </div>
+
+  <div class="sim">
+    <div class="simHeader">
+      <div>
+        <h3>Interactive: Fermi-Dirac probability</h3>
+        <p>Watch how temperature smooths the occupation probability and how moving \(E_F\) shifts the curve.</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="control"><label>Temperature <output id="fdTOut">300 K</output></label><input id="fdT" type="range" min="20" max="900" value="300" step="10"/></div>
+      <div class="control"><label>Fermi level \(E_F\) <output id="fdEFOut">0.00 eV</output></label><input id="fdEF" type="range" min="-0.8" max="0.8" value="0" step="0.02"/></div>
+      <div class="control"><label>Probe energy \(E\) <output id="fdEOut">0.20 eV</output></label><input id="fdE" type="range" min="-1" max="1" value="0.2" step="0.02"/></div>
+      <div class="control"><label>Physical picture <output id="fdPictureOut">Occupation</output></label><select id="fdPicture"><option value="occupation">Occupation of one state</option><option value="empty">Empty-state / hole view</option><option value="semiconductor">Semiconductor band edge</option></select></div>
+    </div>
+    <canvas id="fdCanvas" width="1100" height="430"></canvas>
+    <div class="metrics">
+      <div class="metric"><b>f(E)</b><span id="fdProb">4.36e-4</span></div>
+      <div class="metric"><b>1-f(E)</b><span id="fdHole">0.9996</span></div>
+      <div class="metric"><b>E − EF</b><span id="fdDiff">0.20 eV</span></div>
+      <div class="metric"><b>Meaning</b><span id="fdMeaning">unlikely electron</span></div>
+    </div>
+
+    <div class="meaningGrid" id="fdDynamicMeaningPanel">
+      <div class="meaningCard">
+        <h4>Physical meaning</h4>
+        <div id="fdMeaningLead" class="meaningLead">\(f(E)\) is the probability that an available quantum state at energy \(E\) is occupied by an electron.</div>
+        <p id="fdMeaningText">Move \(E\), \(E_F\), and \(T\) to see how \(f(E)\) and \(1-f(E)\) change.</p>
+        <ul id="fdMeaningBullets">
+          <li>Below \(E_F\), electron occupation is high.</li>
+          <li>Above \(E_F\), electron occupation is low.</li>
+          <li>At \(E=E_F\), occupation is exactly 50%.</li>
+        </ul>
+      </div>
+      <div class="meaningCard">
+        <h4>Energy-state picture</h4>
+        <canvas id="fdMeaningCanvas" class="smallCanvas" width="540" height="300"></canvas>
+        <p id="fdMeaningCount" style="margin:10px 0 0;font-weight:700;"></p>
+        <p id="fdMeaningScale" style="margin:4px 0 0;color:var(--text-soft);font-size:14px;line-height:1.45;"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="boltz-approx" data-title="4. Boltzmann Approximation">
+  <h2>4. Boltzmann Approximation</h2>
+  <div class="card">
+    <p>When an energy state is several \(kT\) above the Fermi level, the exponential term in the Fermi-Dirac denominator is much larger than 1. Then the Fermi-Dirac function becomes the Boltzmann approximation:</p>
+    <div class="eq">\[
+    E-E_F \gg kT
+    \quad\Longrightarrow\quad
+    f(E)\approx \exp\!\left(-\frac{E-E_F}{kT}\right)
+    \]</div>
+    <p>This approximation is the reason carrier concentration formulas often contain exponential terms. In nondegenerate semiconductors, the Fermi level is far enough from the band edge that Boltzmann statistics work well.</p>
+    <div class="grid2">
+      <div class="mini"><b>Exact probability</b><br/>\(f(E)=1/[1+\exp((E-E_F)/kT)]\)</div>
+      <div class="mini"><b>Approximate probability</b><br/>\(f(E)\approx\exp[-(E-E_F)/kT]\)</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="dos" data-title="5. Density of States and Occupation">
+  <h2>5. Density of States and Occupation</h2>
+  <div class="card">
+    <p>The density of states tells us how many allowed electron states exist per unit volume per unit energy. In a 3D parabolic band, the conduction-band density of states increases like a square root above \(E_C\).</p>
+    <div class="eq">\[
+    g_C(E)\propto \sqrt{E-E_C},\qquad E\ge E_C
+    \]</div>
+    <p>The electron concentration is not just the density of states and not just the probability. It is the product integrated over energy:</p>
+    <div class="eq">\[
+    n=\int_{E_C}^{\infty} g_C(E)f(E)\,dE
+    \]</div>
+    <p>For holes, use empty-state probability in the valence band:</p>
+    <div class="eq">\[
+    p=\int_{-\infty}^{E_V} g_V(E)[1-f(E)]\,dE
+    \]</div>
+  </div>
+
+  <div class="sim">
+    <div class="simHeader">
+      <div>
+        <h3>Interactive: DOS × occupation</h3>
+        <p>The shaded product represents which energies contribute most strongly to the electron concentration.</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="control"><label>Temperature <output id="dosTOut">300 K</output></label><input id="dosT" type="range" min="100" max="700" value="300" step="10"/></div>
+      <div class="control"><label>Fermi level <output id="dosEFOut">EF−Ei = 0.00 eV</output></label><input id="dosEF" type="range" min="-0.55" max="0.55" value="0" step="0.01"/></div>
+      <div class="control"><label>View <output id="dosViewOut">band picture</output></label><select id="dosView"><option value="band">band + DOS + carrier areas</option><option value="chain">stacked: g, probability, product</option><option value="overlay">overlay all curves</option><option value="product">product only</option></select></div>
+      <div class="control"><label>Band edge <output id="dosBandOut">conduction</output></label><select id="dosBand"><option value="conduction">conduction band: gC(E), f(E)</option><option value="valence">valence band: gV(E), 1−f(E)</option></select></div>
+    </div>
+    <canvas id="dosCanvas" width="1100" height="520"></canvas>
+    <div class="note" id="dosExplain" style="font-size:15px;margin-top:12px;">
+      The band-picture view shows both available states \(g(E)\), the Fermi-Dirac probability, and the shaded electron/hole carrier contributions on one energy diagram.
+    </div>
+    <div class="metrics">
+      <div class="metric"><b>Approx. ratio</b><span id="dosN">6.33e-5</span></div>
+      <div class="metric"><b>Fermi offset</b><span id="dosDiff">-0.25 eV</span></div>
+      <div class="metric"><b>Regime</b><span id="dosRegime">nondegenerate</span></div>
+      <div class="metric"><b>Peak energy</b><span id="dosPeak">near EC+kT/2</span></div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section" id="advanced-fermi-dos" data-title="Advanced Fermi-DOS Concentration Simulator">
+  <h2>Advanced Fermi-DOS Concentration Simulator</h2>
+  <div class="card">
+    <p>This imported simulator is combined as an embedded, self-contained module. It keeps its own tabs, controls, plots, MathJax equations, and JavaScript while staying inside the Basic Semiconductor tutor. Scroll inside the embedded frame to use all simulator sections.</p>
+    <div class="note"><b>Use this when you want the full simulator:</b> Fermi-Dirac probability, density of states, carrier concentration, donor/acceptor statistics, freeze-out, degeneracy, and temperature excitation.</div>
+  </div>
+  <div class="card embeddedSimulatorCard">
+    <iframe class="embeddedSimulatorFrame" title="Fermi-Dirac DOS Carrier Concentration Simulator" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot; /&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+&lt;title&gt;Fermi-Dirac, Density of States, and Carrier Concentration&lt;/title&gt;
+&lt;script&gt;
+window.MathJax={tex:{inlineMath:[[&quot;\\(&quot;,&quot;\\)&quot;],[&quot;$&quot;,&quot;$&quot;]],displayMath:[[&quot;\\[&quot;,&quot;\\]&quot;]]},svg:{fontCache:&quot;global&quot;}};
+&lt;/script&gt;
+&lt;script defer src=&quot;https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js&quot;&gt;&lt;/script&gt;
+&lt;style&gt;
+:root{--bg:#06101d;--panel:#0d1b2e;--panel2:#071625;--line:#264463;--text:#eef5ff;--muted:#aec2da;--cyan:#27d9ff;--blue:#2d8cff;--pink:#ff3aa6;--yellow:#ffd91a;--green:#34f06c;--orange:#ff8b21;--red:#ff405e}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#132541,#06101d 45%,#030914);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;line-height:1.5}header{padding:22px 30px 16px;border-bottom:1px solid var(--line);background:rgba(8,18,32,.95);position:sticky;top:0;z-index:20;backdrop-filter:blur(8px)}h1{margin:0;font-size:42px;font-weight:900;letter-spacing:-1.4px}.subtitle{margin-top:8px;color:var(--muted);max-width:1200px}.tabs{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.tab{border:1px solid var(--line);background:#0a1728;color:var(--text);border-radius:18px;padding:10px 17px;font-weight:800;cursor:pointer}.tab.active{background:#49adff;color:#04111d;border-color:#49adff}.wrap{max-width:1500px;margin:0 auto;padding:22px 24px 42px}.section{display:none}.section.active{display:block}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.grid3{display:grid;grid-template-columns:390px 1fr 520px;gap:18px}.card{background:linear-gradient(180deg,rgba(16,32,53,.98),rgba(7,18,31,.98));border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:0 18px 55px rgba(0,0,0,.30)}.card h2{margin:0 0 14px;font-size:22px}.card h3{margin:0 0 12px;font-size:18px}.small{font-size:14px;color:var(--muted)}.eq{border:1px solid #2e5b85;background:#081624;border-radius:10px;padding:14px;margin:12px 0;text-align:center;overflow-x:auto}.note{background:#08283a;border-left:5px solid var(--cyan);border-radius:9px;padding:13px;margin:14px 0}.remember{border:1px solid #796c00;background:#1d1a08;border-radius:10px;padding:14px}.inputrow{display:grid;grid-template-columns:1fr 120px;gap:10px;align-items:center;margin:10px 0}.inputrow input,.inputrow select{width:100%;padding:10px;border-radius:8px;border:1px solid #315477;background:#071527;color:white}.btn{border:0;border-radius:10px;padding:10px 16px;font-weight:900;cursor:pointer;background:#2ad7f3;color:#04111d;margin:4px}.btn.secondary{background:#21395e;color:#e7f2ff}.metric{border:1px solid #24415f;border-radius:10px;padding:10px;background:#061523}.metric b{display:block;color:var(--yellow);font-size:20px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.plot{width:100%;height:350px;border:1px solid var(--line);border-radius:12px;background:#081523}.plot.tall{height:430px}.bandBox{height:520px;border:1px solid var(--line);border-radius:14px;background:#081523;overflow:hidden}.bandSvg{width:100%;height:100%;display:block}.legendDot{display:inline-block;width:16px;height:16px;border-radius:50%;margin-right:8px;vertical-align:-2px}.occupied{background:var(--blue);box-shadow:0 0 12px var(--blue)}.empty{border:1.5px solid #d4e7ff}.green{color:var(--green)}.orange{color:var(--orange)}.blue{color:#49adff}.pink{color:#ff4cb2}.yellow{color:var(--yellow)}.red{color:var(--red)}.table{width:100%;border-collapse:collapse;margin-top:10px}.table th,.table td{border:1px solid #284863;padding:9px;text-align:left}.table th{background:#112742;color:#cde8ff}.footer{text-align:center;color:#b9c8dc;padding:24px}.miniRow{display:grid;grid-template-columns:1fr 1fr 1fr 260px;gap:15px}.miniPlot{width:100%;height:90px}.pill{display:inline-block;background:#08243b;border:1px solid #285477;color:#bfe3ff;border-radius:999px;padding:4px 10px;margin:3px}.material{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}@media(max-width:1200px){.grid3,.grid,.miniRow,.three{grid-template-columns:1fr}.plot,.plot.tall{height:320px}h1{font-size:32px}.wrap{padding:14px}}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body data-version=&quot;scientific-notation-safe-v27&quot;&gt;
+&lt;header&gt;
+&lt;h1&gt;Fermi-Dirac, Density of States, and Carrier Concentration&lt;/h1&gt;
+&lt;div class=&quot;subtitle&quot;&gt;Complete semiconductor statistics teaching simulator: probability concept, Fermi energy level, density of states, carrier concentration, donors/acceptors, Boltzmann approximation, freeze-out, degeneracy, temperature excitation, and worked calculations.&lt;/div&gt;
+&lt;div class=&quot;tabs&quot; id=&quot;tabs&quot;&gt;&lt;/div&gt;
+&lt;/header&gt;
+&lt;main class=&quot;wrap&quot;&gt;
+&lt;section id=&quot;concept&quot; class=&quot;section active&quot;&gt;
+ &lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Concept map&lt;/h2&gt;&lt;p&gt;The central idea is that carrier concentration is determined by both the number of available states and the probability that each state is occupied.&lt;/p&gt;&lt;div class=&quot;eq&quot;&gt;\[\text{occupied states}=g(E)f_F(E)\]&lt;/div&gt;&lt;div class=&quot;eq&quot;&gt;\[n_0=\int_{E_c}^{\infty}g_c(E)f_F(E)\,dE,\quad p_0=\int_{-\infty}^{E_v}g_v(E)[1-f_F(E)]\,dE\]&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;What is the Fermi energy?&lt;/h2&gt;&lt;p&gt;The Fermi energy level \(E_F\) is the energy reference that controls occupation probability. At any temperature, a state at \(E=E_F\) has a 50% probability of being occupied.&lt;/p&gt;&lt;div class=&quot;eq&quot;&gt;\[f_F(E_F)=\frac{1}{2}\]&lt;/div&gt;&lt;p&gt;In n-type material, \(E_F\) moves toward \(E_c\). In p-type material, \(E_F\) moves toward \(E_v\).&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;
+ &lt;div class=&quot;grid&quot; style=&quot;margin-top:18px&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Learning flow&lt;/h3&gt;&lt;ol&gt;&lt;li&gt;Probability and quantum states&lt;/li&gt;&lt;li&gt;Fermi-Dirac distribution&lt;/li&gt;&lt;li&gt;Density of states&lt;/li&gt;&lt;li&gt;Carrier concentration&lt;/li&gt;&lt;li&gt;Fermi-level motion with doping&lt;/li&gt;&lt;li&gt;Donor/acceptor statistics and freeze-out&lt;/li&gt;&lt;/ol&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Key visual rule&lt;/h3&gt;&lt;p&gt;Increasing temperature does not create new states. It changes occupation probability: some electrons are excited upward, leaving empty lower-energy states behind.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;/section&gt;
+&lt;section id=&quot;prob&quot; class=&quot;section&quot;&gt;&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Probability and quantum states&lt;/h2&gt;&lt;p&gt;A quantum state is an available allowed energy state. Electron occupancy is probabilistic.&lt;/p&gt;&lt;div class=&quot;eq&quot;&gt;\[0\le f_F(E)\le1\]&lt;/div&gt;&lt;p&gt;Because of the Pauli exclusion principle, a quantum state cannot accept unlimited electrons. This is why semiconductor statistics is different from ordinary classical particles.&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Occupied and empty probabilities&lt;/h2&gt;&lt;div class=&quot;eq&quot;&gt;\[P(\text{occupied})=f_F(E)\]&lt;/div&gt;&lt;div class=&quot;eq&quot;&gt;\[P(\text{empty})=1-f_F(E)\]&lt;/div&gt;&lt;p&gt;Hole concentration in the valence band uses the empty-state probability \(1-f_F(E)\).&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot; style=&quot;margin-top:18px&quot;&gt;&lt;h3&gt;At the Fermi energy&lt;/h3&gt;&lt;div class=&quot;eq&quot;&gt;\[E=E_F\Rightarrow f_F(E)=\frac{1}{1+e^0}=\frac12\]&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
+&lt;section id=&quot;fermi&quot; class=&quot;section&quot;&gt;&lt;div class=&quot;grid3&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Controls&lt;/h2&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;Temperature \(T\) (K)&lt;/label&gt;&lt;input id=&quot;fdT&quot; type=&quot;number&quot; value=&quot;300&quot;&gt;&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;Fermi energy \(E_F\) (eV)&lt;/label&gt;&lt;input id=&quot;fdEF&quot; type=&quot;number&quot; value=&quot;0&quot; step=&quot;0.05&quot;&gt;&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;Range (eV)&lt;/label&gt;&lt;input id=&quot;fdRange&quot; type=&quot;number&quot; value=&quot;0.35&quot; step=&quot;0.05&quot;&gt;&lt;/div&gt;&lt;button class=&quot;btn&quot; onclick=&quot;updateFD()&quot;&gt;Update Plot&lt;/button&gt;&lt;button class=&quot;btn secondary&quot; onclick=&quot;quickFD(300)&quot;&gt;300 K&lt;/button&gt;&lt;button class=&quot;btn secondary&quot; onclick=&quot;quickFD(600)&quot;&gt;600 K&lt;/button&gt;&lt;button class=&quot;btn secondary&quot; onclick=&quot;quickFD(77)&quot;&gt;77 K&lt;/button&gt;&lt;div class=&quot;two&quot; style=&quot;margin-top:12px&quot;&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;\(k_BT\)&lt;/span&gt;&lt;b id=&quot;fdKT&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;\(f_F(E_F+3k_BT)\)&lt;/span&gt;&lt;b id=&quot;fd3k&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot; style=&quot;grid-column:span 2&quot;&gt;&lt;h2&gt;Fermi-Dirac probability&lt;/h2&gt;&lt;svg id=&quot;fdPlot&quot; class=&quot;plot tall&quot;&gt;&lt;/svg&gt;&lt;p class=&quot;small&quot;&gt;Solid: \(f_F(E)\), dashed: \(1-f_F(E)\), dotted: Boltzmann approximation.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;grid&quot; style=&quot;margin-top:18px&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Fermi-Dirac function&lt;/h3&gt;&lt;div class=&quot;eq&quot;&gt;\[f_F(E)=\frac{1}{1+\exp\left(\frac{E-E_F}{k_BT}\right)}\]&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Boltzmann approximation&lt;/h3&gt;&lt;div class=&quot;eq&quot;&gt;\[E-E_F\gtrsim3k_BT\Rightarrow f_F(E)\approx e^{-(E-E_F)/k_BT}\]&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
+&lt;section id=&quot;dos&quot; class=&quot;section&quot;&gt;&lt;div class=&quot;grid3&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Density of states&lt;/h2&gt;&lt;div class=&quot;eq&quot;&gt;\[g_c(E)\propto \sqrt{E-E_c}\]&lt;/div&gt;&lt;div class=&quot;eq&quot;&gt;\[g_v(E)\propto \sqrt{E_v-E}\]&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;Bandgap \(E_g\) (eV)&lt;/label&gt;&lt;input id=&quot;dosEg&quot; value=&quot;1.12&quot; type=&quot;number&quot; step=&quot;0.01&quot;&gt;&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;\(m_n^*/m_0\)&lt;/label&gt;&lt;input id=&quot;dosMn&quot; value=&quot;1.08&quot; type=&quot;number&quot; step=&quot;0.01&quot;&gt;&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;\(m_p^*/m_0\)&lt;/label&gt;&lt;input id=&quot;dosMp&quot; value=&quot;0.56&quot; type=&quot;number&quot; step=&quot;0.01&quot;&gt;&lt;/div&gt;&lt;button class=&quot;btn&quot; onclick=&quot;updateDOS()&quot;&gt;Update DOS&lt;/button&gt;&lt;div class=&quot;material&quot;&gt;&lt;button class=&quot;btn secondary&quot; onclick=&quot;setMat(&#x27;Si&#x27;)&quot;&gt;Si&lt;/button&gt;&lt;button class=&quot;btn secondary&quot; onclick=&quot;setMat(&#x27;GaAs&#x27;)&quot;&gt;GaAs&lt;/button&gt;&lt;button class=&quot;btn secondary&quot; onclick=&quot;setMat(&#x27;Ge&#x27;)&quot;&gt;Ge&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;two&quot; style=&quot;margin-top:12px&quot;&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;Band edges&lt;/span&gt;&lt;b id=&quot;dosEdges&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;Shape&lt;/span&gt;&lt;b&gt;\(\sqrt{\Delta E}\)&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot; style=&quot;grid-column:span 2&quot;&gt;&lt;h2&gt;Conduction and valence DOS&lt;/h2&gt;&lt;svg id=&quot;dosPlot&quot; class=&quot;plot tall&quot;&gt;&lt;/svg&gt;&lt;p class=&quot;small&quot;&gt;No allowed states exist inside the forbidden band: \(g(E)=0\) for \(E_v&lt;E&lt;E_c\).&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;grid&quot; style=&quot;margin-top:18px&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Physical meaning&lt;/h3&gt;&lt;p&gt;The density of states tells how many quantum states are available per unit energy and per unit volume.&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Effective mass&lt;/h3&gt;&lt;p&gt;A larger effective mass increases the DOS because the band curvature is smaller and more states crowd near the band edge.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
+&lt;section id=&quot;carrier&quot; class=&quot;section&quot;&gt;&lt;div class=&quot;grid3&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Carrier concentration&lt;/h2&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;Material&lt;/label&gt;&lt;select id=&quot;ccMat&quot; onchange=&quot;loadCCMat()&quot;&gt;&lt;option&gt;Si&lt;/option&gt;&lt;option&gt;GaAs&lt;/option&gt;&lt;option&gt;Ge&lt;/option&gt;&lt;/select&gt;&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;Temperature (K)&lt;/label&gt;&lt;input id=&quot;ccT&quot; value=&quot;300&quot; type=&quot;number&quot;&gt;&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;Bandgap \(E_g\) (eV)&lt;/label&gt;&lt;input id=&quot;ccEg&quot; value=&quot;1.12&quot; type=&quot;number&quot;&gt;&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;\(N_c\) (cm\(^{-3}\))&lt;/label&gt;&lt;input id=&quot;ccNc&quot; value=&quot;2.8e19&quot;&gt;&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;\(N_v\) (cm\(^{-3}\))&lt;/label&gt;&lt;input id=&quot;ccNv&quot; value=&quot;1.04e19&quot;&gt;&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;\(E_F-E_i\) (eV)&lt;/label&gt;&lt;input id=&quot;ccDE&quot; value=&quot;0&quot; type=&quot;number&quot; step=&quot;0.01&quot;&gt;&lt;/div&gt;&lt;button class=&quot;btn&quot; onclick=&quot;normalizeCarrierSciInputs(); updateCarrier()&quot;&gt;Calculate&lt;/button&gt;&lt;div class=&quot;two&quot; style=&quot;margin-top:12px&quot;&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;\(n_i\)&lt;/span&gt;&lt;b id=&quot;ccNi&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;\(n_0\)&lt;/span&gt;&lt;b id=&quot;ccN&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;\(p_0\)&lt;/span&gt;&lt;b id=&quot;ccP&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;\(n_0p_0\)&lt;/span&gt;&lt;b id=&quot;ccNP&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot; style=&quot;grid-column:span 2&quot;&gt;&lt;h2&gt;Occupied states and carrier concentration&lt;/h2&gt;&lt;svg id=&quot;carrierPlot&quot; class=&quot;plot tall&quot;&gt;&lt;/svg&gt;&lt;p class=&quot;small&quot;&gt;Blue area: electron contribution \(g_c(E)f_F(E)\). Pink area: hole contribution \(g_v(E)[1-f_F(E)]\).&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;grid&quot; style=&quot;margin-top:18px&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Electron concentration&lt;/h3&gt;&lt;div class=&quot;eq&quot;&gt;\[n_0=N_c\exp\left[-\frac{E_c-E_F}{k_BT}\right]\]&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Hole concentration&lt;/h3&gt;&lt;div class=&quot;eq&quot;&gt;\[p_0=N_v\exp\left[-\frac{E_F-E_v}{k_BT}\right]\]&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
+&lt;section id=&quot;eflevel&quot; class=&quot;section&quot;&gt;&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Position of the Fermi energy level&lt;/h2&gt;&lt;p&gt;The Fermi level moves with doping because the majority-carrier concentration changes exponentially with \(E_F\).&lt;/p&gt;&lt;div class=&quot;eq&quot;&gt;\[E_c-E_F=k_BT\ln\left(\frac{N_c}{n_0}\right)\]&lt;/div&gt;&lt;div class=&quot;eq&quot;&gt;\[E_F-E_v=k_BT\ln\left(\frac{N_v}{p_0}\right)\]&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;Type&lt;/label&gt;&lt;select id=&quot;efType&quot; onchange=&quot;updateEFLevel()&quot;&gt;&lt;option value=&quot;n&quot;&gt;n-type&lt;/option&gt;&lt;option value=&quot;p&quot;&gt;p-type&lt;/option&gt;&lt;option value=&quot;i&quot;&gt;intrinsic&lt;/option&gt;&lt;/select&gt;&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;Doping (cm\(^{-3}\))&lt;/label&gt;&lt;input id=&quot;efDop&quot; value=&quot;1e16&quot; oninput=&quot;updateEFLevel()&quot;&gt;&lt;/div&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;Calculated \(E_F-E_i\)&lt;/span&gt;&lt;b id=&quot;efMetric&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Band diagram&lt;/h2&gt;&lt;svg id=&quot;efPlot&quot; class=&quot;plot tall&quot;&gt;&lt;/svg&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot; style=&quot;margin-top:18px&quot;&gt;&lt;h3&gt;Compensated semiconductor&lt;/h3&gt;&lt;p&gt;For compensation, replace donor or acceptor concentration by the net effective concentration: \(N_d-N_a\) for n-type and \(N_a-N_d\) for p-type.&lt;/p&gt;&lt;/div&gt;&lt;/section&gt;
+&lt;section id=&quot;donor&quot; class=&quot;section&quot;&gt;&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Statistics of donors and acceptors&lt;/h2&gt;&lt;p&gt;Donor and acceptor states have their own occupation probabilities. At low temperature, carriers can freeze out in impurity levels; at room temperature many shallow impurities are nearly fully ionized.&lt;/p&gt;&lt;div class=&quot;eq&quot;&gt;\[n_d=\frac{N_d}{1+\frac12\exp\left(\frac{E_d-E_F}{k_BT}\right)}\]&lt;/div&gt;&lt;div class=&quot;eq&quot;&gt;\[p_a=\frac{N_a}{1+\frac14\exp\left(\frac{E_F-E_a}{k_BT}\right)}\]&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;Temperature (K)&lt;/label&gt;&lt;input id=&quot;daT&quot; value=&quot;300&quot; type=&quot;number&quot; oninput=&quot;updateDA()&quot;&gt;&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;Donor ionization energy (eV)&lt;/label&gt;&lt;input id=&quot;daEd&quot; value=&quot;0.045&quot; type=&quot;number&quot; step=&quot;0.001&quot; oninput=&quot;updateDA()&quot;&gt;&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;Acceptor ionization energy (eV)&lt;/label&gt;&lt;input id=&quot;daEa&quot; value=&quot;0.045&quot; type=&quot;number&quot; step=&quot;0.001&quot; oninput=&quot;updateDA()&quot;&gt;&lt;/div&gt;&lt;div class=&quot;two&quot;&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;Donor occupied&lt;/span&gt;&lt;b id=&quot;daDon&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;Donor ionized&lt;/span&gt;&lt;b id=&quot;daDonIon&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;Acceptor occupied&lt;/span&gt;&lt;b id=&quot;daAcc&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;Acceptor ionized&lt;/span&gt;&lt;b id=&quot;daAccIon&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Freeze-out and ionization&lt;/h2&gt;&lt;svg id=&quot;daPlot&quot; class=&quot;plot tall&quot;&gt;&lt;/svg&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
+&lt;section id=&quot;boltz&quot; class=&quot;section&quot;&gt;&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Boltzmann approximation and freeze-out&lt;/h2&gt;&lt;p&gt;The Boltzmann approximation is valid when the state energy is several \(k_BT\) above the Fermi energy.&lt;/p&gt;&lt;div class=&quot;eq&quot;&gt;\[f_F(E)\approx \exp\left[-\frac{E-E_F}{k_BT}\right]\]&lt;/div&gt;&lt;div class=&quot;eq&quot;&gt;\[E-E_F\approx 3k_BT\quad \Rightarrow\quad \text{about 5% error}\]&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Error plot&lt;/h2&gt;&lt;svg id=&quot;boltzPlot&quot; class=&quot;plot tall&quot;&gt;&lt;/svg&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
+&lt;section id=&quot;degenerate&quot; class=&quot;section&quot;&gt;&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Degenerate semiconductor&lt;/h2&gt;&lt;p&gt;At very high doping, \(E_F\) can enter the conduction band for degenerate n-type material or the valence band for degenerate p-type material. Then the simple Boltzmann approximation is no longer accurate.&lt;/p&gt;&lt;div class=&quot;eq&quot;&gt;\[N_d \text{ very large}\Rightarrow E_F\ge E_c\]&lt;/div&gt;&lt;div class=&quot;eq&quot;&gt;\[N_a \text{ very large}\Rightarrow E_F\le E_v\]&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Degenerate band diagram&lt;/h2&gt;&lt;svg id=&quot;degPlot&quot; class=&quot;plot tall&quot;&gt;&lt;/svg&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
+&lt;section id=&quot;temp&quot; class=&quot;section&quot;&gt;&lt;div class=&quot;grid3&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Temperature &amp; Controls&lt;/h2&gt;&lt;label&gt;Temperature \(T\) (K)&lt;/label&gt;&lt;input id=&quot;tempSlider&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1200&quot; value=&quot;900&quot; style=&quot;width:100%&quot; oninput=&quot;updateTempTab()&quot;&gt;&lt;div class=&quot;metric&quot;&gt;&lt;b id=&quot;tempRead&quot;&gt;900 K&lt;/b&gt;&lt;/div&gt;&lt;label&gt;Fermi energy level \(E_F\) (eV)&lt;/label&gt;&lt;input id=&quot;efSlider&quot; type=&quot;range&quot; min=&quot;-1&quot; max=&quot;1&quot; step=&quot;0.01&quot; value=&quot;0.20&quot; style=&quot;width:100%&quot; oninput=&quot;updateTempTab()&quot;&gt;&lt;div class=&quot;metric&quot;&gt;&lt;b id=&quot;efRead&quot;&gt;0.20 eV&lt;/b&gt;&lt;/div&gt;&lt;button class=&quot;btn&quot; onclick=&quot;playTemp()&quot;&gt;▶ Play&lt;/button&gt;&lt;button class=&quot;btn secondary&quot; onclick=&quot;stopTemp()&quot;&gt;Pause&lt;/button&gt;&lt;button class=&quot;btn secondary&quot; onclick=&quot;resetTemp()&quot;&gt;Reset&lt;/button&gt;&lt;div class=&quot;note&quot;&gt;&lt;b&gt;Visual rule:&lt;/b&gt; increasing \(T\) changes the occupation probability. Electrons near \(E_F\) are promoted to higher energy states and leave empty lower states behind. The Fermi-Dirac curve becomes smoother.&lt;/div&gt;&lt;p&gt;&lt;span class=&quot;legendDot occupied&quot;&gt;&lt;/span&gt;Occupied state&lt;/p&gt;&lt;p&gt;&lt;span class=&quot;legendDot empty&quot;&gt;&lt;/span&gt;Empty state&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Discrete Energy Levels&lt;/h2&gt;&lt;div class=&quot;bandBox&quot;&gt;&lt;svg id=&quot;tempSvg&quot; class=&quot;bandSvg&quot;&gt;&lt;/svg&gt;&lt;/div&gt;&lt;p class=&quot;small&quot;&gt;Blue circles are occupied states. Empty circles are available states with no electron. Occupied/empty circles update with temperature. Lower-energy empty states indicate electrons promoted to higher levels.&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Fermi-Dirac Distribution \(f_F(E)\)&lt;/h2&gt;&lt;svg id=&quot;tempPlot&quot; class=&quot;plot&quot;&gt;&lt;/svg&gt;&lt;div class=&quot;eq&quot;&gt;\[f_F(E)=\frac{1}{1+\exp\left(\frac{E-E_F}{k_BT}\right)}\]&lt;/div&gt;&lt;div class=&quot;two&quot;&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;Current values&lt;/span&gt;&lt;b id=&quot;tempVals&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;At selected \(E=0.40\,\text{eV}\)&lt;/span&gt;&lt;b id=&quot;selVals&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot; style=&quot;margin-top:18px&quot;&gt;&lt;h2&gt;Thermal excitation and probability&lt;/h2&gt;&lt;div class=&quot;miniRow&quot;&gt;&lt;div&gt;&lt;b&gt;Low temperature&lt;/b&gt;&lt;p class=&quot;small&quot;&gt;Electrons fill lower states. \(f_F(E)\) is almost a step.&lt;/p&gt;&lt;svg id=&quot;mini0&quot; class=&quot;miniPlot&quot;&gt;&lt;/svg&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;As temperature increases&lt;/b&gt;&lt;p class=&quot;small&quot;&gt;Some electrons gain energy and move upward, leaving holes below.&lt;/p&gt;&lt;svg id=&quot;mini1&quot; class=&quot;miniPlot&quot;&gt;&lt;/svg&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;Very high temperature&lt;/b&gt;&lt;p class=&quot;small&quot;&gt;Occupation changes gradually over a wider energy range.&lt;/p&gt;&lt;svg id=&quot;mini2&quot; class=&quot;miniPlot&quot;&gt;&lt;/svg&gt;&lt;/div&gt;&lt;div class=&quot;remember&quot;&gt;&lt;b class=&quot;yellow&quot;&gt;Remember&lt;/b&gt;&lt;p&gt;Temperature changes probabilities, not the number of available states.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;
+&lt;section id=&quot;examples&quot; class=&quot;section&quot;&gt;&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Worked example: Fermi level position&lt;/h2&gt;&lt;p&gt;For n-type silicon at 300 K:&lt;/p&gt;&lt;div class=&quot;eq&quot;&gt;\[E_c-E_F=k_BT\ln\left(\frac{N_c}{N_d}\right)\]&lt;/div&gt;&lt;div class=&quot;inputrow&quot;&gt;&lt;label&gt;\(N_d\) (cm\(^{-3}\))&lt;/label&gt;&lt;input id=&quot;exNd&quot; value=&quot;1e16&quot; oninput=&quot;updateExamples()&quot;&gt;&lt;/div&gt;&lt;div class=&quot;metric&quot;&gt;&lt;span class=&quot;small&quot;&gt;Result&lt;/span&gt;&lt;b id=&quot;ex1&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;Boltzmann validity example&lt;/h2&gt;&lt;p&gt;If the acceptable error is about 5%, use:&lt;/p&gt;&lt;div class=&quot;eq&quot;&gt;\[E-E_F\approx k_BT\ln(1/0.05)\approx3k_BT\]&lt;/div&gt;&lt;p&gt;At \(T=300\,K\), \(3k_BT\approx0.0777\,eV\).&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;card&quot; style=&quot;margin-top:18px&quot;&gt;&lt;h2&gt;Useful material values at 300 K&lt;/h2&gt;&lt;table class=&quot;table&quot;&gt;&lt;tr&gt;&lt;th&gt;Material&lt;/th&gt;&lt;th&gt;\(E_g\) (eV)&lt;/th&gt;&lt;th&gt;\(N_c\) (cm\(^{-3}\))&lt;/th&gt;&lt;th&gt;\(N_v\) (cm\(^{-3}\))&lt;/th&gt;&lt;th&gt;\(m_n^*/m_0\)&lt;/th&gt;&lt;th&gt;\(m_p^*/m_0\)&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Silicon&lt;/td&gt;&lt;td&gt;1.12&lt;/td&gt;&lt;td&gt;2.8×10¹⁹&lt;/td&gt;&lt;td&gt;1.04×10¹⁹&lt;/td&gt;&lt;td&gt;1.08&lt;/td&gt;&lt;td&gt;0.56&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;GaAs&lt;/td&gt;&lt;td&gt;1.42&lt;/td&gt;&lt;td&gt;4.7×10¹⁷&lt;/td&gt;&lt;td&gt;7.0×10¹⁸&lt;/td&gt;&lt;td&gt;0.067&lt;/td&gt;&lt;td&gt;0.48&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Germanium&lt;/td&gt;&lt;td&gt;0.66&lt;/td&gt;&lt;td&gt;1.04×10¹⁹&lt;/td&gt;&lt;td&gt;6.0×10¹⁸&lt;/td&gt;&lt;td&gt;0.55&lt;/td&gt;&lt;td&gt;0.37&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/div&gt;&lt;/section&gt;
+&lt;div class=&quot;footer&quot;&gt;Semiconductor statistics simulator for solid-state electronics instruction.&lt;/div&gt;
+&lt;/main&gt;
+&lt;script&gt;
+const $=id=&gt;document.getElementById(id), kB=8.617333262e-5;let timer=null;const tabs=[[&#x27;concept&#x27;,&#x27;Concept Map&#x27;],[&#x27;prob&#x27;,&#x27;Probability &amp; Quantum States&#x27;],[&#x27;fermi&#x27;,&#x27;Fermi-Dirac&#x27;],[&#x27;dos&#x27;,&#x27;Density of States&#x27;],[&#x27;carrier&#x27;,&#x27;Carrier Concentration&#x27;],[&#x27;eflevel&#x27;,&#x27;Fermi Energy Level&#x27;],[&#x27;donor&#x27;,&#x27;Donors &amp; Acceptors&#x27;],[&#x27;boltz&#x27;,&#x27;Boltzmann &amp; Freeze-Out&#x27;],[&#x27;degenerate&#x27;,&#x27;Degenerate Semiconductor&#x27;],[&#x27;temp&#x27;,&#x27;Temperature Animation&#x27;],[&#x27;examples&#x27;,&#x27;Worked Examples&#x27;]];
+function initTabs(){const t=$(&#x27;tabs&#x27;);tabs.forEach(([id,name])=&gt;{let b=document.createElement(&#x27;button&#x27;);b.className=&#x27;tab&#x27;+(id===&#x27;concept&#x27;?&#x27; active&#x27;:&#x27;&#x27;);b.textContent=name;b.onclick=()=&gt;showTab(id);t.appendChild(b)})}
+function showTab(id){document.querySelectorAll(&#x27;.section&#x27;).forEach(s=&gt;s.classList.remove(&#x27;active&#x27;));$(id).classList.add(&#x27;active&#x27;);document.querySelectorAll(&#x27;.tab&#x27;).forEach((b,i)=&gt;b.classList.toggle(&#x27;active&#x27;,tabs[i][0]===id));setTimeout(()=&gt;{updateAll();if(window.MathJax)MathJax.typesetPromise()},30)}
+function fd(E,EF,T){if(T&lt;=0)return E&lt;EF?1:(E===EF?.5:0);let x=(E-EF)/(kB*T);if(x&gt;80)return 0;if(x&lt;-80)return 1;return 1/(1+Math.exp(x))}function sci(x){if(!isFinite(x))return &#x27;—&#x27;;let e=Math.floor(Math.log10(Math.abs(x)||1));let m=x/Math.pow(10,e);return `${m.toFixed(2)}×10^${e}`}function fmt(x){return Math.abs(x)&lt;.01?x.toExponential(2):x.toFixed(3)}
+function svgPlot(id,xs,series,opt={}){const svg=$(id),W=svg.clientWidth||600,H=svg.clientHeight||350,p={l:55,r:20,t:25,b:45},xmin=opt.xmin??Math.min(...xs),xmax=opt.xmax??Math.max(...xs),ymin=opt.ymin??0,ymax=opt.ymax??1;let X=x=&gt;p.l+(x-xmin)/(xmax-xmin)*(W-p.l-p.r),Y=y=&gt;H-p.b-(y-ymin)/(ymax-ymin)*(H-p.t-p.b);let html=&#x27;&#x27;;for(let i=0;i&lt;=5;i++){let x=xmin+(xmax-xmin)*i/5,xx=X(x);html+=`&lt;line x1=&quot;${xx}&quot; y1=&quot;${p.t}&quot; x2=&quot;${xx}&quot; y2=&quot;${H-p.b}&quot; stroke=&quot;#203852&quot;/&gt;&lt;text x=&quot;${xx}&quot; y=&quot;${H-14}&quot; fill=&quot;#cbd7ea&quot; font-size=&quot;12&quot; text-anchor=&quot;middle&quot;&gt;${x.toFixed(2)}&lt;/text&gt;`}for(let i=0;i&lt;=5;i++){let y=ymin+(ymax-ymin)*i/5,yy=Y(y);html+=`&lt;line x1=&quot;${p.l}&quot; y1=&quot;${yy}&quot; x2=&quot;${W-p.r}&quot; y2=&quot;${yy}&quot; stroke=&quot;#203852&quot;/&gt;&lt;text x=&quot;${p.l-8}&quot; y=&quot;${yy+4}&quot; fill=&quot;#cbd7ea&quot; font-size=&quot;12&quot; text-anchor=&quot;end&quot;&gt;${y.toFixed(2)}&lt;/text&gt;`}html+=`&lt;line x1=&quot;${p.l}&quot; y1=&quot;${H-p.b}&quot; x2=&quot;${W-p.r}&quot; y2=&quot;${H-p.b}&quot; stroke=&quot;#9fb4cc&quot;/&gt;&lt;line x1=&quot;${p.l}&quot; y1=&quot;${p.t}&quot; x2=&quot;${p.l}&quot; y2=&quot;${H-p.b}&quot; stroke=&quot;#9fb4cc&quot;/&gt;`;if(opt.xlabel)html+=`&lt;text x=&quot;${W/2}&quot; y=&quot;${H-4}&quot; fill=&quot;#e7f2ff&quot; font-size=&quot;13&quot; text-anchor=&quot;middle&quot;&gt;${opt.xlabel}&lt;/text&gt;`;if(opt.ylabel)html+=`&lt;text transform=&quot;translate(16 ${H/2}) rotate(-90)&quot; fill=&quot;#e7f2ff&quot; font-size=&quot;13&quot; text-anchor=&quot;middle&quot;&gt;${opt.ylabel}&lt;/text&gt;`;series.forEach(s=&gt;{let d=xs.map((x,i)=&gt;(i?&#x27;L&#x27;:&#x27;M&#x27;)+X(x)+&#x27; &#x27;+Y(s.y[i])).join(&#x27; &#x27;); if(s.fill){let base=Y(ymin);let dd=d+` L ${X(xs[xs.length-1])} ${base} L ${X(xs[0])} ${base} Z`;html+=`&lt;path d=&quot;${dd}&quot; fill=&quot;${s.fill}&quot; opacity=&quot;0.45&quot;/&gt;`}html+=`&lt;path d=&quot;${d}&quot; fill=&quot;none&quot; stroke=&quot;${s.color}&quot; stroke-width=&quot;${s.width||3}&quot; ${s.dash?`stroke-dasharray=&quot;${s.dash}&quot;`:&#x27;&#x27;}/&gt;`});svg.innerHTML=html}
+function updateFD(){let T=+$(&#x27;fdT&#x27;).value,EF=+$(&#x27;fdEF&#x27;).value,R=+$(&#x27;fdRange&#x27;).value,kt=kB*T;let xs=[],f=[],empty=[],boltz=[];for(let i=0;i&lt;=260;i++){let E=EF-R+2*R*i/260;xs.push(E);f.push(fd(E,EF,T));empty.push(1-f[i]);boltz.push(E&gt;=EF?Math.min(1.1,Math.exp(-(E-EF)/(kt||1e-9))):NaN)}$(&#x27;fdKT&#x27;).textContent=(kt||0).toFixed(4)+&#x27; eV&#x27;;$(&#x27;fd3k&#x27;).textContent=fmt(fd(EF+3*kt,EF,T));$(&#x27;fdBoltz&#x27;)&amp;&amp;($(&#x27;fdBoltz&#x27;).textContent=fmt(Math.exp(-3)));svgPlot(&#x27;fdPlot&#x27;,xs,[{y:f,color:&#x27;#36a7ff&#x27;},{y:empty,color:&#x27;#ff5b8d&#x27;,dash:&#x27;8 6&#x27;},{y:boltz,color:&#x27;#ff9b2b&#x27;,dash:&#x27;2 6&#x27;}],{xmin:EF-R,xmax:EF+R,ymin:0,ymax:1.1,xlabel:&#x27;Energy E (eV)&#x27;,ylabel:&#x27;Probability&#x27;})}
+function quickFD(T){$(&#x27;fdT&#x27;).value=T;updateFD()}function setMat(m){let d={Si:[1.12,1.08,.56],GaAs:[1.42,.067,.48],Ge:[.66,.55,.37]}[m];$(&#x27;dosEg&#x27;).value=d[0];$(&#x27;dosMn&#x27;).value=d[1];$(&#x27;dosMp&#x27;).value=d[2];updateDOS()}
+function updateDOS(){let Eg=+$(&#x27;dosEg&#x27;).value,mn=+$(&#x27;dosMn&#x27;).value,mp=+$(&#x27;dosMp&#x27;).value,Ec=Eg/2,Ev=-Eg/2,R=Eg/2+.7,xs=[],gc=[],gv=[];for(let i=0;i&lt;=260;i++){let E=-R+2*R*i/260;xs.push(E);gc.push(E&gt;=Ec?Math.pow(mn,1.5)*Math.sqrt(E-Ec):0);gv.push(E&lt;=Ev?Math.pow(mp,1.5)*Math.sqrt(Ev-E):0)}let max=Math.max(...gc,...gv,1e-9);gc=gc.map(v=&gt;v/max);gv=gv.map(v=&gt;v/max);$(&#x27;dosEdges&#x27;).textContent=`Ev=${Ev.toFixed(2)} eV, Ec=${Ec.toFixed(2)} eV`;svgPlot(&#x27;dosPlot&#x27;,xs,[{y:gc,color:&#x27;#36a7ff&#x27;,fill:&#x27;#36a7ff&#x27;},{y:gv,color:&#x27;#ff5b8d&#x27;,fill:&#x27;#ff5b8d&#x27;}],{xmin:-R,xmax:R,ymin:0,ymax:1,xlabel:&#x27;Energy E (eV)&#x27;,ylabel:&#x27;Relative DOS&#x27;})}
+function loadCCMat(){let d={Si:[1.12,2.8e19,1.04e19],GaAs:[1.42,4.7e17,7e18],Ge:[.66,1.04e19,6e18]}[$(&#x27;ccMat&#x27;).value];$(&#x27;ccEg&#x27;).value=d[0];$(&#x27;ccNc&#x27;).value=d[1];$(&#x27;ccNv&#x27;).value=d[2];updateCarrier()}
+function updateCarrier(){let T=+$(&#x27;ccT&#x27;).value,kt=kB*T,Eg=+$(&#x27;ccEg&#x27;).value,Nc=+$(&#x27;ccNc&#x27;).value,Nv=+$(&#x27;ccNv&#x27;).value,dE=+$(&#x27;ccDE&#x27;).value;let ni=Math.sqrt(Nc*Nv)*Math.exp(-Eg/(2*kt)),n=ni*Math.exp(dE/kt),p=ni*Math.exp(-dE/kt);$(&#x27;ccNi&#x27;).textContent=sci(ni);$(&#x27;ccN&#x27;).textContent=sci(n);$(&#x27;ccP&#x27;).textContent=sci(p);$(&#x27;ccNP&#x27;).textContent=sci(n*p);let Ec=Eg/2,Ev=-Eg/2,EF=dE,xs=[],nc=[],pc=[];for(let i=0;i&lt;=260;i++){let E=-Eg*.9+Eg*1.8*i/260;xs.push(E);let gc=E&gt;=Ec?Math.sqrt(E-Ec):0,gv=E&lt;=Ev?Math.sqrt(Ev-E):0;nc.push(gc*fd(E,EF,T));pc.push(gv*(1-fd(E,EF,T)))}let max=Math.max(...nc,...pc,1e-9);nc=nc.map(v=&gt;v/max);pc=pc.map(v=&gt;v/max);svgPlot(&#x27;carrierPlot&#x27;,xs,[{y:nc,color:&#x27;#36a7ff&#x27;,fill:&#x27;#36a7ff&#x27;},{y:pc,color:&#x27;#ff5b8d&#x27;,fill:&#x27;#ff5b8d&#x27;}],{xmin:-Eg*.9,xmax:Eg*.9,ymin:0,ymax:1,xlabel:&#x27;Energy E (eV)&#x27;,ylabel:&#x27;Relative contribution&#x27;})}
+function updateEFLevel(){let type=$(&#x27;efType&#x27;).value,D=+$(&#x27;efDop&#x27;).value,T=300,kt=kB*T,Eg=1.12,Nc=2.8e19,Nv=1.04e19,Ec=Eg/2,Ev=-Eg/2,EF=0;if(type===&#x27;n&#x27;)EF=Ec-kt*Math.log(Nc/D);if(type===&#x27;p&#x27;)EF=Ev+kt*Math.log(Nv/D);$(&#x27;efMetric&#x27;).textContent=(EF).toFixed(3)+&#x27; eV&#x27;;drawBandPlot(&#x27;efPlot&#x27;,Ec,Ev,EF,0)}
+function drawBandPlot(id,Ec,Ev,EF,Ei){let xs=[0,1],ys=[Ec,Ev,EF,Ei];let svg=$(id),W=svg.clientWidth||600,H=svg.clientHeight||350,p={l:70,r:35,t:30,b:35},ymin=-.8,ymax=.8,Y=y=&gt;H-p.b-(y-ymin)/(ymax-ymin)*(H-p.t-p.b);let html=&#x27;&#x27;;[[&#x27;Ec&#x27;,Ec,&#x27;#36a7ff&#x27;,8],[&#x27;Ev&#x27;,Ev,&#x27;#ff5b8d&#x27;,8],[&#x27;EF&#x27;,EF,&#x27;#ff405e&#x27;,3],[&#x27;EFi&#x27;,Ei,&#x27;#b0b8c5&#x27;,2]].forEach(a=&gt;{html+=`&lt;line x1=&quot;90&quot; y1=&quot;${Y(a[1])}&quot; x2=&quot;${W-60}&quot; y2=&quot;${Y(a[1])}&quot; stroke=&quot;${a[2]}&quot; stroke-width=&quot;${a[3]}&quot; ${a[0].startsWith(&#x27;E&#x27;)&amp;&amp;a[0]!== &#x27;Ec&#x27;&amp;&amp;a[0]!==&#x27;Ev&#x27;?&#x27;stroke-dasharray=&quot;8 6&quot;&#x27;:&#x27;&#x27;}/&gt;&lt;text x=&quot;35&quot; y=&quot;${Y(a[1])+5}&quot; fill=&quot;${a[2]}&quot; font-size=&quot;16&quot;&gt;${a[0]}&lt;/text&gt;`});svg.innerHTML=html}
+function updateDA(){let T=+$(&#x27;daT&#x27;).value,Ed=+$(&#x27;daEd&#x27;).value,Ea=+$(&#x27;daEa&#x27;).value,kt=kB*T;let don=1/(1+.5*Math.exp(Ed/kt)),acc=1/(1+.25*Math.exp(Ea/kt));$(&#x27;daDon&#x27;).textContent=(100*don).toFixed(2)+&#x27;%&#x27;;$(&#x27;daDonIon&#x27;).textContent=(100*(1-don)).toFixed(2)+&#x27;%&#x27;;$(&#x27;daAcc&#x27;).textContent=(100*acc).toFixed(2)+&#x27;%&#x27;;$(&#x27;daAccIon&#x27;).textContent=(100*acc).toFixed(2)+&#x27;%&#x27;;let xs=[],d=[],fr=[];for(let temp=20;temp&lt;=500;temp+=5){let k=kB*temp,occ=1/(1+.5*Math.exp(Ed/k));xs.push(temp);d.push(100*(1-occ));fr.push(100*occ)}svgPlot(&#x27;daPlot&#x27;,xs,[{y:d,color:&#x27;#34f06c&#x27;},{y:fr,color:&#x27;#ff8b21&#x27;}],{xmin:20,xmax:500,ymin:0,ymax:100,xlabel:&#x27;Temperature (K)&#x27;,ylabel:&#x27;Percent&#x27;})}
+function updateBoltz(){let xs=[],err=[];for(let x=.5;x&lt;=8;x+=.05){let f=1/(1+Math.exp(x)),b=Math.exp(-x);xs.push(x);err.push(100*Math.abs(b-f)/f)}svgPlot(&#x27;boltzPlot&#x27;,xs,[{y:err,color:&#x27;#ff8b21&#x27;}],{xmin:.5,xmax:8,ymin:0,ymax:80,xlabel:&#x27;(E-EF)/kBT&#x27;,ylabel:&#x27;Percent error&#x27;})}
+function updateDeg(){drawBandPlot(&#x27;degPlot&#x27;,.35,-.35,.50,0)}
+const levels=[-0.40,-0.10,0.50,0.75,1.00];
+function drawTempSvg(T,EF){
+const svg=$(&#x27;tempSvg&#x27;),rows=[420,335,250,165,80],cols=[105,180,255,330,405,480,555,630];
+let html=&#x27;&lt;defs&gt;&lt;filter id=&quot;glow&quot;&gt;&lt;feGaussianBlur stdDeviation=&quot;4&quot; result=&quot;b&quot;/&gt;&lt;feMerge&gt;&lt;feMergeNode in=&quot;b&quot;/&gt;&lt;feMergeNode in=&quot;SourceGraphic&quot;/&gt;&lt;/feMerge&gt;&lt;/filter&gt;&lt;/defs&gt;&#x27;;
+rows.forEach((y,ri)=&gt;{html+=`&lt;line x1=&quot;70&quot; y1=&quot;${y}&quot; x2=&quot;650&quot; y2=&quot;${y}&quot; stroke=&quot;#9aa9bd&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;25&quot; y=&quot;${y+8}&quot; fill=&quot;#fff&quot; font-size=&quot;28&quot; font-family=&quot;serif&quot;&gt;E${ri+1}&lt;/text&gt;&lt;text x=&quot;25&quot; y=&quot;${y+30}&quot; fill=&quot;#cbd7ea&quot; font-size=&quot;14&quot;&gt;${levels[ri].toFixed(2)} eV&lt;/text&gt;`});
+let yEF=420-(EF-levels[0])/(levels[4]-levels[0])*(420-80);yEF=Math.max(55,Math.min(455,yEF));
+html+=`&lt;line x1=&quot;70&quot; y1=&quot;${yEF}&quot; x2=&quot;650&quot; y2=&quot;${yEF}&quot; stroke=&quot;#ff405e&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;8 7&quot;/&gt;&lt;text x=&quot;25&quot; y=&quot;${yEF+8}&quot; fill=&quot;#ff405e&quot; font-size=&quot;30&quot; font-family=&quot;serif&quot;&gt;E&lt;tspan baseline-shift=&quot;sub&quot; font-size=&quot;18&quot;&gt;F&lt;/tspan&gt;&lt;/text&gt;`;
+// Start from the 0 K filling order: lowest states are occupied first.
+// As T rises, electrons closest to EF (upper occupied states) are promoted first.
+let occ=new Set();
+for(let c=0;c&lt;cols.length;c++)occ.add(&#x27;0-&#x27;+c);       // E1 fully occupied
+for(let c=0;c&lt;5;c++)occ.add(&#x27;1-&#x27;+c);                 // E2 partially occupied: 13 electrons total
+const holes=[[&#x27;1&#x27;,4],[&#x27;1&#x27;,3],[&#x27;1&#x27;,2],[&#x27;1&#x27;,1],[&#x27;1&#x27;,0],[&#x27;0&#x27;,7],[&#x27;0&#x27;,6]];
+const dests=[[&#x27;2&#x27;,3],[&#x27;2&#x27;,5],[&#x27;3&#x27;,2],[&#x27;3&#x27;,5],[&#x27;4&#x27;,4],[&#x27;2&#x27;,1],[&#x27;4&#x27;,6]];
+let nExc=Math.round((T/1200)*holes.length);
+for(let i=0;i&lt;nExc;i++){
+  let h=holes[i],d=dests[i];
+  occ.delete(h[0]+&#x27;-&#x27;+h[1]);
+  occ.add(d[0]+&#x27;-&#x27;+d[1]);
+}
+rows.forEach((y,ri)=&gt;cols.forEach((x,ci)=&gt;{
+ let o=occ.has(ri+&#x27;-&#x27;+ci);
+ html+=`&lt;circle cx=&quot;${x}&quot; cy=&quot;${y}&quot; r=&quot;12&quot; fill=&quot;${o?&#x27;#1e88ff&#x27;:&#x27;#081523&#x27;}&quot; stroke=&quot;#d7e9ff&quot; stroke-width=&quot;1.5&quot; ${o?&#x27;filter=&quot;url(#glow)&quot;&#x27;:&#x27;&#x27;}/&gt;`;
+}));
+html+=`&lt;text x=&quot;70&quot; y=&quot;475&quot; fill=&quot;#cde3ff&quot; font-size=&quot;14&quot;&gt;As T increases, blue electrons appear in higher levels and empty states remain below. Total electron number is conserved.&lt;/text&gt;`;
+svg.innerHTML=html
+}
+function updateTempTab(){
+let T=+$(&#x27;tempSlider&#x27;).value,EF=+$(&#x27;efSlider&#x27;).value;$(&#x27;tempRead&#x27;).textContent=T+&#x27; K&#x27;;$(&#x27;efRead&#x27;).textContent=EF.toFixed(2)+&#x27; eV&#x27;;drawTempSvg(T,EF);
+let xs=[];for(let i=0;i&lt;=320;i++)xs.push(-1+2*i/320);
+let current=xs.map(E=&gt;fd(E,EF,T));
+let step=xs.map(E=&gt;fd(E,EF,0));
+svgPlot(&#x27;tempPlot&#x27;,xs,[{y:step,color:&#x27;#6bc6ff&#x27;,width:2,dash:&#x27;7 5&#x27;},{y:current,color:&#x27;#ff3aa6&#x27;,width:5}],{xmin:-1,xmax:1,ymin:0,ymax:1.05,xlabel:&#x27;Energy E (eV)&#x27;,ylabel:&#x27;fF(E)&#x27;});
+let kt=kB*T, fsel=fd(.4,EF,T);
+$(&#x27;tempVals&#x27;).innerHTML=`\(T=${T}\,\mathrm{K}\)&lt;br&gt;\(E_F=${EF.toFixed(2)}\,\mathrm{eV}\)&lt;br&gt;\(k_BT=${T?kt.toFixed(4):&#x27;0&#x27;}\,\mathrm{eV}\)`;
+$(&#x27;selVals&#x27;).innerHTML=`\(E=0.40\,\mathrm{eV}\)&lt;br&gt;\(E-E_F=${(0.4-EF).toFixed(2)}\,\mathrm{eV}\)&lt;br&gt;\(f_F(E)=${fmt(fsel)}\)`;
+if(window.MathJax)MathJax.typesetPromise()
+}
+function playTemp(){stopTemp();timer=setInterval(()=&gt;{let s=$(&#x27;tempSlider&#x27;);let v=+s.value+20;if(v&gt;1200)v=0;s.value=v;updateTempTab()},160)}function stopTemp(){if(timer)clearInterval(timer);timer=null}function resetTemp(){$(&#x27;tempSlider&#x27;).value=0;$(&#x27;efSlider&#x27;).value=.2;updateTempTab()}
+function mini(id,T){let xs=[];for(let i=0;i&lt;=80;i++)xs.push(-1+2*i/80);svgPlot(id,xs,[{y:xs.map(E=&gt;fd(E,0,T)),color:T&gt;800?&#x27;#ff3aa6&#x27;:&#x27;#36a7ff&#x27;}],{xmin:-1,xmax:1,ymin:0,ymax:1})}
+function updateExamples(){let Nd=+$(&#x27;exNd&#x27;).value,Nc=2.8e19,kt=kB*300;$(&#x27;ex1&#x27;).textContent=(kt*Math.log(Nc/Nd)).toFixed(3)+&#x27; eV below Ec&#x27;}
+function updateAll(){updateFD();updateDOS();updateCarrier();updateEFLevel();updateDA();updateBoltz();updateDeg();updateTempTab();mini(&#x27;mini0&#x27;,0);mini(&#x27;mini1&#x27;,300);mini(&#x27;mini2&#x27;,1200);updateExamples()}
+window.addEventListener(&#x27;load&#x27;,()=&gt;{initTabs();loadCCMat();updateAll();setTimeout(()=&gt;{if(window.MathJax)MathJax.typesetPromise()},400)});
+
+
+function compactSci(v){
+  const n=Number(v);
+  if(!isFinite(n)) return String(v);
+  if(n===0) return &quot;0&quot;;
+  return n.toExponential(3)
+    .replace(/\.?0+e/,&quot;e&quot;)
+    .replace(/(\.\d*?)0+e/,&quot;$1e&quot;)
+    .replace(&quot;e+&quot;,&quot;e&quot;);
+}
+function normalizeCarrierSciInputs(){
+  [&quot;ccNc&quot;,&quot;ccNv&quot;].forEach(id=&gt;{
+    const el=document.getElementById(id);
+    if(el) el.value=compactSci(el.value);
+  });
+}
+document.addEventListener(&quot;DOMContentLoaded&quot;,()=&gt;{
+  normalizeCarrierSciInputs();
+  [&quot;ccNc&quot;,&quot;ccNv&quot;].forEach(id=&gt;{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener(&quot;blur&quot;,normalizeCarrierSciInputs);
+  });
+});
+
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+  </div>
+</section>
+
+
+<section class="section" id="concentration" data-title="6. Carrier Concentration Calculation">
+  <h2>6. Carrier Concentration Calculation</h2>
+  <div class="card">
+    <p>Under the nondegenerate approximation, the concentration formulas become compact exponentials:</p>
+    <div class="eq">\[
+    n=N_C\exp\!\left(-\frac{E_C-E_F}{kT}\right)
+    \]</div>
+    <div class="eq">\[
+    p=N_V\exp\!\left(-\frac{E_F-E_V}{kT}\right)
+    \]</div>
+    <p>These formulas show the strongest lesson: a small movement of \(E_F\) changes carrier concentration exponentially.</p>
+    <div class="note"><b>Probability interpretation:</b> \(N_C\) and \(N_V\) summarize the number of thermally accessible states, while the exponential terms summarize the probability of occupying those states.</div>
+  </div>
+
+  <div class="sim">
+    <div class="simHeader">
+      <div>
+        <h3>Interactive calculator: \(n\), \(p\), and \(np\)</h3>
+        <p>Move \(E_F\) and temperature. The table updates electron and hole concentrations using silicon-like defaults.</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="control"><label>Temperature <output id="concTOut">300 K</output></label><input id="concT" type="range" min="200" max="500" value="300" step="5"/></div>
+      <div class="control"><label>\(E_F-E_i\) <output id="concEFOut">0.00 eV</output></label><input id="concEF" type="range" min="-0.55" max="0.55" value="0" step="0.01"/></div>
+      <div class="control"><label>Bandgap \(E_g\) <output id="concEgOut">1.12 eV</output></label><input id="concEg" type="range" min="0.7" max="1.8" value="1.12" step="0.01"/></div>
+      <div class="control"><label>Material model <output>Si-like</output></label><select><option>Si-like NC, NV</option></select></div>
+    </div>
+    <canvas id="concCanvas" width="1100" height="430"></canvas>
+    <div class="metrics">
+      <div class="metric"><b>n</b><span id="concN">1.0e10 cm⁻³</span></div>
+      <div class="metric"><b>p</b><span id="concP">1.0e10 cm⁻³</span></div>
+      <div class="metric"><b>np</b><span id="concNP">1.0e20 cm⁻⁶</span></div>
+      <div class="metric"><b>type</b><span id="concType">intrinsic-like</span></div>
+    </div>
+  </div>
+
+  <div class="sim" id="deriveSim">
+    <div class="simHeader">
+      <div>
+        <h3>Interactive derivation: where do \(n\) and \(p\) come from?</h3>
+        <p>This simulation connects <b>density of states</b>, the <b>Fermi-Dirac probability</b>, the <b>Boltzmann approximation</b>, and the final compact formulas.</p><span class="releaseNote">Slider results update after you release the slider to keep LaTeX stable.</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="control">
+        <label>Carrier <output id="deriveModeOut">electrons n</output></label>
+        <select id="deriveMode">
+          <option value="n">electrons \(n\)</option>
+          <option value="p">holes \(p\)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Temperature <output id="deriveTOut">300 K</output></label>
+        <input id="deriveT" type="range" min="200" max="600" value="300" step="5"/>
+      </div>
+      <div class="control">
+        <label>\(E_F-E_i\) <output id="deriveEFOut">0.00 eV</output></label>
+        <input id="deriveEF" type="range" min="-0.55" max="0.55" value="0" step="0.01"/>
+      </div>
+      <div class="control">
+        <label>Bandgap \(E_g\) <output id="deriveEgOut">1.12 eV</output></label>
+        <input id="deriveEg" type="range" min="0.7" max="1.8" value="1.12" step="0.01"/>
+      </div>
+    </div>
+
+    <div class="grid2 deriveGrid">
+      <div class="card">
+        <h3>Step-by-step logic</h3>
+        <div id="deriveTitle" class="note"><b>Electrons:</b> count states near \(E_C\), then weight them by the probability that those states are occupied.</div>
+
+        <div class="mini deriveStep">
+          <b>Step 1 — exact carrier counting</b>
+          <div class="eq" id="deriveEq1">\[
+          n=\int_{E_C}^{\infty} g_C(E)f(E)\,dE
+          \]</div>
+          <p id="deriveStep1Text">Exact counting starts from the product of available states and occupation probability.</p>
+        </div>
+
+        <div class="mini deriveStep">
+          <b>Step 2 — use the Fermi-Dirac probability</b>
+          <div class="eq" id="deriveEq2">\[
+          f(E)=\frac{1}{1+\exp\!\left(\frac{E-E_F}{kT}\right)}
+          \]</div>
+          <p id="deriveStep2Text">The occupation probability becomes small high above \(E_F\).</p>
+        </div>
+
+        <div class="mini deriveStep">
+          <b>Step 3 — Boltzmann approximation</b>
+          <div class="eq" id="deriveEq3">\[
+          f(E)\approx\exp\!\left(-\frac{E-E_F}{kT}\right)
+          \]</div>
+          <p id="deriveStep3Text">When the relevant band edge is several \(kT\) away from \(E_F\), the exact Fermi-Dirac function simplifies to an exponential.</p>
+        </div>
+
+        <div class="mini deriveStep">
+          <b>Step 4 — collect the band-shape integral</b>
+          <div class="eq" id="deriveEq4">\[
+          n=N_C\exp\!\left(-\frac{E_C-E_F}{kT}\right)
+          \]</div>
+          <div class="eq" id="deriveEq5">\[
+          n=n_i\exp\!\left(\frac{E_F-E_i}{kT}\right)
+          \]</div>
+          <p id="deriveStep4Text">The DOS integral is summarized by \(N_C\), leaving the exponential probability factor visible.</p>
+        </div>
+      </div>
+
+      <div class="card deriveRightCard">
+        <h3>Physical meaning + approximation check</h3>
+        <canvas id="deriveCanvas" width="920" height="360"></canvas>
+
+        <div class="deriveSummary">
+          <div class="metric latexMetric">
+            <b>Band-edge offset</b>
+            <span id="deriveEdge">\[
+            E_C-E_F=0.56\,\text{eV}
+            \]</span>
+          </div>
+          <div class="metric latexMetric">
+            <b>Band-edge probability</b>
+            <span id="deriveProb">\[
+            f(E_C)=3.5\times10^{-11}
+            \]</span>
+          </div>
+          <div class="metric latexMetric">
+            <b>Approximation error</b>
+            <span id="deriveError">\[
+            0.00\%
+            \]</span>
+          </div>
+          <div class="metric latexMetric">
+            <b>Final compact formula</b>
+            <span id="deriveResult">\[
+            n=N_C e^{-(E_C-E_F)/kT}
+            \]</span>
+          </div>
+        </div>
+
+        <div class="note deriveInterp" id="deriveInterp">
+          <b>Interpretation.</b> When the band edge is several \(kT\) away from \(E_F\), the exact Fermi-Dirac result and the Boltzmann approximation nearly overlap.
+        </div>
+
+        <div class="note" id="deriveMeaning">
+          \[
+          n = N_C\exp\!\left(-\frac{E_C-E_F}{kT}\right)
+          \]
+          This compact equation means that carrier concentration is controlled by two ingredients:
+          the number of available band-edge states \(N_C\), and the probability factor
+          \(\exp[-(E_C-E_F)/kT]\).
+        </div>
+      </div>
+    </div>    </div>
+  </div>
+</section>
+
+<section class="section" id="intrinsic" data-title="7. Intrinsic Semiconductor and ni">
+  <h2>7. Intrinsic Semiconductor and \(n_i\)</h2>
+  <div class="card">
+    <p>An intrinsic semiconductor has no intentional dopant atoms. At thermal equilibrium, electrons and holes are generated in pairs, so their concentrations are equal:</p>
+    <div class="eq">\[
+    n=p=n_i
+    \]</div>
+    <p>Multiplying the nondegenerate formulas for \(n\) and \(p\) gives the mass-action relation:</p>
+    <div class="eq">\[
+    np=n_i^2
+    \]</div>
+    <p>The intrinsic carrier concentration depends strongly on bandgap and temperature:</p>
+    <div class="eq">\[
+    n_i=\sqrt{N_C N_V}\exp\!\left(-\frac{E_g}{2kT}\right)
+    \]</div>
+    <div class="note">The factor \(E_g/2\) appears because creating one electron-hole pair requires crossing the bandgap, while the intrinsic Fermi level lies near the middle of the gap.</div>
+  </div>
+</section>
+
+<section class="section" id="fermi-level" data-title="8. Fermi Level Meaning and Position">
+  <h2>8. Fermi Level Meaning and Position</h2>
+  <div class="card">
+    <p>The Fermi level \(E_F\) is the energy where the electron occupation probability is 50%. More importantly, it is the parameter that makes the total charge balance correctly.</p>
+    <div class="eq">\[
+    f(E_F)=\frac{1}{2}
+    \]</div>
+    <p>For intrinsic material, the Fermi level is close to the intrinsic level \(E_i\). For n-type material, \(E_F\) moves upward toward \(E_C\). For p-type material, \(E_F\) moves downward toward \(E_V\).</p>
+    <div class="grid3">
+      <div class="mini"><b>Intrinsic</b><br/>\(E_F\approx E_i\), \(n=p=n_i\)</div>
+      <div class="mini"><b>n-type</b><br/>\(E_F\) closer to \(E_C\), \(n\gg p\)</div>
+      <div class="mini"><b>p-type</b><br/>\(E_F\) closer to \(E_V\), \(p\gg n\)</div>
+    </div>
+  </div>
+
+  <div class="sim">
+    <div class="simHeader">
+      <div>
+        <h3>Interactive: Fermi level and band diagram</h3>
+        <p>Choose doping type and concentration. The band diagram shows the Fermi level shift and the concentration ratio.</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="control"><label>Doping type <output id="flTypeOut">n-type</output></label><select id="flType"><option value="n">n-type donor</option><option value="p">p-type acceptor</option><option value="i">intrinsic</option></select></div>
+      <div class="control"><label>Doping \(N\) <output id="flDOut">1e16 cm⁻³</output></label><input id="flLogD" type="range" min="10" max="19" value="16" step="0.1"/></div>
+      <div class="control"><label>Temperature <output id="flTOut">300 K</output></label><input id="flT" type="range" min="200" max="500" value="300" step="5"/></div>
+      <div class="control"><label>Bandgap <output id="flEgOut">1.12 eV</output></label><input id="flEg" type="range" min="0.7" max="1.8" value="1.12" step="0.01"/></div>
+    </div>
+    <canvas id="flCanvas" width="1100" height="430"></canvas>
+    <div class="metrics">
+      <div class="metric"><b>EF − Ei</b><span id="flShift">0.36 eV</span></div>
+      <div class="metric"><b>n</b><span id="flN">1e16 cm⁻³</span></div>
+      <div class="metric"><b>p</b><span id="flP">1e4 cm⁻³</span></div>
+      <div class="metric"><b>minority</b><span id="flMinority">holes</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="doped" data-title="9. Doped Semiconductors">
+  <h2>9. Doped Semiconductors</h2>
+  <div class="card">
+    <p>Doping intentionally adds impurity atoms that donate electrons or accept electrons. In a simple fully ionized, nondegenerate semiconductor:</p>
+    <div class="grid2">
+      <div class="mini">
+        <b>n-type donor doping</b>
+        <div class="eq">\[
+        n\approx N_D,\qquad p=\frac{n_i^2}{N_D}
+        \]</div>
+      </div>
+      <div class="mini">
+        <b>p-type acceptor doping</b>
+        <div class="eq">\[
+        p\approx N_A,\qquad n=\frac{n_i^2}{N_A}
+        \]</div>
+      </div>
+    </div>
+    <p>The majority carrier concentration increases with doping, while the minority carrier concentration decreases through the mass-action relation \(np=n_i^2\).</p>
+  </div>
+  <div class="card">
+    <h3>Charge neutrality</h3>
+    <p>The exact Fermi level is found by enforcing charge neutrality:</p>
+    <div class="eq">\[
+    p+N_D^+=n+N_A^-
+    \]</div>
+    <p>For most introductory problems at room temperature with full ionization, this reduces to simple majority-carrier approximations.</p>
+  </div>
+</section>
+
+<section class="section" id="workflow" data-title="10. Calculation Workflow and Practice">
+  <h2>10. Calculation Workflow and Practice</h2>
+  <div class="card">
+    <h3>Recommended calculation workflow</h3>
+    <ol>
+      <li>Identify \(T\), \(E_g\), \(N_C\), \(N_V\), and doping.</li>
+      <li>Calculate or estimate \(n_i\).</li>
+      <li>Use doping to determine the majority carrier.</li>
+      <li>Use \(np=n_i^2\) to find the minority carrier.</li>
+      <li>Locate the Fermi level using \(E_F-E_i=kT\ln(n/n_i)\) or \(E_i-E_F=kT\ln(p/n_i)\).</li>
+    </ol>
+    <div class="eq">\[
+    E_F-E_i=kT\ln\!\left(\frac{n}{n_i}\right),
+    \qquad
+    E_i-E_F=kT\ln\!\left(\frac{p}{n_i}\right)
+    \]</div>
+  </div>
+
+  <div class="card">
+    <h3>Practice problems</h3>
+    <details class="practiceBox">
+      <summary>Problem 1: Boltzmann factor</summary>
+      <p>At 300 K, estimate the relative probability of a 0.20 eV excitation.</p>
+      <div class="eq">\[
+      kT=0.0259\ \text{eV},\qquad
+      \exp(-0.20/0.0259)\approx 4.4\times10^{-4}
+      \]</div>
+    </details>
+    <details class="practiceBox">
+      <summary>Problem 2: n-type concentration</summary>
+      <p>For silicon with \(n_i=10^{10}\ \text{cm}^{-3}\) and \(N_D=10^{16}\ \text{cm}^{-3}\), estimate \(n\) and \(p\).</p>
+      <div class="eq">\[
+      n\approx10^{16}\ \text{cm}^{-3},\qquad
+      p=\frac{10^{20}}{10^{16}}=10^4\ \text{cm}^{-3}
+      \]</div>
+    </details>
+    <details class="practiceBox">
+      <summary>Problem 3: Fermi level shift</summary>
+      <p>For \(n/n_i=10^6\) at 300 K, estimate \(E_F-E_i\).</p>
+      <div class="eq">\[
+      E_F-E_i=kT\ln(10^6)=0.0259(13.82)\approx0.36\ \text{eV}
+      \]</div>
+    </details>
+  </div>
+</section>
+
+  </div>
+
+  <footer>Standalone teaching HTML for basic semiconductor probability, carrier statistics, and Fermi-level concepts.</footer>
+</main>
+</div>
+
+<script>
+const kB=8.617333262e-5; // eV/K
+const sections=[...document.querySelectorAll(".section")];
+const nav=document.getElementById("nav");
+let current=0, full=false;
+
+function labelFor(i){return sections[i].dataset.title || sections[i].querySelector("h2")?.textContent || `Section ${i+1}`;}
+sections.forEach((s,i)=>{
+  const b=document.createElement("button");
+  b.className="navItem";
+  b.textContent=labelFor(i);
+  b.onclick=()=>{full=false;current=i;render();};
+  nav.appendChild(b);
+});
+
+function render(){
+  const hero=document.querySelector(".hero");
+  if(hero) hero.classList.toggle("compact", !full && current !== 0);
+  sections.forEach((s,i)=>s.classList.toggle("active",full || i===current));
+  [...nav.children].forEach((b,i)=>b.classList.toggle("active",!full && i===current));
+  document.getElementById("progress").textContent=full ? "Full chapter view" : `Page ${current+1} of ${sections.length}`;
+  document.getElementById("modeLabel").textContent=full ? "Full Chapter Mode" : "Single Section Mode";
+  document.getElementById("modeBtn").textContent=full ? "Single Section" : "Full Chapter";
+  document.getElementById("prevBtn").disabled=(!full && current===0);
+  document.getElementById("nextBtn").disabled=(!full && current===sections.length-1);
+  if(!full){history.replaceState(null,"","#"+sections[current].id);}
+  setTimeout(()=>{
+    drawAll();
+    if(window.MathJax && MathJax.startup && MathJax.startup.promise){
+      MathJax.startup.promise.then(()=>MathJax.typesetPromise()).catch(()=>{});
+    }else if(window.MathJax && MathJax.typesetPromise){
+      MathJax.typesetPromise().catch(()=>{});
+    }
+    },30);
+}
+document.getElementById("prevBtn").onclick=()=>{if(full){full=false}else current=Math.max(0,current-1);render();};
+document.getElementById("nextBtn").onclick=()=>{if(full){full=false}else current=Math.min(sections.length-1,current+1);render();};
+document.getElementById("modeBtn").onclick=()=>{full=!full;render();};
+
+const themeBtn=document.getElementById("themeBtn");
+function updateThemeBtn(){
+  const t=document.documentElement.getAttribute("data-theme");
+  themeBtn.textContent=t==="dark"?"Bright":"Dark";
+}
+themeBtn.onclick=()=>{
+  const t=document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark";
+  document.documentElement.setAttribute("data-theme",t);
+  localStorage.setItem("basicSemiTheme",t);
+  updateThemeBtn(); drawAll();
+};
+updateThemeBtn();
+
+document.getElementById("search").addEventListener("input",e=>{
+  const q=e.target.value.toLowerCase().trim();
+  [...nav.children].forEach((b,i)=>{
+    const text=(labelFor(i)+" "+sections[i].textContent).toLowerCase();
+    b.style.display=!q || text.includes(q) ? "" : "none";
+  });
+});
+
+const hash=location.hash.replace("#","");
+const start=sections.findIndex(s=>s.id===hash);
+if(start>=0) current=start;
+
+function isDark(){return document.documentElement.getAttribute("data-theme")==="dark";}
+function colors(){
+  return isDark()?{
+    bg:"#0f2230", grid:"#29485c", text:"#d9f2ff", muted:"#93aebf", accent:"#38d7ff", accent2:"#8068ff", orange:"#ffe2b3", red:"#ff6b8a", green:"#65e6a7", blue:"#7cc7ff"
+  }:{
+    bg:"#ffffff", grid:"#d9e8f2", text:"#17324a", muted:"#5b7284", accent:"#11aee0", accent2:"#7c7cff", orange:"#9a5a00", red:"#dc3454", green:"#0b9669", blue:"#2665d8"
+  };
+}
+function setupCanvas(canvas){
+  const dpr=window.devicePixelRatio||1;
+  const rect=canvas.getBoundingClientRect();
+  canvas.width=Math.max(900,Math.floor(rect.width*dpr));
+  canvas.height=Math.floor(canvas.width*0.39);
+  const ctx=canvas.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,w:canvas.width/dpr,h:canvas.height/dpr,c:colors()};
+}
+function line(ctx,x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+function fmt(x){
+  if(!isFinite(x)) return "—";
+  const ax=Math.abs(x);
+  if(ax===0) return "0";
+  if(ax<1e-2 || ax>=1e4) return x.toExponential(2);
+  return x.toPrecision(3);
+}
+function fmtLatex(x){
+  if(!isFinite(x)) return "\\text{—}";
+  if(x===0) return "0";
+  const ax=Math.abs(x);
+  if(ax<1e-2 || ax>=1e4){
+    const s=x.toExponential(2).split("e");
+    const mant=parseFloat(s[0]).toFixed(2).replace(/\.?0+$/,"");
+    const exp=parseInt(s[1],10);
+    return `${mant}\\times 10^{${exp}}`;
+  }
+  return Number(x).toPrecision(3);
+}
+function fmtConc(x){return fmt(x)+" cm⁻³";}
+function drawAxes(ctx,w,h,c,xlab,ylab){
+  ctx.fillStyle=c.bg; ctx.fillRect(0,0,w,h);
+  const L=72,R=24,T=28,B=58;
+  ctx.strokeStyle=c.grid; ctx.lineWidth=1;
+  for(let i=0;i<=5;i++){let y=T+(h-T-B)*i/5; line(ctx,L,y,w-R,y);}
+  for(let i=0;i<=6;i++){let x=L+(w-L-R)*i/6; line(ctx,x,T,x,h-B);}
+  ctx.strokeStyle=c.text; ctx.lineWidth=1.8; line(ctx,L,h-B,w-R,h-B); line(ctx,L,T,L,h-B);
+  ctx.fillStyle=c.text; ctx.font="14px Arial"; ctx.fillText(xlab,w/2-45,h-18);
+  ctx.save(); ctx.translate(22,h/2+50); ctx.rotate(-Math.PI/2); ctx.fillText(ylab,0,0); ctx.restore();
+  return {L,R,T,B,plotW:w-L-R,plotH:h-T-B};
+}
+
+function drawBoltz(){
+  const canvas=document.getElementById("boltzCanvas"); if(!canvas) return;
+  const {ctx,w,h,c}=setupCanvas(canvas);
+  const T=+document.getElementById("boltzT").value, DE=+document.getElementById("boltzE").value, mode=document.getElementById("boltzMode").value;
+  const boltzCase=document.getElementById("boltzCase").value;
+  const kt=kB*T, prob=Math.exp(-DE/kt), ratio=DE/kt;
+
+  document.getElementById("boltzTOut").textContent=T+" K";
+  document.getElementById("boltzEOut").textContent=DE.toFixed(2)+" eV";
+  document.getElementById("boltzModeOut").textContent=mode==="prob"?"Probability":"Log probability";
+  document.getElementById("boltzCaseOut").textContent =
+    boltzCase==="barrier" ? "Barrier crossing" :
+    boltzCase==="levels" ? "Two energy levels" : "Semiconductor excitation";
+  document.getElementById("boltzKT").textContent=kt.toFixed(4)+" eV";
+  document.getElementById("boltzRatio").textContent=ratio.toFixed(2);
+  document.getElementById("boltzProb").textContent=fmt(prob);
+  document.getElementById("boltzText").textContent=prob>0.1?"likely":prob>1e-3?"small":"very small";
+
+  const ax=drawAxes(ctx,w,h,c,"Energy cost ΔE (eV)", mode==="prob"?"relative probability":"log10 probability");
+  const xMax=1.2;
+  function X(x){return ax.L+x/xMax*ax.plotW}
+  function Yp(y){return ax.T+(1-y)*ax.plotH}
+  function Ylog(y){let v=Math.log10(Math.max(y,1e-16)); return ax.T+((-v)/16)*ax.plotH}
+
+  ctx.strokeStyle=c.accent; ctx.lineWidth=3; ctx.beginPath();
+  for(let i=0;i<=400;i++){
+    const x=xMax*i/400, y=Math.exp(-x/kt);
+    const px=X(x), py=mode==="prob"?Yp(y):Ylog(y);
+    if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+
+  const px=X(DE), py=mode==="prob"?Yp(prob):Ylog(prob);
+  ctx.fillStyle=c.red; ctx.beginPath(); ctx.arc(px,py,7,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=c.red; ctx.setLineDash([5,5]); line(ctx,px,ax.T,px,ax.T+ax.plotH); ctx.setLineDash([]);
+  ctx.fillStyle=c.text; ctx.font="bold 18px Arial"; ctx.fillText("Boltzmann factor: exp(-ΔE/kT)",ax.L+12,ax.T+28);
+  ctx.font="14px Arial"; ctx.fillStyle=c.muted; ctx.fillText(`At T=${T} K and ΔE=${DE.toFixed(2)} eV, probability ≈ ${fmt(prob)}`,ax.L+12,ax.T+52);
+
+  // Physical-meaning explanation: use plain text so it updates immediately without needing MathJax re-typesetting.
+  let lead="", text="", bullets=[];
+  const per100 = 100*prob;
+  const per1000 = 1000*prob;
+  const perMillion = 1_000_000*prob;
+  const countPhrase =
+    per100>=1 ? `${per100.toFixed(1)} per 100` :
+    per1000>=1 ? `${per1000.toFixed(1)} per 1,000` :
+    `${perMillion.toFixed(1)} per 1,000,000`;
+
+  if(boltzCase==="barrier"){
+    lead = "The Boltzmann factor tells what fraction of particles have enough thermal energy to cross an energy barrier of height ΔE.";
+    text = `At T = ${T} K and ΔE = ${DE.toFixed(2)} eV, the activated fraction is ${fmt(prob)}, or about ${countPhrase}.`;
+    bullets = [
+      "Increasing ΔE moves the barrier to the right and shrinks the shaded thermal tail.",
+      "Increasing T broadens the energy distribution, so more particles cross.",
+      "This is the physical picture behind thermally activated processes."
+    ];
+  }else if(boltzCase==="levels"){
+    lead = "The Boltzmann factor is the population ratio between an upper energy level and a lower energy level separated by ΔE.";
+    text = `The upper level population is ${fmt(prob)} times the lower level population, about ${countPhrase} relative to the lower level.`;
+    bullets = [
+      "The upper level is not impossible; it is exponentially less populated.",
+      "A larger level spacing makes the upper level rapidly less likely.",
+      "Higher temperature makes the upper level more populated."
+    ];
+  }else{
+    lead = "In a semiconductor, the Boltzmann factor measures the probability penalty for exciting an electron to a higher-energy state near a band edge.";
+    text = `For this energy rise, the thermally excited fraction is ${fmt(prob)}, about ${countPhrase}.`;
+    bullets = [
+      "This exponential factor appears directly in n = NC exp[-(EC − EF)/kT].",
+      "Small energy changes can cause large carrier-concentration changes.",
+      "Temperature sensitivity comes from kT in the denominator."
+    ];
+  }
+  document.getElementById("boltzMeaningLead").textContent = lead;
+  document.getElementById("boltzMeaningText").textContent = text;
+  document.getElementById("boltzMeaningBullets").innerHTML = bullets.map(b=>`<li>${b}</li>`).join("");
+
+  // Dynamic physical simulation: energy distribution + shaded active tail + fraction gauge.
+  const small = document.getElementById("boltzMeaningCanvas");
+  if(small){
+    const dpr=window.devicePixelRatio||1;
+    const rect=small.getBoundingClientRect();
+    small.width=Math.max(520, Math.floor(rect.width*dpr));
+    small.height=Math.floor(small.width*0.56);
+    const sctx=small.getContext("2d");
+    sctx.setTransform(dpr,0,0,dpr,0,0);
+    const sw=small.width/dpr, sh=small.height/dpr;
+
+    sctx.fillStyle=c.bg; sctx.fillRect(0,0,sw,sh);
+    const L=42, R=18, Tpad=24, B=52;
+    const plotW=sw-L-R, plotH=sh-Tpad-B;
+    const eMax=Math.max(1.2, DE*1.8, kt*12);
+    const Xs=x=>L+x/eMax*plotW;
+    const Ys=y=>Tpad+(1-y)*plotH;
+    const density=x=>Math.exp(-x/kt);
+
+    // Grid and axes
+    sctx.strokeStyle=c.grid; sctx.lineWidth=1;
+    for(let i=0;i<=4;i++){let y=Tpad+plotH*i/4; line(sctx,L,y,L+plotW,y);}
+    for(let i=0;i<=5;i++){let x=L+plotW*i/5; line(sctx,x,Tpad,x,Tpad+plotH);}
+    sctx.strokeStyle=c.text; sctx.lineWidth=1.5;
+    line(sctx,L,Tpad+plotH,L+plotW,Tpad+plotH);
+    line(sctx,L,Tpad,L,Tpad+plotH);
+
+    // Shaded active tail area: E >= ΔE
+    sctx.fillStyle=isDark()?"rgba(255,107,138,.25)":"rgba(220,52,84,.18)";
+    sctx.beginPath();
+    sctx.moveTo(Xs(DE),Ys(0));
+    for(let i=0;i<=240;i++){
+      const x=DE+(eMax-DE)*i/240;
+      sctx.lineTo(Xs(x),Ys(density(x)));
+    }
+    sctx.lineTo(Xs(eMax),Ys(0));
+    sctx.closePath();
+    sctx.fill();
+
+    // Distribution curve
+    sctx.strokeStyle=c.accent; sctx.lineWidth=3;
+    sctx.beginPath();
+    for(let i=0;i<=320;i++){
+      const x=eMax*i/320, y=density(x);
+      if(i===0) sctx.moveTo(Xs(x),Ys(y)); else sctx.lineTo(Xs(x),Ys(y));
+    }
+    sctx.stroke();
+
+    // Barrier line
+    sctx.strokeStyle=c.red; sctx.lineWidth=2.5; sctx.setLineDash([6,5]);
+    line(sctx,Xs(DE),Tpad,Xs(DE),Tpad+plotH);
+    sctx.setLineDash([]);
+    sctx.fillStyle=c.red; sctx.font="bold 13px Arial";
+    sctx.fillText("ΔE barrier", Math.min(Xs(DE)+6, L+plotW-82), Tpad+18);
+
+    // Labels
+    sctx.fillStyle=c.text; sctx.font="bold 14px Arial";
+    sctx.fillText("Thermal energy distribution", L, 16);
+    sctx.font="12px Arial"; sctx.fillStyle=c.muted;
+    sctx.fillText("shaded tail = particles with E ≥ ΔE", L, sh-30);
+    sctx.fillText("Energy", L+plotW-45, sh-12);
+
+    // Fraction gauge
+    const gx=L, gy=sh-22, gw=plotW, gh=8;
+    sctx.fillStyle=isDark()?"#243c4e":"#d9e8f2";
+    sctx.fillRect(gx,gy,gw,gh);
+    const visualFrac=Math.max(prob, prob>0 ? 0.006 : 0); // minimum visible mark for very small nonzero probability
+    sctx.fillStyle=c.red;
+    sctx.fillRect(gx,gy,Math.min(gw,gw*visualFrac),gh);
+    sctx.strokeStyle=c.stroke || c.grid;
+    sctx.strokeRect(gx,gy,gw,gh);
+  }
+
+  document.getElementById("boltzMeaningCount").textContent =
+    `Active fraction = ${fmt(prob)} = ${per100.toFixed(4)} per 100 = ${per1000.toFixed(3)} per 1,000.`;
+  document.getElementById("boltzMeaningScale").textContent =
+    `For very small probabilities, the canvas shows the shrinking shaded tail and a minimum visible red marker so changes are still visible. Expected active particles per 1,000,000: ${perMillion.toFixed(1)}.`;
+}
+
+function fd(E,EF,T){return 1/(1+Math.exp((E-EF)/(kB*T)));}
+
+function typesetDynamicPanel(id){
+  clearTimeout(window.__dynamicMathTimer);
+  window.__dynamicMathTimer=setTimeout(()=>{
+    const run=()=>{
+      try{
+        const targets=[
+          document.getElementById(id),
+          document.getElementById("fdMeaningLead"),
+          document.getElementById("fdMeaningText"),
+          document.getElementById("fdMeaningBullets"),
+          document.getElementById("fdMeaningCount"),
+          document.getElementById("fdMeaningScale")
+        ].filter(Boolean);
+        if(!window.MathJax || !MathJax.typesetPromise) return;
+        if(MathJax.typesetClear) MathJax.typesetClear(targets);
+        MathJax.typesetPromise(targets).catch(()=>{});
+      }catch(e){}
+    };
+    if(window.MathJax && MathJax.startup && MathJax.startup.promise){
+      MathJax.startup.promise.then(run).catch(()=>{});
+    }else{
+      run();
+    }
+  },120);
+}
+
+function drawFD(){
+  const canvas=document.getElementById("fdCanvas"); if(!canvas) return;
+  const {ctx,w,h,c}=setupCanvas(canvas);
+  const T=+document.getElementById("fdT").value, EF=+document.getElementById("fdEF").value, E=+document.getElementById("fdE").value;
+  const picture=document.getElementById("fdPicture") ? document.getElementById("fdPicture").value : "occupation";
+  const p=fd(E,EF,T);
+  const empty=1-p;
+  const diff=E-EF;
+  const kt=kB*T;
+  const pLatex=fmtLatex(p);
+  const emptyLatex=fmtLatex(empty);
+
+  document.getElementById("fdTOut").textContent=T+" K";
+  document.getElementById("fdEFOut").textContent=EF.toFixed(2)+" eV";
+  document.getElementById("fdEOut").textContent=E.toFixed(2)+" eV";
+  if(document.getElementById("fdPictureOut")){
+    document.getElementById("fdPictureOut").textContent =
+      picture==="occupation" ? "Occupation" : picture==="empty" ? "Empty state" : "Band edge";
+  }
+  document.getElementById("fdProb").textContent=fmt(p);
+  document.getElementById("fdHole").textContent=fmt(empty);
+  document.getElementById("fdDiff").textContent=diff.toFixed(2)+" eV";
+  document.getElementById("fdMeaning").textContent=p>0.9?"almost occupied":p<0.1?"mostly empty":"partly occupied";
+
+  const ax=drawAxes(ctx,w,h,c,"Energy E (eV)","occupation probability f(E)");
+  const xmin=-1,xmax=1;
+  const X=x=>ax.L+(x-xmin)/(xmax-xmin)*ax.plotW, Y=y=>ax.T+(1-y)*ax.plotH;
+  ctx.strokeStyle=c.accent; ctx.lineWidth=3; ctx.beginPath();
+  for(let i=0;i<=500;i++){
+    const x=xmin+(xmax-xmin)*i/500,y=fd(x,EF,T);
+    if(i===0)ctx.moveTo(X(x),Y(y)); else ctx.lineTo(X(x),Y(y));
+  }
+  ctx.stroke();
+  ctx.strokeStyle=c.green; ctx.setLineDash([7,5]); line(ctx,X(EF),ax.T,X(EF),ax.T+ax.plotH); ctx.setLineDash([]);
+  ctx.fillStyle=c.green; ctx.font="bold 15px Arial"; ctx.fillText("EF",X(EF)+6,ax.T+22);
+  ctx.fillStyle=c.red; ctx.beginPath(); ctx.arc(X(E),Y(p),7,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=c.grid; ctx.lineWidth=1.5; line(ctx,ax.L,Y(.5),ax.L+ax.plotW,Y(.5));
+  ctx.fillStyle=c.text; ctx.font="bold 18px Arial"; ctx.fillText("Fermi-Dirac occupation",ax.L+12,ax.T+28);
+  ctx.font="14px Arial"; ctx.fillStyle=c.muted; ctx.fillText("At E = EF, f(E)=0.5. Temperature smooths the transition.",ax.L+12,ax.T+52);
+
+  // Dynamic physical meaning panel: stable HTML math, no slider-time MathJax needed.
+  const per100=100*p, emptyPer100=100*empty;
+  const electronText =
+    p>=0.01 ? `${per100.toFixed(1)} out of 100 identical states` :
+    `${(1_000_000*p).toFixed(1)} out of 1,000,000 identical states`;
+  const emptyText =
+    empty>=0.01 ? `${emptyPer100.toFixed(1)} out of 100 identical states` :
+    `${(1_000_000*empty).toFixed(1)} out of 1,000,000 identical states`;
+
+  const Ehtml=`<span class="fdInlineMath">E</span>`;
+  const EFhtml=`<span class="fdInlineMath">E<sub>F</sub></span>`;
+  const fEhtml=`<span class="fdInlineMath">f(E)</span>`;
+  const kThtml=`<span class="fdInlineMath">kT</span>`;
+  const formulaHTML =
+    `<span class="fdFormula">
+      f(E) =
+      <span class="frac">
+        <span class="top">1</span>
+        <span class="bottom">1 + exp((E − E<sub>F</sub>)/kT)</span>
+      </span>
+    </span>`;
+
+  let lead="", text="", bullets=[];
+  if(picture==="occupation"){
+    lead = `${formulaHTML}
+      The value ${fEhtml} is the probability that one available quantum state at energy ${Ehtml}
+      is occupied by an electron. It is not a carrier concentration by itself.`;
+    text = `For the selected state, ${Ehtml} = ${E.toFixed(2)} eV and ${EFhtml} = ${EF.toFixed(2)} eV, so
+      <span class="fdMiniEq">f(E) = ${fmt(p)}</span>.<br>
+      In an ensemble of identical states, about ${electronText} would be occupied by electrons.`;
+    bullets=[
+      `${Ehtml} &lt; ${EFhtml}: the state is usually occupied.`,
+      `${Ehtml} &gt; ${EFhtml}: the state is usually empty.`,
+      `Larger <span class="fdInlineMath">T</span> makes the transition around ${EFhtml} smoother.`
+    ];
+  }else if(picture==="empty"){
+    lead = `<span class="fdFormula">P<sub>empty</sub>(E) = 1 − f(E)</span>
+      The empty-state probability tells how likely an electron state is unoccupied.
+      In the valence band, an empty electron state is interpreted as a hole.`;
+    text = `For this selected state, <span class="fdMiniEq">1 − f(E) = ${fmt(empty)}</span>.<br>
+      About ${emptyText} would be empty and available for an electron to occupy.`;
+    bullets=[
+      `<span class="fdInlineMath">f(E) + [1 − f(E)] = 1</span>.`,
+      `Electron occupation uses ${fEhtml}.`,
+      `Hole probability uses <span class="fdInlineMath">1 − f(E)</span>, especially in the valence band.`
+    ];
+  }else{
+    lead = `<span class="fdFormula">
+      n = ∫<sub>E<sub>C</sub></sub><sup>∞</sup> g<sub>C</sub>(E)f(E)dE,
+      &nbsp;&nbsp;
+      p = ∫<sub>−∞</sub><sup>E<sub>V</sub></sup> g<sub>V</sub>(E)[1−f(E)]dE
+      </span>
+      In a semiconductor band diagram, ${EFhtml} controls how strongly states near
+      <span class="fdInlineMath">E<sub>C</sub></span> and
+      <span class="fdInlineMath">E<sub>V</sub></span> are occupied.`;
+    text = `The probe state is
+      <span class="fdMiniEq">E − E<sub>F</sub> = ${diff.toFixed(3)} eV = ${(diff/kt).toFixed(2)} kT</span>.<br>
+      This distance from ${EFhtml} determines whether the state is mostly occupied, partly occupied, or mostly empty.`;
+    bullets=[
+      `Moving ${EFhtml} upward increases electron occupation near <span class="fdInlineMath">E<sub>C</sub></span>.`,
+      `Moving ${EFhtml} downward increases empty valence-band states, meaning more holes.`,
+      `Carrier concentration comes from density of states × occupation probability.`
+    ];
+  }
+
+  document.getElementById("fdMeaningLead").innerHTML=lead;
+  document.getElementById("fdMeaningText").innerHTML=text;
+  document.getElementById("fdMeaningBullets").innerHTML=bullets.map(b=>`<li>${b}</li>`).join("");
+  document.getElementById("fdMeaningCount").innerHTML=
+    `<span class="fdMiniEq">occupied = 100f(E) = ${(100*p).toFixed(4)}%</span>,
+     &nbsp;
+     <span class="fdMiniEq">empty = 100[1−f(E)] = ${(100*empty).toFixed(4)}%</span>`;
+  document.getElementById("fdMeaningScale").innerHTML=
+    `<span class="fdMiniEq">E − E<sub>F</sub> = ${diff.toFixed(3)} eV = ${(diff/kt).toFixed(2)} kT</span>.
+     At <span class="fdInlineMath">E = E<sub>F</sub></span>, <span class="fdInlineMath">f(E)=0.5</span>.`;
+
+  // Small physical picture canvas
+  const small=document.getElementById("fdMeaningCanvas");
+  if(small){
+    const dpr=window.devicePixelRatio||1;
+    const rect=small.getBoundingClientRect();
+    small.width=Math.max(520,Math.floor(rect.width*dpr));
+    small.height=Math.floor(small.width*0.56);
+    const sctx=small.getContext("2d");
+    sctx.setTransform(dpr,0,0,dpr,0,0);
+    const sw=small.width/dpr, sh=small.height/dpr;
+    sctx.fillStyle=c.bg; sctx.fillRect(0,0,sw,sh);
+
+    const L=58,R=32,Tp=28,B=34;
+    const ymin=-1,ymax=1;
+    const yE=y=>Tp+(ymax-y)/(ymax-ymin)*(sh-Tp-B);
+    const x0=L, x1=sw-R;
+
+    // background transition zone around EF: about ±4kT
+    const yHi=yE(EF+4*kt), yLo=yE(EF-4*kt);
+    sctx.fillStyle=isDark()?"rgba(56,215,255,.08)":"rgba(35,199,244,.10)";
+    sctx.fillRect(x0,Math.min(yHi,yLo),x1-x0,Math.abs(yLo-yHi));
+
+    // Energy axis
+    sctx.strokeStyle=c.grid; sctx.lineWidth=1.2;
+    for(let i=-1;i<=1;i+=0.5){line(sctx,x0,yE(i),x1,yE(i));}
+    sctx.strokeStyle=c.text; sctx.lineWidth=1.6;
+    line(sctx,x0,Tp,x0,sh-B);
+    sctx.fillStyle=c.text; sctx.font="bold 14px Arial";
+    sctx.fillText("Energy states",x0,Tp-8);
+
+    // EF line
+    const yEFLine=yE(EF), yProbeLine=yE(E);
+    const closeLabels=Math.abs(yEFLine-yProbeLine)<28;
+
+    sctx.strokeStyle=c.green; sctx.setLineDash([7,5]); sctx.lineWidth=2;
+    line(sctx,x0,yEFLine,x1,yEFLine);
+    sctx.setLineDash([]);
+
+    // Probe energy line
+    sctx.strokeStyle=c.red; sctx.lineWidth=2.5;
+    line(sctx,x0,yProbeLine,x1,yProbeLine);
+
+    // Non-overlapping label chips
+    function labelChip(txt,x,y,color){
+      sctx.font="bold 12px Arial";
+      const padX=6, padY=4;
+      const tw=sctx.measureText(txt).width;
+      const bx=Math.max(x0+4,Math.min(x,x1-tw-2*padX-4));
+      const by=Math.max(Tp+4,Math.min(y-13,sh-B-18));
+      sctx.fillStyle=isDark()?"rgba(15,34,48,.86)":"rgba(255,255,255,.88)";
+      sctx.fillRect(bx,by,tw+2*padX,18);
+      sctx.strokeStyle=color;
+      sctx.strokeRect(bx,by,tw+2*padX,18);
+      sctx.fillStyle=color;
+      sctx.fillText(txt,bx+padX,by+13);
+    }
+
+    if(closeLabels){
+      labelChip("probe state E",x1-115,yProbeLine-14,c.red);
+      labelChip("EF: 50% occupation",x0+12,yEFLine+28,c.green);
+    }else{
+      labelChip("probe state E",x1-115,yProbeLine+22,c.red);
+      labelChip("EF: 50% occupation",x1-150,yEFLine-10,c.green);
+    }
+
+    // Occupation gauge
+    const gx=x0+20, gy=sh-24, gw=x1-x0-40, gh=9;
+    sctx.fillStyle=isDark()?"#243c4e":"#d9e8f2"; sctx.fillRect(gx,gy,gw,gh);
+    sctx.fillStyle=c.accent; sctx.fillRect(gx,gy,gw*p,gh);
+    sctx.strokeStyle=c.grid; sctx.strokeRect(gx,gy,gw,gh);
+    sctx.fillStyle=c.muted; sctx.font="12px Arial";
+    sctx.fillText("blue gauge = occupied fraction f(E)",gx,gy-6);
+
+    // State icons: 20 possible equivalent states
+    const nStates=20;
+    const occupied=Math.round(nStates*p);
+    const baseY=yE(E);
+    for(let i=0;i<nStates;i++){
+      const x=x0+18+i*(x1-x0-36)/(nStates-1);
+      const filled=i<occupied;
+      sctx.beginPath(); sctx.arc(x,baseY,6,0,Math.PI*2);
+      sctx.fillStyle=filled?c.accent:(isDark()?"#183247":"#e8f1f8");
+      sctx.fill();
+      sctx.strokeStyle=filled?c.accent:c.stroke || c.grid;
+      sctx.stroke();
+    }
+
+    // Optional band-edge guide
+    if(picture==="semiconductor"){
+      const Ec=0.45, Ev=-0.45;
+      sctx.strokeStyle=c.blue; sctx.lineWidth=3; line(sctx,x0,yE(Ec),x1,yE(Ec));
+      sctx.strokeStyle=c.red; sctx.lineWidth=3; line(sctx,x0,yE(Ev),x1,yE(Ev));
+      sctx.fillStyle=c.blue; sctx.font="bold 12px Arial"; sctx.fillText("EC",x0+4,yE(Ec)-6);
+      sctx.fillStyle=c.red; sctx.fillText("EV",x0+4,yE(Ev)+16);
+    }
+
+    sctx.fillStyle=c.text; sctx.font="bold 17px Arial";
+    sctx.fillText(`f(E) = ${fmt(p)}`,x0+8,Tp+24);
+    sctx.fillStyle=c.muted; sctx.font="13px Arial";
+    sctx.fillText(`1 − f(E) = ${fmt(empty)}`,x0+8,Tp+44);
+  }
+}
+
+function drawDOS(){
+  const canvas=document.getElementById("dosCanvas"); if(!canvas) return;
+  const {ctx,w,h,c}=setupCanvas(canvas);
+  const T=+document.getElementById("dosT").value;
+  const EF_Ei=+document.getElementById("dosEF").value;  // common interpretation: EF relative to Ei
+  const view=document.getElementById("dosView").value;
+  const band=document.getElementById("dosBand") ? document.getElementById("dosBand").value : "conduction";
+  const kt=kB*T;
+  const Eg=1.12;
+  const Ec=Eg/2, Ev=-Eg/2, Ei=0, EF=EF_Ei;
+
+  const isConduction = band==="conduction";
+  const EFmEC = EF - Ec;
+  const EFmEV = EF - Ev;
+  const nNorm = Math.exp(EFmEC/kt);
+  const pNorm = Math.exp(-EFmEV/kt);
+
+  document.getElementById("dosTOut").textContent=T+" K";
+  document.getElementById("dosEFOut").textContent="EF−Ei = "+EF_Ei.toFixed(2)+" eV";
+  document.getElementById("dosViewOut").textContent=
+    view==="band" ? "band picture" : view==="chain" ? "full chain" : view==="overlay" ? "overlay" : "product";
+  document.getElementById("dosBandOut").textContent=isConduction?"conduction":"valence";
+
+  if(view==="band"){
+    document.getElementById("dosN").textContent=`n/NC≈${fmt(nNorm)}, p/NV≈${fmt(pNorm)}`;
+    document.getElementById("dosDiff").textContent=`EF−Ei = ${EF_Ei.toFixed(2)} eV`;
+    document.getElementById("dosRegime").textContent=EF_Ei>0.08?"n-type-like":EF_Ei<-0.08?"p-type-like":"intrinsic-like";
+    document.getElementById("dosPeak").textContent="shaded area = carriers";
+  }else{
+    const ratio = isConduction ? nNorm : pNorm;
+    document.getElementById("dosN").textContent=fmt(ratio);
+    document.getElementById("dosDiff").textContent=isConduction ? `EF−EC = ${EFmEC.toFixed(2)} eV` : `EF−EV = ${EFmEV.toFixed(2)} eV`;
+    document.getElementById("dosRegime").textContent = (isConduction ? EFmEC < -3*kt : EFmEV > 3*kt) ? "nondegenerate" : "near/degenerate";
+    document.getElementById("dosPeak").textContent = isConduction ? "≈ EC + kT/2" : "≈ EV − kT/2";
+  }
+
+  const explain=document.getElementById("dosExplain");
+  if(explain){
+    if(view==="band"){
+      explain.innerHTML =
+        `This picture combines the idea from the reference image: blue curves show available states, the green S-curve shows the Fermi-Dirac occupation function, and shaded areas represent actual carrier concentrations.`;
+    }else{
+      explain.innerHTML = isConduction
+        ? `Electron concentration is built from <b>DOS</b> × <b>electron occupation</b>: <span class="fdMiniEq">n = ∫ g<sub>C</sub>(E) f(E) dE</span>.`
+        : `Hole concentration is built from <b>DOS</b> × <b>empty-state probability</b>: <span class="fdMiniEq">p = ∫ g<sub>V</sub>(E)[1−f(E)] dE</span>.`;
+    }
+  }
+
+  ctx.fillStyle=c.bg; ctx.fillRect(0,0,w,h);
+
+  // Shared data for chain/overlay views
+  const eMax=0.8;
+  const vals=[];
+  let prodMax=0;
+  for(let i=0;i<=520;i++){
+    const x=eMax*i/520;
+    const dos=Math.sqrt(Math.max(x,0));
+    let prob;
+    if(isConduction){
+      prob = 1/(1+Math.exp((x-EFmEC)/kt)); // f(E), E=EC+x
+    }else{
+      const fval = 1/(1+Math.exp((-x+Ev-EF)/kt)); // E=EV-x
+      prob = 1 - fval; // hole probability
+    }
+    const prod=dos*prob;
+    vals.push({x,dos,prob,prod});
+    prodMax=Math.max(prodMax,prod);
+  }
+  prodMax=Math.max(prodMax,1e-30);
+
+  function drawBandPicture(){
+    // Layout inspired by textbook band/DOS diagrams, but redrawn as responsive canvas.
+    const L=62, R=32, Tpad=26, B=36;
+    const xMid=w*0.47;
+    const bandW=Math.min(150,w*0.18);
+    const xBandL=xMid-bandW/2, xBandR=xMid+bandW/2;
+    const yTop=Tpad+10, yBot=h-B;
+    const yRangeTop=0.85, yRangeBot=-0.85;
+    const Y=E=>yTop+(yRangeTop-E)/(yRangeTop-yRangeBot)*(yBot-yTop);
+    const yEc=Y(Ec), yEv=Y(Ev), yEi=Y(Ei), yEF=Y(EF);
+
+    // subtle background band region
+    const grad=ctx.createLinearGradient(xBandL,0,xBandR,0);
+    grad.addColorStop(0,isDark()?"rgba(255,255,255,.04)":"rgba(255,255,255,.55)");
+    grad.addColorStop(.5,isDark()?"rgba(56,215,255,.12)":"rgba(180,225,255,.52)");
+    grad.addColorStop(1,isDark()?"rgba(255,255,255,.04)":"rgba(255,255,255,.55)");
+    ctx.fillStyle=grad;
+    ctx.fillRect(xBandL,yTop,xBandR-xBandL,yBot-yTop);
+
+    // energy axis
+    ctx.strokeStyle=c.text; ctx.lineWidth=1.8;
+    line(ctx,L,yBot,L,yTop);
+    ctx.fillStyle=c.text; ctx.font="bold 14px Arial";
+    ctx.fillText("E",L-5,yTop+16);
+
+    // band edge and Fermi lines
+    function hline(y,color,label,xLabel, dashed=false, lw=2){
+      ctx.strokeStyle=color; ctx.lineWidth=lw;
+      ctx.setLineDash(dashed?[7,5]:[]);
+      line(ctx,L+8,y,w-R,y);
+      ctx.setLineDash([]);
+      ctx.fillStyle=color; ctx.font="bold 13px Arial";
+      ctx.fillText(label,xLabel,y-5);
+    }
+    hline(yEc,c.blue || c.accent,"EC",L+14,false,2.4);
+    hline(yEv,c.blue || c.accent,"EV",L+14,false,2.4);
+    hline(yEi,c.muted || "#888","Ei",L+14,true,1.6);
+    hline(yEF,c.red || "#ff6b8a","EF",L+14,true,2.1);
+
+    // Curves: center-right green Fermi function, right blue DOS, shaded carrier product regions.
+    const rightAmp=Math.min(150,w*0.17);
+    const xDOS=xBandR+12;
+
+    // Keep the Fermi-function plot fully inside the F(E)=0 to F(E)=1 window.
+    // Left boundary represents F(E)=0; right boundary represents F(E)=1.
+    const xFLeft=xBandL + 8;
+    const xFRight=xBandR - 8;
+
+    // axes label at bottom
+    ctx.fillStyle=c.muted; ctx.font="12px Arial";
+    ctx.fillText("F(E)=0",xFLeft-18,yBot+18);
+    ctx.fillText("F(E)=1",xFRight-12,yBot+18);
+
+    // Fermi function curve: top (high E) approaches 0 on the left, bottom (low E) approaches 1 on the right.
+    ctx.strokeStyle=c.green || "#65e6a7";
+    ctx.lineWidth=4;
+    ctx.beginPath();
+    for(let i=0;i<=460;i++){
+      const E=yRangeBot+(yRangeTop-yRangeBot)*i/460;
+      const f=1/(1+Math.exp((E-EF)/kt));
+      const x=xFLeft + (xFRight-xFLeft)*f;
+      const y=Y(E);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.fillStyle=c.green || "#65e6a7";
+    ctx.font="bold 13px Arial";
+    ctx.fillText("Fermi function f(E)",xFLeft+6,yEF+30);
+
+    // Conduction DOS gC(E), right opening above EC
+    const condPts=[];
+    for(let i=0;i<=180;i++){
+      const E=Ec+(yRangeTop-Ec)*i/180;
+      const g=Math.sqrt(Math.max(E-Ec,0))/Math.sqrt(yRangeTop-Ec);
+      const x=xDOS+rightAmp*g;
+      const y=Y(E);
+      condPts.push({E,g,x,y});
+    }
+    ctx.strokeStyle=c.blue || "#4db7ff";
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    condPts.forEach((p,i)=>{if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
+    ctx.stroke();
+    ctx.fillStyle=c.blue || "#4db7ff";
+    ctx.font="italic bold 13px Arial";
+    ctx.fillText("gC(E)",xDOS+rightAmp*.45,yEc-42);
+
+    // Valence DOS gV(E), right opening below EV
+    const valPts=[];
+    for(let i=0;i<=180;i++){
+      const E=Ev-(Ev-yRangeBot)*i/180;
+      const g=Math.sqrt(Math.max(Ev-E,0))/Math.sqrt(Ev-yRangeBot);
+      const x=xDOS+rightAmp*g;
+      const y=Y(E);
+      valPts.push({E,g,x,y});
+    }
+    ctx.strokeStyle=c.blue || "#4db7ff";
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    valPts.forEach((p,i)=>{if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
+    ctx.stroke();
+    ctx.fillStyle=c.blue || "#4db7ff";
+    ctx.font="italic bold 13px Arial";
+    ctx.fillText("gV(E)",xDOS+rightAmp*.45,yEv+54);
+
+    // Shade electron concentration area: gC(E) f(E)
+    ctx.beginPath();
+    ctx.moveTo(xDOS,yEc);
+    condPts.forEach(p=>{
+      const f=1/(1+Math.exp((p.E-EF)/kt));
+      const x=xDOS+rightAmp*p.g*f;
+      ctx.lineTo(x,p.y);
+    });
+    ctx.lineTo(xDOS,condPts[condPts.length-1].y);
+    ctx.closePath();
+    ctx.fillStyle=isDark()?"rgba(143,210,65,.75)":"rgba(132,196,42,.72)";
+    ctx.fill();
+
+    // Shade hole concentration area: gV(E)[1-f(E)]
+    ctx.beginPath();
+    ctx.moveTo(xDOS,yEv);
+    valPts.forEach(p=>{
+      const f=1/(1+Math.exp((p.E-EF)/kt));
+      const hole=1-f;
+      const x=xDOS+rightAmp*p.g*hole;
+      ctx.lineTo(x,p.y);
+    });
+    ctx.lineTo(xDOS,valPts[valPts.length-1].y);
+    ctx.closePath();
+    ctx.fillStyle=isDark()?"rgba(190,190,190,.66)":"rgba(120,120,120,.42)";
+    ctx.fill();
+
+    // central vertical reference and labels
+    ctx.strokeStyle=c.grid; ctx.lineWidth=1.4;
+    line(ctx,xBandL,yTop,xBandL,yBot);
+    line(ctx,xBandR,yTop,xBandR,yBot);
+    ctx.fillStyle=c.text; ctx.font="bold 18px Arial";
+    const typeText=EF_Ei>0.08?"N-type tendency: EF moves upward":EF_Ei<-0.08?"P-type tendency: EF moves downward":"Intrinsic tendency: EF near Ei";
+    ctx.fillText("Electron and hole concentrations from DOS × probability",L+10,Tpad+10);
+    ctx.font="bold 14px Arial"; ctx.fillStyle=c.muted;
+    ctx.fillText(typeText,L+10,Tpad+33);
+
+    // Arrows and formulas
+    function arrow(x1,y1,x2,y2,color){
+      ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=1.8;
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+      const a=Math.atan2(y2-y1,x2-x1), s=8;
+      ctx.beginPath();
+      ctx.moveTo(x2,y2);
+      ctx.lineTo(x2-s*Math.cos(a-.45),y2-s*Math.sin(a-.45));
+      ctx.lineTo(x2-s*Math.cos(a+.45),y2-s*Math.sin(a+.45));
+      ctx.closePath(); ctx.fill();
+    }
+    const xText=Math.min(w-R-230,xDOS+rightAmp+8);
+    ctx.fillStyle=c.text; ctx.font="bold 13px Arial";
+    ctx.fillText("electron concentration",xText,Math.max(yTop+72,yEc-48));
+    ctx.font="12px Arial";
+    ctx.fillText("gC(E) f(E)  →  n(E)",xText,Math.max(yTop+90,yEc-30));
+    arrow(xText-8,Math.max(yTop+88,yEc-30),xDOS+rightAmp*.44,yEc-18,c.text);
+
+    ctx.font="bold 13px Arial";
+    ctx.fillText("hole concentration",xText,Math.min(yBot-54,yEv+70));
+    ctx.font="12px Arial";
+    ctx.fillText("gV(E)[1−f(E)]  →  p(E)",xText,Math.min(yBot-36,yEv+88));
+    arrow(xText-8,Math.min(yBot-42,yEv+80),xDOS+rightAmp*.40,yEv+26,c.text);
+
+    // mini legend
+    const lx=L+10, ly=yBot-60;
+    const items=[
+      [c.blue || "#4db7ff","DOS: available states"],
+      [c.green || "#65e6a7","f(E): occupation probability"],
+      [c.red || "#ff6b8a","EF: Fermi level"],
+      [isDark()?"#8fd241":"#72aa28","shaded: electron carriers"],
+    ];
+    ctx.font="12px Arial";
+    items.forEach((it,i)=>{
+      const yy=ly+i*16;
+      ctx.fillStyle=it[0]; ctx.fillRect(lx,yy-9,14,8);
+      ctx.fillStyle=c.muted; ctx.fillText(it[1],lx+20,yy);
+    });
+  }
+
+  function drawPanel(y0,ph,title,ylabel,curveColor,kind){
+    const L=70,R=25;
+    const plotW=w-L-R;
+    const X=x=>L+x/eMax*plotW;
+    const Y=y=>y0+(1-y)*ph;
+    ctx.strokeStyle=c.grid; ctx.lineWidth=1;
+    for(let j=0;j<=3;j++){const yy=y0+ph*j/3; line(ctx,L,yy,L+plotW,yy);}
+    for(let j=0;j<=6;j++){const xx=L+plotW*j/6; line(ctx,xx,y0,xx,y0+ph);}
+    ctx.strokeStyle=c.text; ctx.lineWidth=1.4;
+    line(ctx,L,y0,L,y0+ph); line(ctx,L,y0+ph,L+plotW,y0+ph);
+    ctx.fillStyle=c.text; ctx.font="bold 15px Arial"; ctx.fillText(title,L+10,y0+20);
+    ctx.save(); ctx.translate(20,y0+ph/2+38); ctx.rotate(-Math.PI/2);
+    ctx.fillStyle=c.muted; ctx.font="12px Arial"; ctx.fillText(ylabel,0,0);
+    ctx.restore();
+    let maxVal=1;
+    if(kind==="dos") maxVal=Math.sqrt(eMax);
+    if(kind==="prob") maxVal=1;
+    if(kind==="prod") maxVal=prodMax;
+    if(kind==="prod"){
+      ctx.fillStyle=isDark()?"rgba(56,215,255,.20)":"rgba(35,199,244,.18)";
+      ctx.beginPath();
+      ctx.moveTo(X(0),Y(0));
+      vals.forEach(v=>ctx.lineTo(X(v.x),Y((v.prod/maxVal)*0.90)));
+      ctx.lineTo(X(eMax),Y(0));
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.strokeStyle=curveColor; ctx.lineWidth=2.8; ctx.beginPath();
+    vals.forEach((v,i)=>{
+      const value = kind==="dos" ? v.dos/maxVal*0.90 :
+                    kind==="prob" ? v.prob :
+                    v.prod/maxVal*0.90;
+      if(i===0) ctx.moveTo(X(v.x),Y(value)); else ctx.lineTo(X(v.x),Y(value));
+    });
+    ctx.stroke();
+    return {X,Y};
+  }
+
+  if(view==="band"){
+    drawBandPicture();
+  }else if(view==="chain"){
+    const L=70,R=25,Tp=26,B=44;
+    const plotH=h-Tp-B;
+    const gap=18;
+    const ph=(plotH-2*gap)/3;
+    const gSymbol=isConduction?"gC(E)":"gV(E)";
+    const probSymbol=isConduction?"f(E)":"1−f(E)";
+    const productSymbol=isConduction?"gC(E)f(E)":"gV(E)[1−f(E)]";
+    drawPanel(Tp,ph,`${gSymbol}: available states`,"relative DOS",c.blue || c.accent,"dos");
+    drawPanel(Tp+ph+gap,ph,`${probSymbol}: probability factor`,"probability",c.red || "#ff6b8a","prob");
+    drawPanel(Tp+2*(ph+gap),ph,`${productSymbol}: carrier contribution`,"product",c.accent,"prod");
+    ctx.fillStyle=c.text; ctx.font="13px Arial";
+    ctx.fillText(isConduction ? "E − EC (eV)" : "EV − E (eV)", L+(w-L-R)/2-45, h-14);
+  }else if(view==="overlay"){
+    const ax=drawAxes(ctx,w,h,c,isConduction ? "E − EC (eV)" : "EV − E (eV)","normalized scale");
+    const X=x=>ax.L+x/eMax*ax.plotW, Y=y=>ax.T+(1-y)*ax.plotH;
+    ctx.fillStyle=isDark()?"rgba(56,215,255,.18)":"rgba(35,199,244,.14)";
+    ctx.beginPath(); ctx.moveTo(X(0),Y(0));
+    vals.forEach(v=>ctx.lineTo(X(v.x),Y(v.prod/prodMax*.82)));
+    ctx.lineTo(X(eMax),Y(0)); ctx.closePath(); ctx.fill();
+    const drawCurve=(kind,color,label,yLabelOffset)=>{
+      ctx.strokeStyle=color; ctx.lineWidth=2.8; ctx.beginPath();
+      vals.forEach((v,i)=>{
+        let y = kind==="dos" ? v.dos/Math.sqrt(eMax)*.82 : kind==="prob" ? v.prob*.82 : v.prod/prodMax*.82;
+        if(i===0) ctx.moveTo(X(v.x),Y(y)); else ctx.lineTo(X(v.x),Y(y));
+      });
+      ctx.stroke();
+      ctx.fillStyle=color; ctx.font="bold 14px Arial"; ctx.fillText(label,ax.L+14,ax.T+yLabelOffset);
+    };
+    drawCurve("dos",c.blue || c.accent,isConduction?"gC(E)":"gV(E)",28);
+    drawCurve("prob",c.red || "#ff6b8a",isConduction?"f(E)":"1−f(E)",50);
+    drawCurve("prod",c.accent,isConduction?"gC(E)f(E)":"gV(E)[1−f(E)]",72);
+  }else{
+    const ax=drawAxes(ctx,w,h,c,isConduction ? "E − EC (eV)" : "EV − E (eV)","relative product");
+    const X=x=>ax.L+x/eMax*ax.plotW, Y=y=>ax.T+(1-y)*ax.plotH;
+    ctx.fillStyle=isDark()?"rgba(56,215,255,.22)":"rgba(35,199,244,.18)";
+    ctx.beginPath(); ctx.moveTo(X(0),Y(0));
+    vals.forEach(v=>ctx.lineTo(X(v.x),Y(v.prod/prodMax*.86)));
+    ctx.lineTo(X(eMax),Y(0)); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle=c.accent; ctx.lineWidth=3; ctx.beginPath();
+    vals.forEach((v,i)=>{const y=v.prod/prodMax*.86; if(i===0)ctx.moveTo(X(v.x),Y(y)); else ctx.lineTo(X(v.x),Y(y));});
+    ctx.stroke();
+    ctx.fillStyle=c.text; ctx.font="bold 18px Arial";
+    ctx.fillText(`${isConduction?"gC(E)f(E)":"gV(E)[1−f(E)]"}: final contribution only`,ax.L+12,ax.T+28);
+  }
+}
+
+function niSi(T,Eg){
+  const ni300=1e10, Eg0=1.12, T0=300;
+  return ni300*Math.pow(T/T0,1.5)*Math.exp(-(Eg-Eg0)/(2*kB*T))*Math.exp(-Eg/(2*kB)*(1/T-1/T0));
+}
+function drawConc(){
+  const canvas=document.getElementById("concCanvas"); if(!canvas) return;
+  const {ctx,w,h,c}=setupCanvas(canvas);
+  const T=+document.getElementById("concT").value, dEF=+document.getElementById("concEF").value, Eg=+document.getElementById("concEg").value;
+  const kt=kB*T, ni=niSi(T,Eg), n=ni*Math.exp(dEF/kt), p=ni*Math.exp(-dEF/kt);
+  document.getElementById("concTOut").textContent=T+" K"; document.getElementById("concEFOut").textContent=dEF.toFixed(2)+" eV"; document.getElementById("concEgOut").textContent=Eg.toFixed(2)+" eV";
+  document.getElementById("concN").textContent=fmtConc(n); document.getElementById("concP").textContent=fmtConc(p); document.getElementById("concNP").textContent=fmt(n*p)+" cm⁻⁶";
+  document.getElementById("concType").textContent=n>10*p?"n-type-like":p>10*n?"p-type-like":"intrinsic-like";
+  const ax=drawAxes(ctx,w,h,c,"quantity","log10 concentration (cm⁻³)");
+  const vals=[["n",n,c.blue],["p",p,c.red],["ni",ni,c.green]];
+  const logMin=0, logMax=20;
+  vals.forEach((v,i)=>{
+    const x=ax.L+ax.plotW*(i+1)/4, y=ax.T+(logMax-Math.log10(Math.max(v[1],1)))/(logMax-logMin)*ax.plotH;
+    ctx.fillStyle=v[2]; ctx.fillRect(x-42,y,84,ax.T+ax.plotH-y);
+    ctx.fillStyle=c.text; ctx.font="bold 16px Arial"; ctx.fillText(v[0],x-8,ax.T+ax.plotH+28);
+    ctx.fillText(fmt(v[1]),x-38,Math.max(y-10,ax.T+18));
+  });
+  ctx.fillStyle=c.text; ctx.font="bold 18px Arial"; ctx.fillText("Carrier concentration changes exponentially with EF",ax.L+12,ax.T+28);
+}
+
+function drawFL(){
+  const canvas=document.getElementById("flCanvas"); if(!canvas) return;
+  const {ctx,w,h,c}=setupCanvas(canvas);
+  const type=document.getElementById("flType").value, logD=+document.getElementById("flLogD").value, T=+document.getElementById("flT").value, Eg=+document.getElementById("flEg").value;
+  const N=Math.pow(10,logD), ni=niSi(T,Eg), kt=kB*T;
+  let dEF=0,n=ni,p=ni,minority="none";
+  if(type==="n"){n=N; p=ni*ni/n; dEF=kt*Math.log(n/ni); minority="holes";}
+  if(type==="p"){p=N; n=ni*ni/p; dEF=-kt*Math.log(p/ni); minority="electrons";}
+  document.getElementById("flTypeOut").textContent=type==="n"?"n-type":type==="p"?"p-type":"intrinsic";
+  document.getElementById("flDOut").textContent="1e"+logD.toFixed(1)+" cm⁻³";
+  document.getElementById("flTOut").textContent=T+" K"; document.getElementById("flEgOut").textContent=Eg.toFixed(2)+" eV";
+  document.getElementById("flShift").textContent=dEF.toFixed(3)+" eV"; document.getElementById("flN").textContent=fmtConc(n); document.getElementById("flP").textContent=fmtConc(p); document.getElementById("flMinority").textContent=minority;
+  ctx.fillStyle=c.bg; ctx.fillRect(0,0,w,h);
+  const L=95,R=70,Tp=45,B=55, plotH=h-Tp-B;
+  const Ev=Tp+plotH*.78, Ei=Tp+plotH*.50, Ec=Tp+plotH*.22;
+  function yEnergy(E){ // E relative to Ei, Ec=Eg/2, Ev=-Eg/2
+    const min=-Eg/2-.15,max=Eg/2+.15;
+    return Tp+(max-E)/(max-min)*plotH;
+  }
+  const yEc=yEnergy(Eg/2), yEv=yEnergy(-Eg/2), yEi=yEnergy(0), yEF=yEnergy(dEF);
+  ctx.lineWidth=4;
+  ctx.strokeStyle=c.blue; line(ctx,L,yEc,w-R,yEc);
+  ctx.strokeStyle=c.red; line(ctx,L,yEv,w-R,yEv);
+  ctx.strokeStyle=c.green; ctx.setLineDash([8,6]); line(ctx,L,yEi,w-R,yEi); ctx.setLineDash([]);
+  ctx.strokeStyle=c.orange; ctx.setLineDash([12,6]); line(ctx,L,yEF,w-R,yEF); ctx.setLineDash([]);
+  ctx.fillStyle=c.text; ctx.font="bold 22px Arial"; ctx.fillText("EC",w-R+10,yEc+6); ctx.fillText("EV",w-R+10,yEv+6);
+  ctx.fillStyle=c.green; ctx.fillText("Ei",w-R+10,yEi+6);
+  ctx.fillStyle=c.orange; ctx.fillText("EF",w-R+10,yEF+6);
+  ctx.strokeStyle=c.grid; ctx.lineWidth=2; line(ctx,L,yEc,L,yEv);
+  ctx.fillStyle=c.text; ctx.font="bold 18px Arial"; ctx.fillText("Fermi level movement controls carrier probability",L,Tp+5);
+  ctx.font="15px Arial"; ctx.fillStyle=c.muted;
+  ctx.fillText(`Type: ${type==="n"?"donor n-type":type==="p"?"acceptor p-type":"intrinsic"} | N ≈ ${fmt(N)} cm⁻³ | ni ≈ ${fmt(ni)} cm⁻³`,L,Tp+32);
+  for(let i=0;i<28;i++){
+    const x=L+60+i*(w-L-R-120)/27;
+    if(type==="n" || type==="i"){
+      ctx.fillStyle=c.blue; ctx.beginPath(); ctx.arc(x,yEc-24-8*Math.sin(i),5,0,Math.PI*2); ctx.fill();
+    }
+    if(type==="p" || type==="i"){
+      ctx.fillStyle=c.red; ctx.beginPath(); ctx.arc(x,yEv+24+8*Math.cos(i),5,0,Math.PI*2); ctx.fill();
+    }
+  }
+}
+
+
+
+function typesetDerivePanel(){
+  if(!window.MathJax || !MathJax.typesetPromise) return;
+  clearTimeout(window.__deriveMathTimer);
+  window.__deriveMathTimer=setTimeout(()=>{
+    const targets=[
+      document.getElementById("deriveTitle"),
+      document.getElementById("deriveEq1"),
+      document.getElementById("deriveEq2"),
+      document.getElementById("deriveEq3"),
+      document.getElementById("deriveEq4"),
+      document.getElementById("deriveEq5"),
+      document.getElementById("deriveStep2Text"),
+      document.getElementById("deriveStep3Text"),
+      document.getElementById("deriveStep4Text"),
+      document.getElementById("deriveEdge"),
+      document.getElementById("deriveProb"),
+      document.getElementById("deriveError"),
+      document.getElementById("deriveResult"),
+      document.getElementById("deriveInterp"),
+      document.getElementById("deriveMeaning")
+    ].filter(Boolean);
+
+    const run=()=>{
+      try{
+        if(MathJax.typesetClear) MathJax.typesetClear(targets);
+        window.__deriveMathPromise = MathJax.typesetPromise(targets).catch(()=>{});
+      }catch(e){}
+    };
+
+    if(window.__deriveMathPromise){
+      window.__deriveMathPromise.then(run).catch(run);
+    }else{
+      run();
+    }
+  },120);
+}
+
+function drawDerive(){
+  const canvas=document.getElementById("deriveCanvas"); if(!canvas) return;
+  const {ctx,w,h,c}=setupCanvas(canvas);
+
+  const mode=document.getElementById("deriveMode").value;
+  const T=+document.getElementById("deriveT").value;
+  const EFmEi=+document.getElementById("deriveEF").value;
+  const Eg=+document.getElementById("deriveEg").value;
+
+  document.getElementById("deriveModeOut").textContent=mode==="n"?"electrons n":"holes p";
+  document.getElementById("deriveTOut").textContent=T+" K";
+  document.getElementById("deriveEFOut").textContent=EFmEi.toFixed(2)+" eV";
+  document.getElementById("deriveEgOut").textContent=Eg.toFixed(2)+" eV";
+
+  const Ei=0, Ec=Eg/2, Ev=-Eg/2, EF=EFmEi;
+  const kt=kB*T;
+
+  let edgeOffset, edgeProbExact, edgeProbBoltz, finalRatio, errorPct;
+  if(mode==="n"){
+    edgeOffset = Ec - EF;
+    edgeProbExact = 1/(1+Math.exp(edgeOffset/kt));              // f(Ec)
+    edgeProbBoltz = Math.exp(-edgeOffset/kt);
+    finalRatio = edgeProbBoltz;                                 // n/Nc
+    errorPct = Math.abs(edgeProbBoltz-edgeProbExact)/Math.max(edgeProbExact,1e-30)*100;
+  }else{
+    edgeOffset = EF - Ev;
+    const fEv = 1/(1+Math.exp((Ev-EF)/kt));
+    edgeProbExact = 1 - fEv;                                    // 1-f(Ev)
+    edgeProbBoltz = Math.exp(-edgeOffset/kt);
+    finalRatio = edgeProbBoltz;                                 // p/Nv
+    errorPct = Math.abs(edgeProbBoltz-edgeProbExact)/Math.max(edgeProbExact,1e-30)*100;
+  }
+
+  // Update the step text and equations
+  const title = document.getElementById("deriveTitle");
+  const s1 = document.getElementById("deriveStep1Text");
+  const s2 = document.getElementById("deriveStep2Text");
+  const s3 = document.getElementById("deriveStep3Text");
+  const s4 = document.getElementById("deriveStep4Text");
+
+  const eq1 = document.getElementById("deriveEq1");
+  const eq2 = document.getElementById("deriveEq2");
+  const eq3 = document.getElementById("deriveEq3");
+  const eq4 = document.getElementById("deriveEq4");
+  const eq5 = document.getElementById("deriveEq5");
+
+  if(mode==="n"){
+    title.innerHTML="<b>Electrons:</b> count states near \\(E_C\\), then weight them by the probability that those states are occupied.";
+    eq1.innerHTML=String.raw`\[ n=\int_{E_C}^{\infty} g_C(E)f(E)\,dE \]`;
+    eq2.innerHTML=String.raw`\[ f(E)=\frac{1}{1+\exp\!\left(\frac{E-E_F}{kT}\right)} \]`;
+    eq3.innerHTML=String.raw`\[ f(E)\approx\exp\!\left(-\frac{E-E_F}{kT}\right) \]`;
+    eq4.innerHTML=String.raw`\[ n=N_C\exp\!\left(-\frac{E_C-E_F}{kT}\right) \]`;
+    eq5.innerHTML=String.raw`\[ n=n_i\exp\!\left(\frac{E_F-E_i}{kT}\right) \]`;
+
+    s1.textContent="Electrons in the conduction band are found by multiplying the conduction-band DOS by the probability of occupation and integrating over energy.";
+    s2.innerHTML=String.raw`At the conduction-band edge, \(E_C-E_F=${edgeOffset.toFixed(3)}\,\mathrm{eV}=${(edgeOffset/kt).toFixed(2)}\,kT\).`;
+    s3.innerHTML=String.raw`Because the edge is \(${Math.abs(edgeOffset/kt).toFixed(2)}\,kT\) above \(E_F\), the exact Fermi-Dirac probability and the Boltzmann exponential are ${errorPct<5?"very close":"noticeably different"}.`;
+    s4.innerHTML=String.raw`All the detailed square-root DOS integration is absorbed into \(N_C\). The remaining exponential factor is the probability penalty for occupying states near \(E_C\).`;
+  }else{
+    title.innerHTML="<b>Holes:</b> count states near \\(E_V\\), then weight them by the probability that those states are empty.";
+    eq1.innerHTML=String.raw`\[ p=\int_{-\infty}^{E_V} g_V(E)\,[1-f(E)]\,dE \]`;
+    eq2.innerHTML=String.raw`\[ 1-f(E)=\frac{1}{1+\exp\!\left(\frac{E_F-E}{kT}\right)} \]`;
+    eq3.innerHTML=String.raw`\[ 1-f(E)\approx\exp\!\left(-\frac{E_F-E}{kT}\right) \]`;
+    eq4.innerHTML=String.raw`\[ p=N_V\exp\!\left(-\frac{E_F-E_V}{kT}\right) \]`;
+    eq5.innerHTML=String.raw`\[ p=n_i\exp\!\left(\frac{E_i-E_F}{kT}\right) \]`;
+
+    s1.textContent="Holes in the valence band are counted from empty states, so the weighting factor is 1 − f(E).";
+    s2.innerHTML=String.raw`At the valence-band edge, \(E_F-E_V=${edgeOffset.toFixed(3)}\,\mathrm{eV}=${(edgeOffset/kt).toFixed(2)}\,kT\).`;
+    s3.innerHTML=String.raw`Because the edge is \(${Math.abs(edgeOffset/kt).toFixed(2)}\,kT\) below \(E_F\), the exact empty-state probability and the Boltzmann exponential are ${errorPct<5?"very close":"noticeably different"}.`;
+    s4.innerHTML=String.raw`All the detailed DOS integration near \(E_V\) is absorbed into \(N_V\). The remaining exponential factor is the probability penalty for leaving an empty state near \(E_V\).`;
+  }
+
+  const edgeLatex =
+    mode==="n"
+      ? String.raw`\[
+          E_C-E_F=${edgeOffset.toFixed(3)}\,\mathrm{eV}
+          = ${(edgeOffset/kt).toFixed(2)}\,kT
+        \]`
+      : String.raw`\[
+          E_F-E_V=${edgeOffset.toFixed(3)}\,\mathrm{eV}
+          = ${(edgeOffset/kt).toFixed(2)}\,kT
+        \]`;
+
+  const probLatex =
+    mode==="n"
+      ? String.raw`\[
+          f(E_C)=${fmtLatex(edgeProbExact)}
+          \qquad
+          e^{-(E_C-E_F)/kT}=${fmtLatex(edgeProbBoltz)}
+        \]`
+      : String.raw`\[
+          1-f(E_V)=${fmtLatex(edgeProbExact)}
+          \qquad
+          e^{-(E_F-E_V)/kT}=${fmtLatex(edgeProbBoltz)}
+        \]`;
+
+  const errorLatex = String.raw`\[
+      \mathrm{error}=${errorPct.toFixed(errorPct<1?2:1)}\%
+    \]`;
+
+  const resultLatex =
+    mode==="n"
+      ? String.raw`\[
+          n=N_C e^{-(E_C-E_F)/kT}
+          = n_i e^{(E_F-E_i)/kT}
+        \]`
+      : String.raw`\[
+          p=N_V e^{-(E_F-E_V)/kT}
+          = n_i e^{(E_i-E_F)/kT}
+        \]`;
+
+  document.getElementById("deriveEdge").innerHTML=edgeLatex;
+  document.getElementById("deriveProb").innerHTML=probLatex;
+  document.getElementById("deriveError").innerHTML=errorLatex;
+  document.getElementById("deriveResult").innerHTML=resultLatex;
+
+  const interp=document.getElementById("deriveInterp");
+  interp.innerHTML =
+    mode==="n"
+      ? `<b>Interpretation.</b> Near the conduction-band edge, the exact weighting factor is \\(f(E)\\).
+         When \\(E_C-E_F\\gg kT\\), the exact curve becomes almost identical to
+         \\(\\exp[-(E-E_F)/kT]\\).`
+      : `<b>Interpretation.</b> Near the valence-band edge, the exact weighting factor is \\(1-f(E)\\).
+         When \\(E_F-E_V\\gg kT\\), the exact empty-state probability becomes almost identical to
+         \\(\\exp[-(E_F-E)/kT]\\).`;
+
+  const meaning=document.getElementById("deriveMeaning");
+  meaning.innerHTML =
+    mode==="n"
+      ? String.raw`\[
+          n = N_C\exp\!\left(-\frac{E_C-E_F}{kT}\right)
+        \]
+        <b>Physical meaning.</b> The factor \(N_C\) counts the thermally relevant conduction-band states.
+        The factor \(\exp[-(E_C-E_F)/kT]\) is the probability cost for electrons to occupy those states.
+        As \(E_F\) moves upward toward \(E_C\), that probability penalty becomes smaller, so \(n\) rises exponentially.`
+      : String.raw`\[
+          p = N_V\exp\!\left(-\frac{E_F-E_V}{kT}\right)
+        \]
+        <b>Physical meaning.</b> The factor \(N_V\) counts the thermally relevant valence-band states.
+        The factor \(\exp[-(E_F-E_V)/kT]\) is the probability cost for leaving those states empty.
+        As \(E_F\) moves downward toward \(E_V\), that probability penalty becomes smaller, so \(p\) rises exponentially.`;
+
+  typesetDerivePanel();
+
+  // --------- Draw exact FD vs Boltzmann comparison ----------
+  ctx.fillStyle=c.bg;
+  ctx.fillRect(0,0,w,h);
+  const L=68,R=18,Tp=28,B=40;
+  const plotW=w-L-R, plotH=h-Tp-B;
+
+  // axes
+  ctx.strokeStyle=c.grid; ctx.lineWidth=1;
+  for(let i=0;i<=5;i++){ const xx=L+i*plotW/5; line(ctx,xx,Tp,xx,Tp+plotH); }
+  for(let j=0;j<=5;j++){ const yy=Tp+j*plotH/5; line(ctx,L,yy,L+plotW,yy); }
+  ctx.strokeStyle=c.text; ctx.lineWidth=1.5;
+  line(ctx,L,Tp,L,Tp+plotH);
+  line(ctx,L,Tp+plotH,L+plotW,Tp+plotH);
+
+  ctx.fillStyle=c.text; ctx.font="bold 18px Arial";
+  ctx.fillText(mode==="n"?"Probability near the conduction-band edge":"Probability near the valence-band edge",L+10,Tp+24);
+  ctx.font="14px Arial"; ctx.fillStyle=c.muted;
+  ctx.fillText(mode==="n"
+               ?"Exact Fermi-Dirac vs Boltzmann approximation for f(E)"
+               :"Exact empty-state probability vs Boltzmann approximation for 1−f(E)",
+               L+10,Tp+46);
+
+  const xMax=0.30; // eV away from band edge
+  const X=x=>L + x/xMax*plotW;
+  const Y=y=>Tp + (1-y)*plotH;
+
+  // probability curves
+  ctx.strokeStyle=c.accent; ctx.lineWidth=3; ctx.beginPath();
+  ctx.strokeStyle=isDark()?"#37d7ff":"#0aa2da";
+  for(let i=0;i<=360;i++){
+    const x=xMax*i/360;
+    let pExact;
+    if(mode==="n"){
+      pExact=1/(1+Math.exp((edgeOffset + x)/kt));
+    }else{
+      pExact=1/(1+Math.exp((edgeOffset + x)/kt)); // this already equals empty-state probability at Ev-x
+    }
+    const y=Math.min(1,pExact/Math.max(edgeProbExact,1e-30));
+    if(i===0) ctx.moveTo(X(x),Y(y)); else ctx.lineTo(X(x),Y(y));
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle=isDark()?"#ff7b99":"#d84f79"; ctx.lineWidth=2.6; ctx.setLineDash([8,5]); ctx.beginPath();
+  for(let i=0;i<=360;i++){
+    const x=xMax*i/360;
+    const pBoltz=Math.exp(-(edgeOffset + x)/kt);
+    const y=Math.min(1,pBoltz/Math.max(edgeProbBoltz,1e-30));
+    if(i===0) ctx.moveTo(X(x),Y(y)); else ctx.lineTo(X(x),Y(y));
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // highlight band edge
+  ctx.strokeStyle=c.green; ctx.lineWidth=2; ctx.setLineDash([6,4]);
+  line(ctx,X(0),Tp,X(0),Tp+plotH);
+  ctx.setLineDash([]);
+  ctx.fillStyle=c.green; ctx.font="bold 13px Arial";
+  ctx.fillText(mode==="n"?"E = E_C":"E = E_V",X(0)+6,Tp+plotH-10);
+
+  // labels
+  ctx.fillStyle=c.text; ctx.font="13px Arial";
+  ctx.fillText(mode==="n"?"Δ = E − E_C (eV)":"Δ = E_V − E (eV)",L+plotW/2-56,h-14);
+  ctx.save(); ctx.translate(18,Tp+plotH/2+42); ctx.rotate(-Math.PI/2);
+  ctx.fillText("relative probability (normalized to the band edge)",0,0);
+  ctx.restore();
+
+  // legend
+  const lx=L+12, ly=Tp+plotH-70;
+  ctx.fillStyle=isDark()?"#37d7ff":"#0aa2da"; ctx.fillRect(lx,ly,18,4);
+  ctx.fillStyle=c.muted; ctx.fillText(mode==="n"?"exact f(E)":"exact [1−f(E)]",lx+24,ly+6);
+  ctx.fillStyle=isDark()?"#ff7b99":"#d84f79"; ctx.fillRect(lx,ly+24,18,4);
+  ctx.fillStyle=c.muted; ctx.fillText("Boltzmann approximation",lx+24,ly+30);
+
+  // Clean plot: keep only curves, axes, and legend.
+}
+
+function drawAll(){drawBoltz();drawFD();drawDOS();drawConc();drawFL();drawDerive();}
+["boltzT","boltzE","boltzMode","boltzCase","fdT","fdEF","fdE","fdPicture","dosT","dosEF","dosView","dosBand","concT","concEF","concEg","deriveMode","deriveT","deriveEF","deriveEg","flType","flLogD","flT","flEg"].forEach(id=>{
+  const el=document.getElementById(id);
+  if(!el) return;
+
+  // Important:
+  // Range sliders use "change" instead of real-time "input".
+  // This updates the simulation only after the user releases the slider,
+  // preventing MathJax from being interrupted while equations are re-rendering.
+  if(el.type==="range"){
+    el.addEventListener("change",drawAll);
+  }else{
+    el.addEventListener("change",drawAll);
+  }
+});
+window.addEventListener("resize",()=>setTimeout(drawAll,80));
+render();
+</script>
+<a class="hubMainMenuButton" href="../index.html" title="Back to Semiconductor Learning Hub">← Main Menu</a>
+
+<!-- maestra-integration-v4 -->
+<link rel="stylesheet" href="../shared/maestra-toolbar.css">
+<script defer src="../shared/theme-sync-v2.js"></script>
+<script defer src="../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="semiconductor-foundations" data-maestra-module-title="Semiconductor Foundations" data-maestra-topic-title="Basic Semiconductor" data-maestra-canvas-template="semiconductor-foundations"></script>
+</body>
+</html>

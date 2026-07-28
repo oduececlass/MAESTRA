@@ -1,0 +1,1600 @@
+<!doctype html>
+<!-- Standalone rubber-sheet Poisson equation metaphor tutor with embedded AI chat. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Poisson Equation Rubber-Sheet Simulation & AI Tutor - High Resolution</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  
+  <style>
+    :root {
+      --bg: #efefea;
+      --panel: #f7f7f5;
+      --line: #b7b7b2;
+      --text: #1d1d1f;
+      --muted: #555;
+      --green: #2ed629;
+      --green-dark: #03a714;
+      --yellow: #f5cd45;
+      --blue: #cfe4ff;
+      --primary: #2563eb;
+      --button: #eeeeee;
+      --chat-user: #e0f2fe;
+      --chat-ai: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: auto;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: minmax(300px, 330px) minmax(460px, 1fr) var(--right-panel-width, 380px);
+      gap: 8px;
+      width: 100vw;
+      height: 100vh;
+      padding: 8px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .right-panel {
+      position: relative;
+      min-width: 280px;
+    }
+
+    .chat-resize-handle {
+      position: absolute;
+      left: -6px;
+      top: 0;
+      bottom: 0;
+      width: 12px;
+      cursor: col-resize;
+      z-index: 50;
+      background: transparent;
+    }
+
+    .chat-resize-handle::after {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: 40%;
+      width: 2px;
+      height: 20%;
+      border-radius: 2px;
+      background: rgba(37, 99, 235, 0.45);
+    }
+
+    .chat-resize-handle:hover::after,
+    body.resizing-chat .chat-resize-handle::after {
+      background: rgba(37, 99, 235, 0.95);
+      width: 3px;
+    }
+
+    body.resizing-chat {
+      cursor: col-resize;
+      user-select: none;
+    }
+
+    .panel-title {
+      height: 30px;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 700;
+      font-size: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .control-scroll {
+      overflow-y: auto;
+      padding: 10px 14px 16px 14px;
+      flex: 1;
+    }
+
+    .control-section { margin-bottom: 17px; }
+    .control-section h3 { margin: 0 0 11px 0; font-size: 14px; line-height: 1.3; }
+
+    .mode-btn, .secondary-btn, select, .small-btn {
+      width: 100%; min-height: 39px; border: 1px solid #9d9d9a;
+      border-radius: 5px; font-size: 14px; margin: 4px 0; cursor: pointer;
+    }
+
+    .mode-btn.positive, .mode-btn.negative { background: var(--green); }
+    .mode-btn.positive.active, .mode-btn.negative.active { background: var(--green-dark); font-weight: 700; color: white;}
+    .mode-btn.remove { background: var(--yellow); }
+    .mode-btn.remove.active { background: #e29e15; font-weight: 700; }
+    .mode-btn.inspect { background: var(--blue); }
+    .mode-btn.inspect.active { background: #7bb5ff; font-weight: 700; }
+    
+    .secondary-btn { background: var(--button); }
+    .secondary-btn.active { background: #62d95e; font-weight: 700; }
+    .secondary-btn.primary { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold;}
+    .secondary-btn.reset { margin-top: 10px; }
+    .small-btn { min-height: 34px; font-size: 13px; }
+
+    .status-label { margin-top: 12px; font-size: 13px; font-weight: 700; line-height: 1.35; }
+    
+    .slider-label {
+      display: flex; justify-content: space-between; align-items: baseline;
+      gap: 10px; font-size: 14px; font-weight: 700; margin: 15px 0 7px 0; line-height: 1.25;
+    }
+    .slider-label strong { min-width: 54px; text-align: right; }
+    input[type="range"] { width: 100%; margin: 0; accent-color: #348ee8; }
+    .tick-row { display: flex; justify-content: space-between; color: #333; font-size: 12px; padding: 4px 2px 0 2px; min-height: 19px; }
+
+    .coordinate-box { margin-top: 14px; padding: 10px; border: 1px solid #c9c9c5; border-radius: 6px; background: #ffffffc9; }
+    .coordinate-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+    .coord-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+    .coord-row label { font-size: 13px; font-weight: 700; }
+    .coord-row input { width: 100%; height: 32px; margin-top: 4px; padding: 4px 6px; border: 1px solid #aaa; border-radius: 4px; font-size: 13px; }
+
+    .select-label { display: block; font-size: 14px; font-weight: 700; margin: 0 0 6px 0; }
+    select { background: white; padding: 0 8px; }
+
+    .check-row { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0; font-size: 13px; line-height: 1.25; }
+    .check-row input { margin-top: 2px; }
+
+    .instructions { border: 1px solid #c9c9c5; padding: 10px; background: #ffffffb8; font-size: 13px; line-height: 1.35; }
+    .instructions ol { margin: 0 0 8px 18px; padding: 0; }
+    .instructions p { margin: 0; color: #444; }
+
+    .simulation-panel { display: grid; grid-template-rows: 30px minmax(420px, 58vh) minmax(280px, 34vh); min-height: 0; overflow: visible; }
+    .plot { min-width: 0; min-height: 0; width: 100%; height: 100%; }
+
+    .panel-tabs { display: flex; border-bottom: 1px solid var(--line); flex-shrink: 0; background: #e5e5e0;}
+    .tab-btn { flex: 1; padding: 8px; cursor: pointer; background: transparent; border: none; border-bottom: 2px solid transparent; font-weight: bold; font-size: 13px; color: var(--muted);}
+    .tab-btn.active { border-bottom: 2px solid var(--primary); color: var(--primary); background: var(--panel);}
+    
+    #tab-maps { display: grid; grid-template-rows: minmax(120px, 1fr) minmax(120px, 1fr) auto minmax(100px, 1fr); height: 100%; overflow: hidden;}
+    #tab-chat { display: none; }
+    #tab-lesson { display: none; flex-direction: column; height: 100%; overflow-y: auto; padding: 10px; background: #fbfbfb; }
+    .ai-tab-hidden { display: none !important; }
+    .inline-ai-chat { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 360px; padding: 0; overflow: hidden; }
+    .inline-ai-chat .chat-header { flex-shrink: 0; }
+    .inline-ai-chat .chat-messages { min-height: 220px; flex: 1 1 auto; }
+    .inline-ai-chat .chat-composer { flex-shrink: 0; }
+    .lesson-card { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 13px; line-height: 1.35; }
+    .lesson-card h3 { margin: 0 0 6px 0; font-size: 14px; color: #0f3f56; }
+    .lesson-card p { margin: 5px 0; }
+    .lesson-card ol, .lesson-card ul { margin: 6px 0 6px 20px; padding: 0; }
+    .lesson-badge { display: inline-block; background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; border-radius: 999px; padding: 2px 8px; font-weight: 700; font-size: 11px; margin-bottom: 6px; }
+    .lesson-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+    .lesson-btn { min-height: 32px; border: 1px solid #9d9d9a; border-radius: 5px; background: #eef2ff; cursor: pointer; font-weight: 700; font-size: 12px; }
+    .lesson-btn:hover { filter: brightness(0.97); }
+
+    .project-selector-card { background: #f8fafc; position: sticky; top: 0; z-index: 3; box-shadow: 0 2px 5px rgba(15,23,42,0.06); }
+    .project-card { display: none; }
+    .project-card.active { display: block; }
+
+    .map-plot { cursor: crosshair; }
+    .guide-card { margin: 6px 8px; border: 1px solid var(--line); background: #fff; overflow: hidden; display: flex; flex-direction: column; }
+    .guide-title { font-size: 12px; font-weight: 700; padding: 4px 6px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+    .guide-card img { display: block; max-width: 100%; height: auto; max-height: 14vh; object-fit: contain; margin: 0 auto; }
+    .explanation { margin: 0 8px 8px 8px; padding: 10px; border: 1px solid var(--line); background: #ffffff; overflow-y: auto; white-space: normal; font-size: 13px; line-height: 1.35; height: calc(100% - 8px); }
+    .explanation h3 { margin: 0 0 8px 0; font-size: 14px; color: #0f3f56; }
+    .explanation .meta-line { margin: 4px 0; }
+    .explanation .eq-box { margin-top: 10px; padding: 8px; border-left: 4px solid var(--primary); background: #f8fafc; }
+    .explanation .eq-box div { margin: 4px 0; }
+    .explanation .note-line { margin-top: 8px; color: #475569; font-size: 12px; }
+
+    .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: #eef2ff; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: bold;}
+    .chat-header button { border: 1px solid #ccc; background: white; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px;}
+    .chat-messages { flex: 1; overflow-y: auto; padding: 10px; background: #fbfbfb; display: flex; flex-direction: column; gap: 10px;}
+    
+    .msg { border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-size: 13px; line-height: 1.4; white-space: normal; overflow-wrap: anywhere;}
+    .msg .role { display: block; text-transform: uppercase; font-size: 10px; font-weight: 800; color: var(--muted); margin-bottom: 4px; }
+    .msg.user { background: var(--chat-user); align-self: flex-end; width: 90%; border-color: #bae6fd;}
+    .msg.assistant { background: var(--chat-ai); align-self: flex-start; width: 95%; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+    .msg.error { background: #fee2e2; color: #991b1b; }
+    
+    .msg h1, .msg h2, .msg h3 { margin: 0.5em 0 0.25em; line-height: 1.2; }
+    .msg h1 { font-size: 1.2em; } .msg h2 { font-size: 1.1em; } .msg h3 { font-size: 1.05em; }
+    .msg p { margin: 0.5em 0; }
+    .msg ul, .msg ol { margin: 0.3em 0 0.3em 1.2em; padding: 0; }
+    .msg code { background: #f1f5f9; padding: 0.1em 0.3em; border-radius: 4px; font-family: monospace;}
+    .msg pre { background: #1e293b; color: #f8fafc; padding: 8px; border-radius: 6px; overflow-x: auto; }
+    .mathBlock { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+    .msg mjx-container { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+    .msg mjx-container[display="true"] { margin: 0.55em 0 !important; }
+    .msg .MathJax, .msg .MJXc-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+
+    .chat-composer { padding: 10px; background: #fff; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px;}
+    .chat-composer textarea { width: 100%; resize: none; border: 1px solid var(--line); border-radius: 6px; padding: 8px; font-size: 13px; font-family: inherit;}
+    .chat-actions { display: flex; justify-content: space-between; align-items: center;}
+    .chat-actions label { margin: 0; font-size: 12px; font-weight: normal; display: flex; align-items: center; gap: 4px; cursor: pointer;}
+
+    .thinking-wrapper { display: flex; align-items: center; height: 16px; padding: 4px 0; }
+    .dot-flashing { position: relative; width: 6px; height: 6px; border-radius: 5px; background-color: var(--primary); animation: dot-flashing 1s infinite linear alternate; animation-delay: 0.5s; margin-left: 12px; }
+    .dot-flashing::before, .dot-flashing::after { content: ''; position: absolute; top: 0; width: 6px; height: 6px; border-radius: 5px; background-color: var(--primary); animation: dot-flashing 1s infinite alternate; }
+    .dot-flashing::before { left: -12px; animation-delay: 0s; }
+    .dot-flashing::after { left: 12px; animation-delay: 1s; }
+    @keyframes dot-flashing { 0% { background-color: var(--primary); } 50%, 100% { background-color: rgba(37, 99, 235, 0.2); } }
+
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal.hidden { display: none; }
+    .modal-card { background: #fff; width: 400px; max-width: 90vw; border-radius: 8px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;}
+    .modal-card h2 { margin: 0 0 15px 0; font-size: 18px; }
+    .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+
+    .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: rgba(22, 22, 22, 0.92); color: white; padding: 9px 14px; border-radius: 8px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity 0.18s ease; max-width: 70vw; text-align: center; z-index: 2000; }
+    .toast.show { opacity: 1; }
+
+    @media (max-width: 1100px) {
+      .app-shell { height: auto; min-height: 100vh; grid-template-columns: 1fr; grid-template-rows: auto minmax(920px, auto) minmax(920px, auto); }
+      .control-scroll { height: auto; max-height: none; }
+      .simulation-panel { min-height: 760px; }
+      #tab-maps { grid-template-rows: minmax(200px, 1fr) minmax(200px, 1fr) auto minmax(150px, 1fr); }
+    }
+  
+
+    /* ================================================================
+       High-resolution classroom mode
+       ================================================================ */
+    html, body { font-size: 18px; }
+    .app-shell {
+      grid-template-columns: minmax(370px, 410px) minmax(760px, 1fr) var(--right-panel-width, 480px);
+      gap: 12px;
+      padding: 12px;
+    }
+    .panel-title { height: 44px; padding: 10px 12px; font-size: 21px; }
+    .simulation-panel { grid-template-rows: 44px minmax(600px, 64vh) minmax(390px, 36vh); }
+    .control-scroll { padding: 14px 18px 20px 18px; }
+    .control-section h3,
+    .select-label,
+    .slider-label,
+    .lesson-card h3,
+    .explanation h3 { font-size: 18px; }
+    .slider-label { margin-top: 18px; }
+    .mode-btn, .secondary-btn, select, .small-btn {
+      min-height: 48px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+    .small-btn { min-height: 42px; font-size: 16px; }
+    .status-label,
+    .coordinate-title,
+    .coord-row label,
+    .check-row,
+    .instructions,
+    .lesson-card,
+    .explanation,
+    .msg,
+    .chat-composer textarea { font-size: 16px; line-height: 1.55; }
+    .tick-row,
+    .lesson-badge,
+    .lesson-btn,
+    .guide-title,
+    .chat-header,
+    .chat-header button,
+    .chat-actions label { font-size: 14px; }
+    .coord-row input { height: 42px; font-size: 16px; }
+    .tab-btn { padding: 12px 10px; font-size: 16px; }
+    #tab-maps { grid-template-rows: minmax(250px, 1fr) minmax(250px, 1fr) auto minmax(200px, 1fr); }
+    #tab-lesson { padding: 14px; }
+    .lesson-card { padding: 14px; margin-bottom: 14px; }
+    .lesson-btn { min-height: 42px; font-size: 15px; }
+    .inline-ai-chat { min-height: 560px; }
+    .inline-ai-chat .chat-messages { min-height: 330px; }
+    .chat-composer textarea { min-height: 110px; }
+    .explanation .eq-box { font-size: 17px; }
+    .mathBlock { font-size: 1.05em; }
+
+  </style>
+
+<style id="hubMainMenuStyle">
+.hubMainMenuButton{
+  position:fixed;
+  right:18px;
+  top:76px;
+  z-index:999999;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:11px 15px;
+  border-radius:999px;
+  border:1px solid rgba(56,215,255,.65);
+  background:linear-gradient(135deg,#38d7ff,#7f7cff);
+  color:#06131d !important;
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  font-size:14px;
+  font-weight:950;
+  text-decoration:none !important;
+  box-shadow:0 14px 34px rgba(0,0,0,.34);
+}
+.hubMainMenuButton:hover{
+  transform:translateY(-1px);
+  filter:brightness(1.06);
+}
+@media(max-width:760px){
+  .hubMainMenuButton{
+    top:auto;
+    right:14px;
+    bottom:14px;
+    font-size:13px;
+    padding:10px 13px;
+  }
+}
+@media print{
+  .hubMainMenuButton{display:none!important;}
+}
+</style>
+
+</head>
+<body>
+  <div class="app-shell">
+    
+    <!-- LEFT PANEL: Simulation Controls -->
+    <aside class="panel controls-panel">
+      <div class="panel-title">Poisson Rubber-Sheet Controls</div>
+      <div class="control-scroll">
+        <section class="control-section">
+          <h3>1) Choose source-charge mode</h3>
+          <button id="btnPositive" class="mode-btn active positive">Add Positive Source +ρ</button>
+          <button id="btnNegative" class="mode-btn negative">Add Negative Source −ρ</button>
+          <button id="btnRemove" class="mode-btn remove">Remove Nearest Source</button>
+          <button id="btnInspect" class="mode-btn inspect">Inspect Point Values</button>
+          <div id="modeLabel" class="status-label">Current mode: Add Positive Source +ρ</div>
+        </section>
+
+        <section class="control-section slider-section">
+          <h3>2) Poisson / material parameters</h3>
+
+          <label class="slider-label" for="epsilonSlider">
+            <span>Permittivity ε</span>
+            <strong id="epsilonValue">2.00</strong>
+          </label>
+          <input id="epsilonSlider" type="range" min="0.5" max="10" value="2" step="0.01" />
+          <div class="tick-row"><span>0.5</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span></div>
+
+          <label class="slider-label" for="strengthSlider">
+            <span>Source-charge strength</span>
+            <strong id="strengthValue">2.20</strong>
+          </label>
+          <input id="strengthSlider" type="range" min="0.2" max="6" value="2.2" step="0.01" />
+          <div class="tick-row"><span>0.2</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
+
+          <label class="slider-label" for="sigmaSlider">
+            <span>Source smoothing σ</span>
+            <strong id="sigmaValue">2.80</strong>
+          </label>
+          <input id="sigmaSlider" type="range" min="1" max="6" value="2.8" step="0.01" />
+          <div class="tick-row"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
+
+          <div class="coordinate-box">
+            <div class="coordinate-title">Place a source-charge point</div>
+            <div class="coord-row">
+              <label>x <input id="xInput" type="number" min="-20" max="20" step="0.5" value="0"></label>
+              <label>y <input id="yInput" type="number" min="-20" max="20" step="0.5" value="0"></label>
+            </div>
+            <button id="placeBtn" class="secondary-btn small-btn">Apply selected source at x,y</button>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <label for="scenarioSelect" class="select-label">Predefined scenario</label>
+          <select id="scenarioSelect">
+            <option>Opposite charge sheets</option>
+            <option>Single positive source</option>
+            <option>Single negative source</option>
+            <option>Dipole pair</option>
+            <option>Quadrupole pattern</option>
+            <option>Same-sign pair</option>
+            <option>Distributed source sheet</option>
+            <option>Clear sheet</option>
+          </select>
+
+          <!-- Animation button is still here if you want to use it manually, but placement animations are disabled -->
+          <button id="rotateBtn" class="secondary-btn">Auto Rotate View</button>
+          <button id="resetViewBtn" class="secondary-btn">Reset 3D View</button>
+
+          <label class="check-row">
+            <input id="showEBox" type="checkbox" />
+            <span>Show small negative-gradient arrows, −∇φ</span>
+          </label>
+          <label class="check-row">
+            <input id="showCurvBox" type="checkbox" />
+            <span>Show potential contour lines on surface</span>
+          </label>
+
+          <button id="resetBtn" class="secondary-btn reset">Reset Sheet</button>
+        </section>
+
+        <section class="control-section instructions">
+          <h3>Simulation use</h3>
+          <ol>
+            <li>Start with <strong>Opposite charge sheets</strong>.</li>
+            <li>Predict how the sign of \(\rho\) bends the rubber sheet.</li>
+            <li>Use ε, source strength, and σ to study curvature, slope, and potential height.</li>
+            <li>Use the centerline to connect \(\rho\), \(\nabla^2\phi\), \(-\nabla\phi\), and \(\phi\).</li>
+            <li>Ask the AI Tutor to focus only on Poisson's equation and the rubber-sheet metaphor.</li>
+          </ol>
+        </section>
+      </div>
+    </aside>
+
+    <!-- MIDDLE PANEL: 3D Visualization -->
+    <main class="panel simulation-panel">
+      <div class="panel-title">Poisson Equation: Rubber-Sheet Potential Surface φ(x,y)</div>
+      <div id="surfacePlot" class="plot surface-plot"></div>
+      <div id="centerlinePlot" class="plot centerline-plot"></div>
+    </main>
+
+    <!-- RIGHT PANEL: Tabbed Data & Chat -->
+    <aside class="panel right-panel">
+      <div id="chatResizeHandle" class="chat-resize-handle" title="Drag to resize AI Tutor panel"></div>
+      <div class="panel-tabs">
+        <button id="btnTabMaps" class="tab-btn active">Poisson Data & Maps</button>
+        <button id="btnTabLesson" class="tab-btn">Poisson Projects + AI Chat</button>
+        <button id="btnTabChat" class="tab-btn ai-tab-hidden" aria-hidden="true" tabindex="-1">AI Tutor</button>
+      </div>
+
+      <!-- Tab 1: Original Maps -->
+      <div id="tab-maps">
+        <div id="rhoMap" class="plot map-plot"></div>
+        <div id="curvMap" class="plot map-plot"></div>
+        <div class="guide-card">
+          <div class="guide-title">Poisson Rubber-Sheet Metaphor Guide</div>
+          <svg viewBox="0 0 400 150" xmlns="http://www.w3.org/2000/svg" style="max-height: 14vh; margin:auto; display:block;">
+            <rect width="400" height="150" fill="#f8fafc"/>
+            <path d="M20,98 C80,45 130,120 190,78 C255,35 310,115 380,62" fill="none" stroke="#2563eb" stroke-width="4"/>
+            <circle cx="105" cy="85" r="12" fill="#1d4ed8"/>
+            <circle cx="280" cy="65" r="12" fill="#dc2626"/>
+            <text x="105" y="122" font-family="Arial" font-size="13" fill="#1d4ed8" text-anchor="middle">−ρ source</text>
+            <text x="280" y="36" font-family="Arial" font-size="13" fill="#dc2626" text-anchor="middle">+ρ source</text>
+            <text x="200" y="18" font-family="Arial" font-size="15" fill="#111" text-anchor="middle">source charge controls curvature</text>
+            <text x="200" y="142" font-family="Arial" font-size="13" fill="#111" text-anchor="middle">Poisson map: ρ → ∇²φ, slope −∇φ, potential φ</text>
+          </svg>
+        </div>
+        <div id="explanation" class="explanation"></div>
+      </div>
+
+
+      <!-- Tab 2: Guided Learning Strategy -->
+      <div id="tab-lesson">
+        <div class="lesson-card" style="border-left:4px solid #2563eb;">
+          <span class="lesson-badge">Main Goal</span>
+          <h3>Poisson equation: source charge → curvature → slope → potential</h3>
+          <p><strong>Principle:</strong> a source distribution \(\rho(x,y)\) does not directly become the potential. It first determines the <em>curvature</em> of the potential surface through Poisson's equation.</p>
+          <p><strong>Rubber-sheet metaphor:</strong> source charges push or pull the sheet; the sheet height represents potential \(\phi\); the local bending represents \(\nabla^2\phi\); the slope represents the field-like quantity \(-\nabla\phi\).</p>
+          <p><strong>Equation map:</strong> \(\rho(x,y)\rightarrow \nabla^2\phi(x,y)\rightarrow -\nabla\phi(x,y)\rightarrow \phi(x,y)\).</p>
+          <div class="lesson-actions">
+            <button class="lesson-btn scenario-btn" data-scenario="Opposite charge sheets">Load Opposite Charge Sheets</button>
+            <button class="lesson-btn prompt-btn" data-prompt="Guide me through Poisson's equation using only the rubber-sheet metaphor. Ask me to predict how source charge changes curvature, then connect the surface shape to ∇²φ = −ρ/ε and −∇φ.">Ask AI Tutor</button>
+          </div>
+        </div>
+
+        <div class="lesson-card project-selector-card">
+          <label for="projectSelect" class="select-label">Project / learning activity</label>
+          <select id="projectSelect" aria-label="Project selector">
+            <option value="source-curvature">Project 1 — Source charge and curvature</option>
+            <option value="sign">Project 2 — Sign of ρ and sign of curvature</option>
+            <option value="slope">Project 3 — Slope, gradient, and field direction</option>
+            <option value="superposition">Project 4 — Superposition of multiple sources</option>
+            <option value="permittivity">Project 5 — Permittivity controls curvature strength</option>
+            <option value="smoothness">Project 6 — Smoothing, localization, and numerical intuition</option>
+            <option value="equations">Project 7 — Build Poisson's equation from observations</option>
+            <option value="reflection">Project 8 — Misconceptions and exit reflection</option>
+          </select>
+        </div>
+
+        <div id="projectCards">
+          <div class="lesson-card project-card active" data-project="source-curvature">
+            <span class="lesson-badge">Project 1</span>
+            <h3>Source charge and curvature</h3>
+            <ol>
+              <li>Load <strong>Opposite charge sheets</strong>.</li>
+              <li>Look at the heat map of \(\rho(x,y)\) and the curvature map \(\nabla^2\phi\).</li>
+              <li>Explain why the potential surface bends where the source charge exists.</li>
+              <li>State the local rule: large \(|\rho|\) creates large curvature magnitude.</li>
+            </ol>
+            <div class="lesson-actions">
+              <button class="lesson-btn scenario-btn" data-scenario="Opposite charge sheets">Set Scenario</button>
+              <button class="lesson-btn prompt-btn" data-prompt="Ask me a Socratic question about how source charge ρ controls curvature ∇²φ in the rubber-sheet simulation.">Ask AI</button>
+            </div>
+          </div>
+
+          <div class="lesson-card project-card" data-project="sign">
+            <span class="lesson-badge">Project 2</span>
+            <h3>Sign of \(\rho\) and sign of curvature</h3>
+            <p>Compare <strong>Single positive source</strong> and <strong>Single negative source</strong>. The goal is to connect source sign to whether the sheet bends upward or downward in this chosen sign convention.</p>
+            <p><strong>Key idea:</strong> Poisson's equation fixes the sign relation between \(\rho\) and \(\nabla^2\phi\): \(\nabla^2\phi=-\rho/\epsilon\).</p>
+            <div class="lesson-actions">
+              <button class="lesson-btn scenario-btn" data-scenario="Single positive source">Positive Source</button>
+              <button class="lesson-btn scenario-btn" data-scenario="Single negative source">Negative Source</button>
+              <button class="lesson-btn prompt-btn" data-prompt="Help me reason about the sign relation ∇²φ = −ρ/ε using the rubber-sheet metaphor. Ask me to predict the curvature sign first.">Ask AI</button>
+            </div>
+          </div>
+
+          <div class="lesson-card project-card" data-project="slope">
+            <span class="lesson-badge">Project 3</span>
+            <h3>Slope, gradient, and field direction</h3>
+            <p>Turn on the arrows. They show the negative gradient direction \(-\nabla\phi\). Students should distinguish <strong>height</strong> \(\phi\), <strong>slope</strong> \(\nabla\phi\), and <strong>curvature</strong> \(\nabla^2\phi\).</p>
+            <div class="lesson-actions">
+              <button class="lesson-btn scenario-btn" data-scenario="Dipole pair">Set Dipole Pair</button>
+              <button class="lesson-btn prompt-btn" data-prompt="Teach me the difference between potential height φ, slope ∇φ, negative gradient −∇φ, and curvature ∇²φ using the current rubber-sheet view.">Ask AI</button>
+            </div>
+          </div>
+
+          <div class="lesson-card project-card" data-project="superposition">
+            <span class="lesson-badge">Project 4</span>
+            <h3>Superposition of multiple sources</h3>
+            <p>Load a dipole, a same-sign pair, and a quadrupole. The total surface is the combined contribution of all sources.</p>
+            <p><strong>Key idea:</strong> for a linear Poisson problem, source contributions add: \(\rho=\rho_1+\rho_2+\cdots\), so the resulting potential is a superposition.</p>
+            <div class="lesson-actions">
+              <button class="lesson-btn scenario-btn" data-scenario="Dipole pair">Dipole</button>
+              <button class="lesson-btn scenario-btn" data-scenario="Same-sign pair">Same-Sign Pair</button>
+              <button class="lesson-btn scenario-btn" data-scenario="Quadrupole pattern">Quadrupole</button>
+              <button class="lesson-btn prompt-btn" data-prompt="Use the current source pattern to explain superposition in Poisson's equation. Keep the explanation focused on ρ, ∇²φ, −∇φ, and φ.">Ask AI</button>
+            </div>
+          </div>
+
+          <div class="lesson-card project-card" data-project="permittivity">
+            <span class="lesson-badge">Project 5</span>
+            <h3>Permittivity controls curvature strength</h3>
+            <p>Move the permittivity slider \(\epsilon\). For the same source charge, larger \(\epsilon\) reduces the curvature magnitude.</p>
+            <p><strong>Key relation:</strong> \(\nabla^2\phi=-\rho/\epsilon\). The material parameter controls how strongly the sheet bends for a given source.</p>
+            <div class="lesson-actions">
+              <button class="lesson-btn scenario-btn" data-scenario="Single positive source">Set Source</button>
+              <button class="lesson-btn prompt-btn" data-prompt="Guide me through how changing ε changes the curvature and potential surface in ∇²φ = −ρ/ε. Ask me to predict before explaining.">Ask AI</button>
+            </div>
+          </div>
+
+          <div class="lesson-card project-card" data-project="smoothness">
+            <span class="lesson-badge">Project 6</span>
+            <h3>Smoothing, localization, and numerical intuition</h3>
+            <p>Move the smoothing slider \(\sigma\). A small \(\sigma\) makes a localized source; a larger \(\sigma\) spreads the source over a broader region.</p>
+            <p><strong>Learning goal:</strong> see why localized sources produce sharp curvature features and why numerical simulations often use smoothed sources.</p>
+            <div class="lesson-actions">
+              <button class="lesson-btn scenario-btn" data-scenario="Distributed source sheet">Distributed Source</button>
+              <button class="lesson-btn prompt-btn" data-prompt="Explain how source smoothing σ changes ρ(x,y), curvature ∇²φ, and the shape of φ in this rubber-sheet simulation.">Ask AI</button>
+            </div>
+          </div>
+
+          <div class="lesson-card project-card" data-project="equations">
+            <span class="lesson-badge">Project 7</span>
+            <h3>From rubber-sheet observation to Poisson's equation</h3>
+            <ol>
+              <li>Observe where the sheet bends most strongly.</li>
+              <li>Compare that location with the source-charge map \(\rho(x,y)\).</li>
+              <li>Use the curvature map to identify \(\nabla^2\phi\).</li>
+              <li>Use arrows/centerline slope to identify \(-\nabla\phi\).</li>
+              <li>Write the complete relationship: \(\nabla^2\phi=-\rho/\epsilon\).</li>
+            </ol>
+            <div class="lesson-actions">
+              <button class="lesson-btn prompt-btn" data-prompt="Ask me to build Poisson's equation step by step from the rubber-sheet simulation: source ρ, curvature ∇²φ, slope −∇φ, and potential φ.">Step-by-step Derivation</button>
+              <button class="lesson-btn prompt-btn" data-prompt="Check whether my explanation correctly distinguishes source charge, potential, gradient, and curvature.">Check My Explanation</button>
+            </div>
+          </div>
+
+          <div class="lesson-card project-card" data-project="reflection">
+            <span class="lesson-badge">Project 8</span>
+            <h3>Misconceptions and exit reflection</h3>
+            <p>Students finish by explaining what the rubber sheet represents and what it does not represent.</p>
+            <div class="lesson-actions">
+              <button class="lesson-btn prompt-btn" data-prompt="Give me an exit-ticket question about Poisson's equation and the rubber-sheet metaphor. I should explain ρ, ∇²φ, −∇φ, and φ.">Exit Ticket</button>
+              <button class="lesson-btn prompt-btn" data-prompt="Ask me three conceptual questions about Poisson's equation, potential curvature, gradient direction, and the limitations of the rubber-sheet metaphor.">3-Question Quiz</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lesson-card inline-ai-chat">
+          <div class="chat-header">
+            <span id="chatStatusText">AI chat</span>
+            <button id="openChatSettingsBtn">⚙️ Settings</button>
+          </div>
+
+          <div id="chatMessages" class="chat-messages">
+            <div class="msg assistant">
+              <span class="role">AI Tutor</span>
+              <p>Hello! I am your Poisson-equation rubber-sheet tutor.</p>
+              <p>You can ask me about source charge \(\rho\), curvature \(\nabla^2\phi\), slope/gradient \(-\nabla\phi\), boundary behavior, and the effect of permittivity.</p>
+              <p><em>Tip: Check "Attach Sim State" so I can use your current rubber-sheet surface and source-charge pattern.</em></p>
+            </div>
+          </div>
+
+          <div class="chat-composer">
+            <textarea id="chatInput" rows="3" placeholder="Ask about Poisson's equation, source charge, curvature, slope, potential, boundary conditions, or the rubber-sheet metaphor... (Ctrl+Enter to send)"></textarea>
+            <div class="chat-actions">
+              <label title="Send current max potential, source charges, etc. to the AI">
+                <input type="checkbox" id="attachContextCheck" checked> 📎 Attach Sim State
+              </label>
+              <button id="chatSendBtn" class="secondary-btn primary small-btn" style="width:auto; padding:0 20px;">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden compatibility target. AI chat is embedded inside Poisson Projects + AI Chat. -->
+      <div id="tab-chat" hidden></div>
+    </aside>
+  </div>
+
+  <!-- Chat Settings Modal -->
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-card">
+      <h2>AI Tutor Settings</h2>
+      <p style="font-size: 12px; color: #666; margin-top:0;">API Keys are saved locally in your browser.</p>
+
+      <label>Provider</label>
+      <select id="chatProvider">
+        <option value="google">Google AI Studio (Gemini)</option>
+        <option value="lmstudio">LM Studio (Local)</option>
+      </select>
+
+      <label>API Key</label>
+      <input type="password" id="chatApiKey" placeholder="Paste your API key here...">
+
+      <div id="lmUrlGroup" class="hidden">
+        <label>LM Studio URL</label>
+        <input type="text" id="chatLmUrl" value="http://localhost:1234/v1">
+      </div>
+
+      <label>Model Name</label>
+      <input type="text" id="chatModel" value="gemini-2.5-flash">
+
+      <div class="modal-row">
+        <div>
+          <label>Temperature (<span id="chatTempVal">0.6</span>)</label>
+          <input type="range" id="chatTemp" min="0" max="1.5" step="0.1" value="0.6">
+        </div>
+      </div>
+
+      <label>System Prompt</label>
+      <textarea id="chatSysPrompt" rows="4">You are a helpful Poisson-equation tutor using the rubber-sheet metaphor. Explain clearly using standard text and LaTeX equations. Focus only on source charge density $\rho(x,y)$, permittivity $\epsilon$, Poisson's equation $\nabla^2\phi=-\rho/\epsilon$, potential $\phi$, gradient $\nabla\phi$, negative-gradient field direction $-\nabla\phi$, curvature, boundary behavior, superposition, and limitations of the metaphor. Stay focused exclusively on Poisson's equation and the rubber-sheet metaphor. Use a Socratic style: ask for a prediction first, ask what parameter changed, then connect the observation to the equation. Keep answers concise and undergraduate-friendly.</textarea>
+
+      <div class="modal-row">
+        <button id="cancelSettingsBtn" class="secondary-btn">Cancel</button>
+        <button id="saveSettingsBtn" class="secondary-btn primary">Save Config</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      // ================================================================
+      // 1. Simulation Constants & Shared State
+      // ================================================================
+      const L = 20;
+      const N = 51;
+      const h = (2 * L) / (N - 1);
+      const centerIndex = Math.floor(N / 2);
+      const x = Array.from({ length: N }, (_, j) => -L + j * h);
+      const y = Array.from({ length: N }, (_, i) => -L + i * h);
+
+      const state = {
+        // Physics state
+        mode: "positive",
+        epsilon: 2.0,
+        strength: 2.2,
+        sigma: 2.8,
+        charges: [
+          { x: -4, y: -12, sign: -0.45 }, { x: -4, y: -8, sign: -0.45 }, { x: -4, y: -4, sign: -0.45 }, { x: -4, y: 0, sign: -0.45 }, { x: -4, y: 4, sign: -0.45 }, { x: -4, y: 8, sign: -0.45 }, { x: -4, y: 12, sign: -0.45 },
+          { x: 4, y: -12, sign: 0.45 }, { x: 4, y: -8, sign: 0.45 }, { x: 4, y: -4, sign: 0.45 }, { x: 4, y: 0, sign: 0.45 }, { x: 4, y: 4, sign: 0.45 }, { x: 4, y: 8, sign: 0.45 }, { x: 4, y: 12, sign: 0.45 }
+        ],
+        rho: zeros(),
+        phi: zeros(),
+        Ex: zeros(),
+        Ey: zeros(),
+        curv: zeros(),
+        az: -38,
+        el: 28,
+        rotate: false,
+        lastMessage: "Ready for Poisson rubber-sheet exploration. Start with opposite source sheets: source charge bends the sheet, curvature follows ∇²φ = −ρ/ε, and slope gives −∇φ.",
+        lastCamera: null,
+        isSolving: false,
+        pendingUpdate: false,
+
+        // Chat state
+        chatHistory: [],
+        provider: "google",
+        apiKey: "",
+        lmUrl: "http://localhost:1234/v1",
+        model: "gemini-2.5-flash",
+        temperature: 0.6,
+        sysPrompt: ""
+      };
+
+      const els = {
+        // Sim Elements
+        btnPositive: document.getElementById("btnPositive"),
+        btnNegative: document.getElementById("btnNegative"),
+        btnRemove: document.getElementById("btnRemove"),
+        btnInspect: document.getElementById("btnInspect"),
+        modeLabel: document.getElementById("modeLabel"),
+        epsilonSlider: document.getElementById("epsilonSlider"),
+        epsilonValue: document.getElementById("epsilonValue"),
+        strengthSlider: document.getElementById("strengthSlider"),
+        strengthValue: document.getElementById("strengthValue"),
+        sigmaSlider: document.getElementById("sigmaSlider"),
+        sigmaValue: document.getElementById("sigmaValue"),
+        scenarioSelect: document.getElementById("scenarioSelect"),
+        rotateBtn: document.getElementById("rotateBtn"),
+        resetViewBtn: document.getElementById("resetViewBtn"),
+        showEBox: document.getElementById("showEBox"),
+        showCurvBox: document.getElementById("showCurvBox"),
+        xInput: document.getElementById("xInput"),
+        yInput: document.getElementById("yInput"),
+        placeBtn: document.getElementById("placeBtn"),
+        resetBtn: document.getElementById("resetBtn"),
+        surfacePlot: document.getElementById("surfacePlot"),
+        centerlinePlot: document.getElementById("centerlinePlot"),
+        rhoMap: document.getElementById("rhoMap"),
+        curvMap: document.getElementById("curvMap"),
+        explanation: document.getElementById("explanation"),
+        toast: document.getElementById("toast"),
+
+        // Tab Elements
+        btnTabMaps: document.getElementById("btnTabMaps"),
+        btnTabChat: document.getElementById("btnTabChat"),
+        btnTabLesson: document.getElementById("btnTabLesson"),
+        tabMaps: document.getElementById("tab-maps"),
+        tabLesson: document.getElementById("tab-lesson"),
+        projectSelect: document.getElementById("projectSelect"),
+        tabChat: document.getElementById("tab-chat"),
+        chatResizeHandle: document.getElementById("chatResizeHandle"),
+
+        // Chat Elements
+        chatMessages: document.getElementById("chatMessages"),
+        chatInput: document.getElementById("chatInput"),
+        chatSendBtn: document.getElementById("chatSendBtn"),
+        attachContextCheck: document.getElementById("attachContextCheck"),
+        chatStatusText: document.getElementById("chatStatusText"),
+        openChatSettingsBtn: document.getElementById("openChatSettingsBtn"),
+
+        // Modal Elements
+        settingsModal: document.getElementById("settingsModal"),
+        chatProvider: document.getElementById("chatProvider"),
+        chatApiKey: document.getElementById("chatApiKey"),
+        lmUrlGroup: document.getElementById("lmUrlGroup"),
+        chatLmUrl: document.getElementById("chatLmUrl"),
+        chatModel: document.getElementById("chatModel"),
+        chatTemp: document.getElementById("chatTemp"),
+        chatTempVal: document.getElementById("chatTempVal"),
+        chatSysPrompt: document.getElementById("chatSysPrompt"),
+        cancelSettingsBtn: document.getElementById("cancelSettingsBtn"),
+        saveSettingsBtn: document.getElementById("saveSettingsBtn")
+      };
+
+      let sliderUpdateTimer = null;
+      let rotateTimer = null;
+      let mapsRendered = false;
+      let lastPlacementTime = 0; // prevents duplicate Plotly click events from adding multiple particles
+
+      // ================================================================
+      // 2. Initialization
+      // ================================================================
+      applySavedChatWidth();
+      bindEvents();
+      loadChatSettings();
+      setMode("positive");
+      updateSimulation();
+
+      // ================================================================
+      // 3. UI Events & Tab Logic
+      // ================================================================
+      function bindEvents() {
+        // Sim Controls
+        els.btnPositive.addEventListener("click", () => setMode("positive"));
+        els.btnNegative.addEventListener("click", () => setMode("negative"));
+        els.btnRemove.addEventListener("click", () => setMode("remove"));
+        els.btnInspect.addEventListener("click", () => setMode("inspect"));
+
+        els.epsilonSlider.addEventListener("input", () => {
+          state.epsilon = Number(els.epsilonSlider.value);
+          els.epsilonValue.textContent = state.epsilon.toFixed(2);
+          state.lastMessage = "Changed permittivity ε. Larger ε reduces potential curvature for the same source charge.";
+          scheduleSimulationUpdate();
+        });
+
+        els.strengthSlider.addEventListener("input", () => {
+          state.strength = Number(els.strengthSlider.value);
+          els.strengthValue.textContent = state.strength.toFixed(2);
+          state.lastMessage = "Changed source-charge strength. Larger |ρ| increases curvature magnitude and steepens the potential surface.";
+          scheduleSimulationUpdate();
+        });
+
+        els.sigmaSlider.addEventListener("input", () => {
+          state.sigma = Number(els.sigmaSlider.value);
+          els.sigmaValue.textContent = state.sigma.toFixed(2);
+          state.lastMessage = "Changed source smoothing σ. Larger σ spreads the source charge over a wider region and softens local curvature.";
+          scheduleSimulationUpdate();
+        });
+
+        els.scenarioSelect.addEventListener("change", () => {
+          loadScenario(els.scenarioSelect.value);
+          updateSimulation();
+        });
+
+        els.rotateBtn.addEventListener("click", toggleRotate);
+        els.resetViewBtn.addEventListener("click", resetCameraView);
+        els.showEBox.addEventListener("change", () => drawAll(state.phi));
+        els.showCurvBox.addEventListener("change", () => drawAll(state.phi));
+        els.placeBtn.addEventListener("click", placeFromInputs);
+        els.xInput.addEventListener("keydown", (ev) => { if (ev.key === "Enter") placeFromInputs(); });
+        els.yInput.addEventListener("keydown", (ev) => { if (ev.key === "Enter") placeFromInputs(); });
+        els.resetBtn.addEventListener("click", resetSheet);
+        els.chatResizeHandle.addEventListener("mousedown", startChatResize);
+
+        // Tab Switching
+        els.btnTabMaps.addEventListener("click", () => switchTab('maps'));
+        els.btnTabLesson.addEventListener("click", () => switchTab('lesson'));
+        els.btnTabChat.addEventListener("click", () => switchTab('chat'));
+        if (els.projectSelect) els.projectSelect.addEventListener("change", updateProjectCard);
+        document.querySelectorAll(".prompt-btn").forEach(btn => btn.addEventListener("click", () => useLessonPrompt(btn.dataset.prompt || "")));
+        document.querySelectorAll(".scenario-btn").forEach(btn => btn.addEventListener("click", () => useLessonScenario(btn.dataset.scenario || "")));
+
+        // Chat Modals & Inputs
+        els.openChatSettingsBtn.addEventListener("click", openSettingsModal);
+        els.cancelSettingsBtn.addEventListener("click", closeSettingsModal);
+        els.saveSettingsBtn.addEventListener("click", saveChatSettings);
+        
+        els.chatProvider.addEventListener("change", () => {
+          els.lmUrlGroup.classList.toggle("hidden", els.chatProvider.value !== "lmstudio");
+          if(els.chatProvider.value === "google") els.chatModel.value = "gemini-2.5-flash";
+          if(els.chatProvider.value === "lmstudio") els.chatModel.value = "local-model";
+        });
+
+        els.chatTemp.addEventListener("input", () => {
+          els.chatTempVal.textContent = Number(els.chatTemp.value).toFixed(1);
+        });
+
+        els.chatSendBtn.addEventListener("click", handleChatSend);
+        els.chatInput.addEventListener("keydown", (ev) => {
+          if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) {
+            ev.preventDefault();
+            handleChatSend();
+          }
+        });
+
+        window.addEventListener("resize", debounce(() => {
+          if (els.surfacePlot?.data) Plotly.Plots.resize(els.surfacePlot);
+          if (els.centerlinePlot?.data) Plotly.Plots.resize(els.centerlinePlot);
+          if (els.tabMaps.style.display !== 'none') {
+            Plotly.Plots.resize(els.rhoMap);
+            Plotly.Plots.resize(els.curvMap);
+          }
+        }, 120));
+      }
+
+      function applySavedChatWidth() {
+        const saved = Number(localStorage.getItem("rubberSheetRightPanelWidth"));
+        if (Number.isFinite(saved)) {
+          setChatPanelWidth(saved);
+        }
+      }
+
+      function setChatPanelWidth(widthPx) {
+        const minW = 280;
+        const maxW = Math.max(320, Math.min(780, window.innerWidth - 760));
+        const w = clamp(widthPx, minW, maxW);
+        document.documentElement.style.setProperty("--right-panel-width", `${w}px`);
+        localStorage.setItem("rubberSheetRightPanelWidth", String(Math.round(w)));
+        setTimeout(() => {
+          Plotly.Plots.resize(els.surfacePlot);
+          Plotly.Plots.resize(els.centerlinePlot);
+          if (els.tabMaps.style.display !== "none") {
+            Plotly.Plots.resize(els.rhoMap);
+            Plotly.Plots.resize(els.curvMap);
+          }
+        }, 0);
+      }
+
+      function startChatResize(ev) {
+        ev.preventDefault();
+        const startX = ev.clientX;
+        const startWidth = els.chatResizeHandle.parentElement.getBoundingClientRect().width;
+        document.body.classList.add("resizing-chat");
+
+        const onMove = (moveEv) => {
+          const dx = startX - moveEv.clientX;
+          setChatPanelWidth(startWidth + dx);
+        };
+
+        const onUp = () => {
+          document.body.classList.remove("resizing-chat");
+          window.removeEventListener("mousemove", onMove);
+          window.removeEventListener("mouseup", onUp);
+        };
+
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+      }
+
+      function switchTab(tab) {
+        els.tabMaps.style.display = tab === 'maps' ? 'grid' : 'none';
+        els.tabLesson.style.display = tab === 'lesson' ? 'flex' : 'none';
+        els.tabChat.style.display = tab === 'chat' ? 'flex' : 'none';
+
+        els.btnTabMaps.classList.toggle('active', tab === 'maps');
+        els.btnTabLesson.classList.toggle('active', tab === 'lesson');
+        els.btnTabChat.classList.toggle('active', tab === 'chat');
+
+        if (tab === 'maps' && mapsRendered) {
+          Plotly.Plots.resize(els.rhoMap);
+          Plotly.Plots.resize(els.curvMap);
+        }
+      }
+
+
+      function updateProjectCard() {
+        if (!els.projectSelect) return;
+        const selected = els.projectSelect.value;
+        document.querySelectorAll(".project-card").forEach(card => {
+          card.classList.toggle("active", card.dataset.project === selected);
+        });
+        if (window.MathJax && window.MathJax.typesetPromise) {
+          window.MathJax.typesetPromise([els.tabLesson]).catch(()=>{});
+        }
+      }
+
+      function useLessonPrompt(prompt) {
+        if (!prompt) return;
+        els.chatInput.value = prompt;
+        els.attachContextCheck.checked = true;
+        switchTab('lesson');
+        els.chatInput.focus();
+        els.chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showToast('Lesson prompt loaded into the AI chat box below.');
+      }
+
+      function useLessonScenario(name) {
+        if (!name) return;
+        els.scenarioSelect.value = name;
+        loadScenario(name);
+        state.lastMessage = `Guided lesson scenario loaded: ${name}. Predict first, then ask AI.`;
+        updateSimulation();
+        switchTab('maps');
+      }
+
+      // ================================================================
+      // 4. Chat Integration Logic
+      // ================================================================
+      function loadChatSettings() {
+        try {
+          const s = JSON.parse(localStorage.getItem('rubberSheetChatConfig') || '{}');
+          state.provider = s.provider || "google";
+          state.apiKey = s.apiKey || "";
+          state.lmUrl = s.lmUrl || "http://localhost:1234/v1";
+          state.model = s.model || "gemini-2.5-flash";
+          state.temperature = s.temperature !== undefined ? s.temperature : 0.6;
+          state.sysPrompt = s.sysPrompt || els.chatSysPrompt.value;
+        } catch(e) {}
+      }
+
+      function openSettingsModal() {
+        els.chatProvider.value = state.provider;
+        els.chatApiKey.value = state.apiKey;
+        els.chatLmUrl.value = state.lmUrl;
+        els.chatModel.value = state.model;
+        els.chatTemp.value = state.temperature;
+        els.chatTempVal.textContent = state.temperature.toFixed(1);
+        els.chatSysPrompt.value = state.sysPrompt;
+        els.lmUrlGroup.classList.toggle("hidden", state.provider !== "lmstudio");
+        els.settingsModal.classList.remove("hidden");
+      }
+
+      function closeSettingsModal() {
+        els.settingsModal.classList.add("hidden");
+      }
+
+      function saveChatSettings() {
+        state.provider = els.chatProvider.value;
+        state.apiKey = els.chatApiKey.value.trim();
+        state.lmUrl = els.chatLmUrl.value.trim();
+        state.model = els.chatModel.value.trim();
+        state.temperature = Number(els.chatTemp.value);
+        state.sysPrompt = els.chatSysPrompt.value.trim();
+        
+        localStorage.setItem('rubberSheetChatConfig', JSON.stringify({
+          provider: state.provider,
+          apiKey: state.apiKey,
+          lmUrl: state.lmUrl,
+          model: state.model,
+          temperature: state.temperature,
+          sysPrompt: state.sysPrompt
+        }));
+        
+        closeSettingsModal();
+        showToast("AI Tutor settings saved.");
+      }
+
+      async function handleChatSend() {
+        const rawText = els.chatInput.value.trim();
+        if (!rawText) return;
+
+        if (!state.apiKey && state.provider === "google") {
+          showToast("Please configure your Google API Key in Chat Settings first.");
+          openSettingsModal();
+          return;
+        }
+
+        let userPrompt = rawText;
+        
+        // Context Injection Feature
+        if (els.attachContextCheck.checked) {
+           const context = els.explanation.textContent;
+           userPrompt = `[Simulation Context]\n${context}\n\n[User Question]\n${rawText}`;
+        }
+
+        els.chatInput.value = "";
+        appendMessage("user", rawText); // Visually only show what user typed
+        state.chatHistory.push({ role: "user", content: userPrompt }); // Send full context to AI
+
+        els.chatStatusText.textContent = "AI is thinking...";
+        els.chatSendBtn.disabled = true;
+
+        const loadingDiv = document.createElement("div");
+        loadingDiv.className = "msg assistant";
+        loadingDiv.innerHTML = '<span class="role">AI Tutor</span><div class="thinking-wrapper"><div class="dot-flashing"></div></div>';
+        els.chatMessages.appendChild(loadingDiv);
+        els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+
+        try {
+          const aiResponse = state.provider === "google" ? await fetchGoogleAPI() : await fetchLMStudioAPI();
+          loadingDiv.remove();
+          appendMessage("assistant", aiResponse);
+          state.chatHistory.push({ role: "model", content: aiResponse });
+          els.chatStatusText.textContent = "Ready";
+        } catch (err) {
+          loadingDiv.remove();
+          appendMessage("error", String(err.message));
+          els.chatStatusText.textContent = "Error occurred.";
+        } finally {
+          els.chatSendBtn.disabled = false;
+        }
+      }
+
+      function appendMessage(role, text) {
+        const div = document.createElement("div");
+        div.className = `msg ${role}`;
+        
+        let displayRole = role === "user" ? "You" : role === "assistant" ? "AI Tutor" : "Error";
+        let contentHtml = role === "error" ? escapeHtml(text) : renderMarkdown(text);
+
+        div.innerHTML = `<span class="role">${displayRole}</span>${contentHtml}`;
+        els.chatMessages.appendChild(div);
+        els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+
+        if (role !== "error") typesetMath(div);
+        return div;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function typesetMath(target) {
+        const run = () => {
+          if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([target]).catch(() => {});
+          }
+        };
+        if (window.MathJax && window.MathJax.typesetPromise) run();
+        else setTimeout(run, 250);
+      }
+
+      function renderMarkdown(text) {
+        const lines = escapeHtml(text).split('\n');
+        let html = '';
+        let inMath = false; let mathLines = [];
+        let inCode = false; let codeLines = [];
+
+        for (let line of lines) {
+          const t = line.trim();
+          
+          if (inMath) { mathLines.push(line); if(t.endsWith('$$')||t.endsWith('\\]')) { html += `<div class="mathBlock">${mathLines.join('\n')}</div>`; inMath=false; } continue; }
+          if (t.startsWith('$$') || t.startsWith('\\[')) {
+            if((t.startsWith('$$')&&t.endsWith('$$')&&t.length>2) || (t.startsWith('\\[')&&t.endsWith('\\]')&&t.length>4)) { html += `<div class="mathBlock">${line}</div>`; }
+            else { inMath=true; mathLines=[line]; } continue;
+          }
+
+          if (t.startsWith('```')) {
+            if (inCode) { html += `<pre><code>${codeLines.join('\n')}</code></pre>`; inCode=false; }
+            else { inCode=true; codeLines=[]; } continue;
+          }
+          if (inCode) { codeLines.push(line); continue; }
+
+          if (!t) continue;
+          let m = t.match(/^###?\s+(.+)/); if (m) { html += `<strong>${formatInline(m[1])}</strong><br/>`; continue; }
+          m = t.match(/^[-*]\s+(.+)/); if (m) { html += `• ${formatInline(m[1])}<br/>`; continue; }
+          
+          html += `<p>${formatInline(line)}</p>`;
+        }
+        return html;
+      }
+
+      function formatInline(str) {
+        return str.replace(/`([^`]+)`/g, '<code>$1</code>')
+                  .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      }
+
+      async function fetchGoogleAPI() {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(state.model)}:generateContent`;
+        const contents = state.chatHistory.map(m => ({
+           role: m.role === 'model' ? 'model' : 'user', 
+           parts: [{ text: m.content }] 
+        }));
+
+        const body = {
+          contents,
+          generationConfig: { temperature: state.temperature },
+          systemInstruction: { parts: [{ text: state.sysPrompt }] }
+        };
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': state.apiKey },
+          body: JSON.stringify(body)
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+        return data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+      }
+
+      async function fetchLMStudioAPI() {
+        const url = `${state.lmUrl.replace(/\/$/, '')}/chat/completions`;
+        const messages = [{ role: 'system', content: state.sysPrompt }];
+        state.chatHistory.forEach(m => messages.push({ role: m.role==='model'?'assistant':'user', content: m.content }));
+
+        const headers = { 'Content-Type': 'application/json' };
+        if (state.apiKey) headers.Authorization = `Bearer ${state.apiKey}`;
+
+        const res = await fetch(url, {
+          method: 'POST', headers,
+          body: JSON.stringify({ model: state.model, messages, temperature: state.temperature })
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+        return data?.choices?.[0]?.message?.content || '';
+      }
+
+      // ================================================================
+      // 5. Physics Simulation Core (direct final-state update, no animation)
+      // ================================================================
+      function setMode(mode) {
+        state.mode = mode;
+        for (const b of [els.btnPositive, els.btnNegative, els.btnRemove, els.btnInspect]) b.classList.remove("active");
+        if (mode === "positive") { els.btnPositive.classList.add("active"); els.modeLabel.innerHTML = "Current mode: Add Positive Source +ρ"; } 
+        else if (mode === "negative") { els.btnNegative.classList.add("active"); els.modeLabel.innerHTML = "Current mode: Add Negative Source −ρ"; } 
+        else if (mode === "remove") { els.btnRemove.classList.add("active"); els.modeLabel.textContent = "Current mode: Remove Nearest Source"; } 
+        else { els.btnInspect.classList.add("active"); els.modeLabel.textContent = "Current mode: Inspect Point Values"; }
+      }
+
+      function handleSurfaceClick(xClick, yClick) {
+        if (!Number.isFinite(xClick) || !Number.isFinite(yClick)) return;
+
+        // Prevent duplicate event-handler firing from adding many charges for one click.
+        const now = Date.now();
+        if (now - lastPlacementTime < 120) return;
+        lastPlacementTime = now;
+        const j = nearestIndex(x, clamp(xClick, -L, L));
+        const i = nearestIndex(y, clamp(yClick, -L, L));
+        const xs = x[j], ys = y[i];
+
+        if (state.rotate) { toggleRotate(false); showToast("Auto-rotate off."); }
+
+        if (state.mode === "positive") { state.charges.push({ x: xs, y: ys, sign: 1 }); state.lastMessage = `Added positive source +ρ at (${xs.toFixed(1)}, ${ys.toFixed(1)}).`; updateSimulation(); } 
+        else if (state.mode === "negative") { state.charges.push({ x: xs, y: ys, sign: -1 }); state.lastMessage = `Added negative source −ρ at (${xs.toFixed(1)}, ${ys.toFixed(1)}).`; updateSimulation(); } 
+        else if (state.mode === "remove") { removeNearestCharge(xs, ys); updateSimulation(); } 
+        else if (state.mode === "inspect") { inspectPoint(xs, ys); }
+      }
+
+      function scheduleSimulationUpdate() {
+        clearTimeout(sliderUpdateTimer);
+        sliderUpdateTimer = setTimeout(() => updateSimulation(), 90);
+      }
+
+      function placeFromInputs() {
+        const xs = clamp(Number(els.xInput.value), -L, L), ys = clamp(Number(els.yInput.value), -L, L);
+        if (!Number.isFinite(xs) || !Number.isFinite(ys)) { showToast("Enter valid x,y."); return; }
+        els.xInput.value = xs.toFixed(1); els.yInput.value = ys.toFixed(1);
+        handleSurfaceClick(xs, ys);
+      }
+
+      function updateSimulation() {
+        // Direct final-state update. No animation and no incremental build-up.
+        if (state.isSolving) { state.pendingUpdate = true; return; }
+        state.isSolving = true;
+        try {
+          do {
+            state.pendingUpdate = false;
+            const oldPhi = state.phi;
+            state.rho = buildChargeDensity();
+            state.phi = solvePoissonSOR(state.rho, state.epsilon);
+            const field = electricField(state.phi);
+            state.Ex = field.Ex; state.Ey = field.Ey;
+            state.curv = laplacian(state.phi);
+
+            drawAll(state.phi);
+          } while (state.pendingUpdate);
+        } finally {
+          state.isSolving = false;
+        }
+      }
+
+      function buildChargeDensity() {
+        const rho = zeros();
+        const sigma2 = Math.max(state.sigma * state.sigma, 1e-8);
+        for (const ch of state.charges) {
+          const amp = state.strength * ch.sign;
+          for (let i = 0; i < N; i++) {
+            const dy = y[i] - ch.y;
+            for (let j = 0; j < N; j++) {
+              const dx = x[j] - ch.x;
+              rho[idx(i, j)] += amp * Math.exp(-(dx * dx + dy * dy) / (2 * sigma2));
+            }
+          }
+        }
+        return rho;
+      }
+
+      // FIX: Increase iterations to 3000 to reach 100% convergence instantly.
+      // This solves the bug where the solver partially finished, causing the 
+      // hills to "creep up/down" (look like slow animation) on subsequent clicks.
+      function solvePoissonSOR(rho, eps) {
+        // Re-solve from a clean state every update to prevent any creeping or
+        // apparent build-up animation from an unfinished previous solution.
+        const phi = zeros();
+        if (maxAbs(rho) < 1e-14) return phi;
+
+        const omega = 1.85, rhsScale = (h * h) / Math.max(eps, 1e-8), tol = 5e-5;
+        const rhs = new Float64Array(N * N);
+        for (let k = 0; k < N * N; k++) rhs[k] = rhsScale * rho[k];
+
+        for (let iter = 0; iter < 5000; iter++) {
+          let maxD = 0;
+          for (let i = 1; i < N - 1; i++) {
+            for (let j = 1; j < N - 1; j++) {
+              const k = idx(i, j);
+              const gs = 0.25 * (phi[idx(i, j + 1)] + phi[idx(i, j - 1)] + phi[idx(i + 1, j)] + phi[idx(i - 1, j)] + rhs[k]);
+              const next = phi[k] + omega * (gs - phi[k]);
+              const d = Math.abs(next - phi[k]);
+              if (d > maxD) maxD = d;
+              phi[k] = next;
+            }
+          }
+          if (maxD < tol) break;
+        }
+        return phi;
+      }
+
+      function electricField(phi) {
+        const Ex = zeros(), Ey = zeros();
+        for (let i = 0; i < N; i++) {
+          for (let j = 0; j < N; j++) {
+            const jm = Math.max(j - 1, 0), jp = Math.min(j + 1, N - 1);
+            const im = Math.max(i - 1, 0), ip = Math.min(i + 1, N - 1);
+            Ex[idx(i, j)] = -(phi[idx(i, jp)] - phi[idx(i, jm)]) / ((jp - jm) * h);
+            Ey[idx(i, j)] = -(phi[idx(ip, j)] - phi[idx(im, j)]) / ((ip - im) * h);
+          }
+        }
+        return { Ex, Ey };
+      }
+
+      function laplacian(phi) {
+        const lap = zeros();
+        for (let i = 1; i < N - 1; i++) {
+          for (let j = 1; j < N - 1; j++) {
+            lap[idx(i, j)] = (phi[idx(i, j + 1)] + phi[idx(i, j - 1)] + phi[idx(i + 1, j)] + phi[idx(i - 1, j)] - 4 * phi[idx(i, j)]) / (h * h);
+          }
+        }
+        return lap;
+      }
+
+      // ================================================================
+      // 6. Plotly Renderers
+      // ================================================================
+      function drawAll(phiToDraw) {
+        drawSurface(phiToDraw);
+        drawCenterline();
+        drawMaps();
+        updateExplanation();
+      }
+
+      function drawSurface(phiToDraw) {
+        const z = toMatrix(phiToDraw);
+        // Auto-scale z from the actual surface amplitude. Do not cap it,
+        // because capped z-ranges crop deep negative valleys and create holes.
+        const zLimit = Math.max(18, 1.45 * maxAbs(phiToDraw));
+        const zAspect = Math.max(0.18, Math.min(0.46, 28 / Math.max(28, zLimit)));
+
+        const traces = [{
+          type: "surface", x, y, z, colorscale: "Jet", showscale: false, opacity: 0.98,
+          hovertemplate: "x=%{x:.2f}<br>y=%{y:.2f}<br>φ=%{z:.3g}<extra></extra>",
+          contours: { z: { show: els.showCurvBox.checked, usecolormap: true, highlightcolor: "#111", project: { z: false } } }
+        }, ...chargeMarkerTraces(phiToDraw, zLimit)];
+
+        if (els.showEBox.checked) traces.push(electricFieldConeTrace(phiToDraw));
+
+        const layout = {
+          margin: { l: 8, r: 8, t: 42, b: 14 }, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
+          title: { text: "Poisson rubber-sheet potential surface: final static solution", font: { size: 20 } },
+          clickmode: "event", dragmode: "orbit", showlegend: false, uirevision: "stable-view",
+          transition: { duration: 0 }, // FIX: Explicitly disable Plotly's tween animations to prevent slowdown
+          scene: {
+            xaxis: { title: "x", range: [-L, L], automargin: true },
+            yaxis: { title: "y", range: [-L, L], automargin: true },
+            zaxis: { title: "φ(x,y)", range: [-zLimit, zLimit], automargin: true },
+            aspectmode: "manual", aspectratio: { x: 1.08, y: 1.08, z: zAspect },
+            camera: state.lastCamera || cameraFromAngles(state.az, state.el)
+          }
+        };
+
+        Plotly.react(els.surfacePlot, traces, layout, {responsive:true, displayModeBar:false}).then(el => {
+           if (!el._surfaceEventsAttached) {
+             el.on("plotly_click", handlePlotClick);
+             el.on("plotly_relayout", ev => { if (ev && ev["scene.camera"]) state.lastCamera = ev["scene.camera"]; });
+             el._surfaceEventsAttached = true;
+           }
+        });
+      }
+
+      function drawCenterline() {
+        const traces = [
+          { type: "scatter", mode: "lines", x, y: normalize(lineAtCenter(state.phi)), name: "φ potential", line: { width: 2, dash: "solid" } },
+          { type: "scatter", mode: "lines", x, y: normalize(lineAtCenter(state.rho)), name: "ρ source charge", line: { width: 2, dash: "solid" } },
+          { type: "scatter", mode: "lines", x, y: normalize(lineAtCenter(state.Ex)), name: "−∂φ/∂x slope", line: { width: 2, dash: "solid" } },
+          { type: "scatter", mode: "lines", x, y: normalize(lineAtCenter(state.curv)), name: "∇²φ", line: { width: 2, dash: "dash" } }
+        ];
+        Plotly.react(els.centerlinePlot, traces, {
+          margin: { l: 58, r: 20, t: 52, b: 78 }, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "#fff",
+          title: { text: "Centerline: source charge → curvature → slope → potential", font: { size: 20 } },
+          xaxis: { title: "x at y = 0", range: [-L, L] }, yaxis: { title: "normalized value", range: [-1.15, 1.15] },
+          legend: { orientation: "h", x: 0.0, y: -0.24, xanchor: "left", yanchor: "top", font: { size: 16 } },
+          transition: { duration: 0 } // Kill transitions
+        }, {responsive:true, displayModeBar:false});
+      }
+
+      function drawMaps() {
+        const zRho = toMatrix(state.rho);
+        const zCurv = toMatrix(state.curv);
+        
+        const drawHeatmap = (el, z, title, label) => {
+          Plotly.react(el, [
+            { type: "heatmap", x, y, z, colorscale: "RdBu", reversescale: true, zmid: 0, colorbar: { title: label, thickness: 10, len: 0.78 } },
+            ...chargeMarkerTraces2D()
+          ], {
+            margin: { l: 42, r: 8, t: 28, b: 35 }, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)", title: { text: title, font: { size: 20 } },
+            xaxis: { title: "x", range: [-L, L], constrain: "domain" }, yaxis: { title: "y", range: [-L, L], scaleanchor: "x", scaleratio: 1 }, showlegend: false,
+            transition: { duration: 0 } // Kill transitions
+          }, {responsive:true, displayModeBar:false}).then(e => {
+            if(!e._eventsAttached) { e.on("plotly_click", handlePlotClick); e._eventsAttached = true; }
+          });
+        };
+
+        drawHeatmap(els.rhoMap, zRho, "Source Charge ρ(x,y)", "ρ");
+        drawHeatmap(els.curvMap, zCurv, "Potential Curvature ∇²φ ≈ −ρ/ε_s", "∇²φ");
+        mapsRendered = true;
+      }
+
+      function handlePlotClick(ev) {
+        if (!ev || !ev.points || !ev.points.length) return;
+        const p = ev.points[0];
+        setTimeout(() => { els.xInput.value = p.x.toFixed(1); els.yInput.value = p.y.toFixed(1); handleSurfaceClick(p.x, p.y); }, 0);
+      }
+
+      function chargeMarkerTraces(phi, zLim) {
+        const p={x:[],y:[],z:[],t:[]}, n={x:[],y:[],z:[],t:[]};
+        for (const ch of state.charges) {
+          const markerLift = Math.min(6, 0.035 * zLim);
+          const z = phi[idx(nearestIndex(y, ch.y), nearestIndex(x, ch.x))] + (ch.sign > 0 ? markerLift : -markerLift);
+          const tgt = ch.sign>0 ? p : n;
+          tgt.x.push(ch.x); tgt.y.push(ch.y); tgt.z.push(z); tgt.t.push(ch.sign>0 ? "+" : "−");
+        }
+        const traces = [];
+        if(p.x.length) traces.push({type: "scatter3d", mode: "markers+text", x: p.x, y: p.y, z: p.z, text: p.t, textposition: "top center", marker: {size: 11, color: "red"}, textfont: {size: 18, color: "#7f1d1d"}});
+        if(n.x.length) traces.push({type: "scatter3d", mode: "markers+text", x: n.x, y: n.y, z: n.z, text: n.t, textposition: "bottom center", marker: {size: 11, color: "blue"}, textfont: {size: 18, color: "#1e3a8a"}});
+        return traces;
+      }
+
+      function chargeMarkerTraces2D() {
+        const p = state.charges.filter(c=>c.sign>0), n = state.charges.filter(c=>c.sign<0);
+        const out = [];
+        if(p.length) out.push({type: "scatter", mode: "markers", x: p.map(c=>c.x), y: p.map(c=>c.y), marker: {size: 16, color: "red"}, hoverinfo:"skip"});
+        if(n.length) out.push({type: "scatter", mode: "markers", x: n.map(c=>c.x), y: n.map(c=>c.y), marker: {size: 16, color: "blue"}, hoverinfo:"skip"});
+        return out;
+      }
+
+      function electricFieldConeTrace(phi) {
+        const xs=[], ys=[], zs=[], step=15, maxLen=2.1, headLen=0.42, headAng=Math.PI/7;
+        let eMax = 0;
+        for(let k=0; k<state.Ex.length; k++) eMax = Math.max(eMax, Math.hypot(state.Ex[k], state.Ey[k]));
+        if(eMax<1e-14) return {type: "scatter3d", mode: "lines", x:[], y:[], z:[], hoverinfo:"skip"};
+
+        const zLift = 0.08 * Math.max(6, maxAbs(phi));
+        for(let i=0; i<N; i+=step) {
+          for(let j=0; j<N; j+=step) {
+            const ex = state.Ex[idx(i,j)], ey = state.Ey[idx(i,j)], e = Math.hypot(ex,ey);
+            if(e < 0.16*eMax) continue;
+            const ux=ex/e, uy=ey/e, len=maxLen*Math.min(1, e/eMax);
+            const x0 = x[j]-0.45*len*ux, y0 = y[i]-0.45*len*uy;
+            const x1 = x[j]+0.55*len*ux, y1 = y[i]+0.55*len*uy, z0 = phi[idx(i,j)]+zLift;
+            
+            xs.push(x0, x1, null); ys.push(y0, y1, null); zs.push(z0, z0, null);
+            
+            const a1x = Math.cos(headAng)*(-ux)-Math.sin(headAng)*(-uy), a1y = Math.sin(headAng)*(-ux)+Math.cos(headAng)*(-uy);
+            const a2x = Math.cos(-headAng)*(-ux)-Math.sin(-headAng)*(-uy), a2y = Math.sin(-headAng)*(-ux)+Math.cos(-headAng)*(-uy);
+            xs.push(x1, x1+headLen*a1x, null, x1, x1+headLen*a2x, null);
+            ys.push(y1, y1+headLen*a1y, null, y1, y1+headLen*a2y, null);
+            zs.push(z0, z0, null, z0, z0, null);
+          }
+        }
+        return {type: "scatter3d", mode: "lines", x: xs, y: ys, z: zs, line: {color: "rgba(15,15,15,0.62)", width: 3}, hoverinfo: "skip"};
+      }
+
+      function updateExplanation() {
+        const phiMax = maxVal(state.phi), phiMin = minVal(state.phi);
+        let gradMax = 0; for(let k=0; k<state.Ex.length; k++) gradMax = Math.max(gradMax, Math.hypot(state.Ex[k], state.Ey[k]));
+        const positive = state.charges.filter(c=>c.sign>0).length;
+        const negative = state.charges.filter(c=>c.sign<0).length;
+        const esc = (s) => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+        els.explanation.innerHTML = `
+          <h3>Poisson Equation Rubber-Sheet Interpretation</h3>
+          <div class="meta-line">${esc(state.lastMessage)}</div>
+          <div class="meta-line"><strong>Source charges:</strong> ${positive} positive source points / ${negative} negative source points</div>
+          <div class="meta-line"><strong>Parameters:</strong> \\(\\epsilon=${state.epsilon.toFixed(2)}\\), source strength = ${state.strength.toFixed(2)}, smoothing \\(\\sigma=${state.sigma.toFixed(2)}\\)</div>
+          <div class="meta-line"><strong>Potential range:</strong> \\(\\phi_{\\max}=${phiMax.toFixed(3)}\\), \\(\\phi_{\\min}=${phiMin.toFixed(3)}\\)</div>
+          <div class="meta-line"><strong>Maximum slope magnitude:</strong> \\(\\max |-\\nabla\\phi|=${gradMax.toFixed(3)}\\)</div>
+          <div class="eq-box">
+            <div><strong>Poisson equation map</strong></div>
+            <div>\\[\\rho(x,y) \\quad \\text{is the source distribution}\\]</div>
+            <div>\\[\\nabla^2 \\phi(x,y) = -\\frac{\\rho(x,y)}{\\epsilon}\\]</div>
+            <div>\\[-\\nabla \\phi(x,y) \\quad \\text{points downhill on the potential surface}\\]</div>
+            <div>\\[\\phi(x,y) \\quad \\text{is the rubber-sheet height / potential}\\]</div>
+          </div>
+          <div class="note-line">Interpretation: source charge controls local curvature, not just height. The potential surface is obtained by solving a curvature equation with boundary behavior and superposition.</div>
+        `;
+
+        if (window.MathJax && window.MathJax.typesetPromise) {
+          window.MathJax.typesetPromise([els.explanation]).catch(()=>{});
+        }
+      }
+
+      // ================================================================
+      // 7. Scenarios & Utilities
+      // ================================================================
+      function inspectPoint(xC, yC) {
+        const j = nearestIndex(x, xC), i = nearestIndex(y, yC), k = idx(i,j);
+        state.lastMessage = `Inspected (${xC.toFixed(1)}, ${yC.toFixed(1)}): φ=${state.phi[k].toFixed(3)}, ρ=${state.rho[k].toFixed(3)}, Curv=${state.curv[k].toFixed(3)}`;
+        updateExplanation(); showToast("Point inspected.");
+      }
+
+      function removeNearestCharge(xC, yC) {
+        if (!state.charges.length) return;
+        let best = -1, bestD = Infinity;
+        for (let k = 0; k < state.charges.length; k++) {
+          const d = Math.hypot(state.charges[k].x - xC, state.charges[k].y - yC);
+          if (d < bestD) { bestD = d; best = k; }
+        }
+        if (bestD < 6.0) state.charges.splice(best, 1);
+        state.lastMessage = "Removed nearest source charge.";
+      }
+
+      function resetCameraView() { state.az=-38; state.el=28; state.lastCamera=cameraFromAngles(state.az, state.el); Plotly.relayout(els.surfacePlot, {"scene.camera": state.lastCamera}); }
+      function resetSheet() {
+        // Hard reset: clear every numerical array and redraw immediately.
+        state.isSolving = false;
+        state.pendingUpdate = false;
+        state.charges = [];
+        els.scenarioSelect.value = "Clear sheet";
+        state.rho = zeros();
+        state.phi = zeros();
+        state.Ex = zeros();
+        state.Ey = zeros();
+        state.curv = zeros();
+        state.lastMessage = "Sheet reset. No source charges are present.";
+        drawAll(state.phi);
+        showToast("Sheet reset.");
+      }
+      function toggleRotate() { state.rotate = !state.rotate; els.rotateBtn.classList.toggle("active", state.rotate); if (state.rotate) rotateTimer = setInterval(() => { state.az += 1.2; Plotly.relayout(els.surfacePlot, {"scene.camera": cameraFromAngles(state.az, state.el)}); }, 50); else clearInterval(rotateTimer); }
+
+      function loadScenario(name) {
+        const yy = linspace(-12, 12, 7);
+        const makeLine = (xpos, sign, mag=0.45, yvals=yy) => yvals.map(v=>({x:xpos, y:v, sign:sign*mag}));
+        const makeDoubleLine = (x1, s1, x2, s2, mag=0.45, yvals=yy) => [...makeLine(x1, s1, mag, yvals), ...makeLine(x2, s2, mag, yvals)];
+        const point = (x0, y0, sign, mag=1.0) => ({x:x0, y:y0, sign:sign*mag});
+
+        if (name === "Opposite charge sheets") {
+          state.charges = makeDoubleLine(-4, -1, 4, 1, 0.45);
+          state.lastMessage = "Opposite charge sheets loaded: compare the source map ρ with the curvature map ∇²φ and the potential surface φ.";
+        }
+        else if (name === "Single positive source") {
+          state.charges = [point(0, 0, 1, 1.2)];
+          state.lastMessage = "Single positive source loaded. Predict the sign of curvature from ∇²φ = −ρ/ε before looking at the surface.";
+        }
+        else if (name === "Single negative source") {
+          state.charges = [point(0, 0, -1, 1.2)];
+          state.lastMessage = "Single negative source loaded. Compare the curvature sign with the positive-source case.";
+        }
+        else if (name === "Dipole pair") {
+          state.charges = [point(-5, 0, -1, 1.0), point(5, 0, 1, 1.0)];
+          state.lastMessage = "Dipole pair loaded. Use it to distinguish potential height, slope direction, and curvature near each source.";
+        }
+        else if (name === "Quadrupole pattern") {
+          state.charges = [point(-6,-6,1,0.9), point(6,6,1,0.9), point(-6,6,-1,0.9), point(6,-6,-1,0.9)];
+          state.lastMessage = "Quadrupole pattern loaded. Observe how multiple positive and negative sources superpose.";
+        }
+        else if (name === "Same-sign pair") {
+          state.charges = [point(-5, 0, 1, 0.9), point(5, 0, 1, 0.9)];
+          state.lastMessage = "Same-sign pair loaded. Compare the combined surface with a single positive source to see superposition.";
+        }
+        else if (name === "Distributed source sheet") {
+          state.charges = makeLine(0, 1, 0.42, linspace(-15,15,11));
+          state.lastMessage = "Distributed source sheet loaded. Use σ and ε to see how source spreading and material response control curvature.";
+        }
+        else {
+          state.charges = [];
+          state.lastMessage = "Clear sheet loaded. With ρ = 0, the potential is flat under these boundary conditions.";
+        }
+      }
+      function idx(i, j) { return i * N + j; }
+      function zeros() { return new Float64Array(N * N); }
+      function toMatrix(v) { const m=[]; for(let i=0;i<N;i++) { const r=[]; for(let j=0;j<N;j++) r.push(v[idx(i,j)]); m.push(r); } return m; }
+      function lineAtCenter(v) { const o=[]; for(let j=0;j<N;j++) o.push(v[idx(centerIndex,j)]); return o; }
+      function normalize(arr) { let m=0; for(const v of arr) m=Math.max(m,Math.abs(v)); return m<1e-14 ? arr.map(()=>0) : arr.map(v=>v/m); }
+      function maxAbs(v) { let m=0; for(const val of v) m=Math.max(m, Math.abs(val)); return m; }
+      function maxVal(v) { let m=-Infinity; for(const val of v) if(val>m) m=val; return m===-Infinity?0:m; }
+      function minVal(v) { let m=Infinity; for(const val of v) if(val<m) m=val; return m===Infinity?0:m; }
+      function nearestIndex(arr, val) { let best=0, bestD=Infinity; for(let k=0;k<arr.length;k++){ const d=Math.abs(arr[k]-val); if(d<bestD){bestD=d;best=k;}} return best; }
+      function clamp(v, lo, hi) { return Math.min(Math.max(v, lo), hi); }
+      function linspace(a,b,n) { return Array.from({length:n}, (_,i) => a+(b-a)*i/(n-1)); }
+      function cameraFromAngles(azDeg, elDeg) { const az=azDeg*Math.PI/180, el=elDeg*Math.PI/180, r=2.45; return { eye: {x:r*Math.cos(el)*Math.cos(az), y:r*Math.cos(el)*Math.sin(az), z:r*Math.sin(el)}, center:{x:0,y:0,z:0}, up:{x:0,y:0,z:1} }; }
+      function debounce(fn, ms) { let t=null; return (...args) => { clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; }
+      function showToast(msg) { els.toast.textContent = msg; els.toast.classList.add("show"); setTimeout(()=>els.toast.classList.remove("show"), 1800); }
+      
+    })();
+  </script>
+<a class="hubMainMenuButton" href="../index.html" title="Back to Semiconductor Learning Hub">← Main Menu</a>
+
+<!-- maestra-integration-v4 -->
+<link rel="stylesheet" href="../shared/maestra-toolbar.css">
+<script defer src="../shared/theme-sync-v2.js"></script>
+<script defer src="../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="pn-diode" data-maestra-module-title="PN Diode" data-maestra-topic-title="Poisson Rubbersheet Poissonequation Ai Highres Open" data-maestra-canvas-template="pn-junction"></script>
+</body>
+</html>

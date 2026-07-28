@@ -1,0 +1,60 @@
+:root{
+  --maestra-shell-bg:rgba(5,18,31,.94);
+  --maestra-shell-panel:#10283a;
+  --maestra-shell-text:#f4fbff;
+  --maestra-shell-muted:#a9c5d8;
+  --maestra-shell-line:#31566f;
+  --maestra-shell-accent:#38d7ff;
+  --maestra-shell-accent2:#8068ff;
+}
+html[data-theme="light"]{
+  --maestra-shell-bg:rgba(248,252,255,.96);
+  --maestra-shell-panel:#ffffff;
+  --maestra-shell-text:#102033;
+  --maestra-shell-muted:#60798d;
+  --maestra-shell-line:#9ecfe6;
+  --maestra-shell-accent:#0aa8d8;
+  --maestra-shell-accent2:#6f71ff;
+}
+.maestra-shell-launcher,.maestra-shell-toolbar{
+  position:fixed;z-index:2147483000;font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--maestra-shell-text);
+}
+.maestra-shell-launcher{right:18px;bottom:18px;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.maestra-shell-toggle{
+  border:1px solid color-mix(in srgb,var(--maestra-shell-accent) 70%,var(--maestra-shell-line));
+  border-radius:999px;padding:11px 16px;background:linear-gradient(135deg,var(--maestra-shell-accent),var(--maestra-shell-accent2));
+  color:#06131d;font:900 14px/1 Inter,Segoe UI,Arial,sans-serif;box-shadow:0 16px 38px rgba(0,0,0,.28);cursor:pointer
+}
+.maestra-shell-panel{
+  width:min(330px,calc(100vw - 28px));padding:12px;border:1px solid var(--maestra-shell-line);border-radius:18px;
+  background:var(--maestra-shell-bg);box-shadow:0 22px 60px rgba(0,0,0,.38);backdrop-filter:blur(14px)
+}
+.maestra-shell-panel[hidden]{display:none!important}
+.maestra-shell-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:9px}
+.maestra-shell-brand{font-weight:950;font-size:14px;line-height:1.2}.maestra-shell-brand small{display:block;margin-top:3px;color:var(--maestra-shell-muted);font-size:11px;font-weight:700}
+.maestra-shell-close{border:0;background:transparent;color:var(--maestra-shell-muted);font-size:19px;cursor:pointer;padding:0 3px}
+.maestra-shell-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.maestra-shell-action{
+  min-height:42px;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;border:1px solid var(--maestra-shell-line);
+  border-radius:12px;padding:8px 10px;background:var(--maestra-shell-panel);color:var(--maestra-shell-text);font-size:12px;font-weight:850;cursor:pointer
+}
+.maestra-shell-action:hover{border-color:var(--maestra-shell-accent);color:var(--maestra-shell-accent)}
+.maestra-shell-action.primary{background:linear-gradient(135deg,var(--maestra-shell-accent),#6ee7ff);border-color:transparent;color:#06131d}
+.maestra-shell-action.wide{grid-column:1/-1}
+.maestra-shell-toolbar{
+  left:14px;bottom:14px;max-width:min(680px,calc(100vw - 28px));display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:8px 10px;border:1px solid var(--maestra-shell-line);border-radius:16px;background:var(--maestra-shell-bg);box-shadow:0 16px 42px rgba(0,0,0,.34);backdrop-filter:blur(14px)
+}
+.maestra-shell-context{min-width:120px;max-width:330px;padding:0 5px;font-size:11px;color:var(--maestra-shell-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.maestra-shell-context b{display:block;color:var(--maestra-shell-text);font-size:12px;overflow:hidden;text-overflow:ellipsis}
+.maestra-shell-toolbtn{
+  text-decoration:none;border:1px solid var(--maestra-shell-line);border-radius:10px;padding:8px 10px;background:var(--maestra-shell-panel);color:var(--maestra-shell-text);font-size:12px;font-weight:850;white-space:nowrap
+}
+.maestra-shell-toolbtn:hover{border-color:var(--maestra-shell-accent);color:var(--maestra-shell-accent)}
+.maestra-shell-toolbtn.primary{border-color:transparent;background:linear-gradient(135deg,var(--maestra-shell-accent),var(--maestra-shell-accent2));color:#06131d}
+@media(max-width:680px){
+  .maestra-shell-launcher{right:10px;bottom:10px}.maestra-shell-toolbar{left:8px;right:8px;bottom:8px;max-width:none}
+  .maestra-shell-context{width:100%;max-width:none}.maestra-shell-toolbtn{flex:1;text-align:center}.maestra-shell-grid{grid-template-columns:1fr}
+  .maestra-shell-action.wide{grid-column:auto}
+}
+@media print{.maestra-shell-launcher,.maestra-shell-toolbar{display:none!important}}

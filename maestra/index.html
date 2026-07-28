@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MAESTRA engineering learning tools integrated with the Semiconductor Learning Hub: EE Canvas, Student and Instructor Workspaces, Problem Set Builder, and Assessment Grader.">
+  <title>MAESTRA Tools | Semiconductor Learning Hub</title>
+  <style>
+    :root{
+      color-scheme:light;
+      --navy:#072f63;
+      --navy-2:#0b4d86;
+      --teal:#12a8a8;
+      --teal-2:#0f8f95;
+      --gold:#d69a13;
+      --bg:#eef4f8;
+      --surface:#ffffff;
+      --surface-2:#f6f9fc;
+      --text:#17324d;
+      --muted:#60758a;
+      --line:#d6e1ea;
+      --shadow:0 18px 50px rgba(7,47,99,.12);
+      --shadow-soft:0 8px 24px rgba(7,47,99,.08);
+      --radius:20px;
+    }
+    html[data-theme="dark"]{
+      color-scheme:dark;
+      --bg:#07131f;
+      --surface:#0d2030;
+      --surface-2:#112a3d;
+      --text:#e8f2f8;
+      --muted:#9eb3c3;
+      --line:#294359;
+      --navy:#66aef1;
+      --navy-2:#8bc7ff;
+      --teal:#43d3ce;
+      --teal-2:#2fb7b5;
+      --gold:#f1bf46;
+      --shadow:0 22px 60px rgba(0,0,0,.34);
+      --shadow-soft:0 10px 28px rgba(0,0,0,.24);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.55}
+    button,a{font:inherit}
+    a{color:inherit}
+    .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;min-height:66px;padding:10px clamp(18px,4vw,62px);background:color-mix(in srgb,var(--surface) 91%,transparent);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}
+    .mini-brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.02em;color:var(--navy)}
+    .mini-mark{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#072f63,#12a8a8);box-shadow:var(--shadow-soft)}
+    .top-spacer{flex:1}
+    .top-link,.theme-toggle{min-height:38px;padding:0 13px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font-weight:750;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+    .top-link:hover,.theme-toggle:hover{border-color:var(--teal);color:var(--teal)}
+    main{width:min(1240px,calc(100% - 32px));margin:0 auto}
+    .hero{margin:34px 0 22px;padding:clamp(24px,5vw,62px);border:1px solid var(--line);border-radius:30px;background:radial-gradient(circle at 90% 10%,color-mix(in srgb,var(--teal) 16%,transparent),transparent 34%),linear-gradient(145deg,var(--surface),var(--surface-2));box-shadow:var(--shadow);overflow:hidden;position:relative}
+    .hero::after{content:"";position:absolute;width:380px;height:380px;right:-190px;bottom:-230px;border:60px solid color-mix(in srgb,var(--gold) 13%,transparent);border-radius:50%;pointer-events:none}
+    .hero-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(310px,.92fr);gap:clamp(28px,5vw,70px);align-items:center;position:relative;z-index:1}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border-radius:999px;border:1px solid color-mix(in srgb,var(--teal) 55%,var(--line));background:color-mix(in srgb,var(--teal) 10%,var(--surface));color:var(--teal-2);font-size:12px;font-weight:900;letter-spacing:.07em;text-transform:uppercase}
+    h1{font-size:clamp(34px,5.4vw,68px);line-height:1.03;letter-spacing:-.045em;margin:18px 0 18px;color:var(--navy)}
+    .project-title{font-size:clamp(18px,2.1vw,27px);line-height:1.28;font-weight:770;color:var(--text);max-width:840px;margin:0}
+    .hero-copy{margin:18px 0 0;color:var(--muted);font-size:16px;max-width:760px}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:11px;margin-top:26px}
+    .cta{min-height:46px;padding:0 18px;border-radius:12px;text-decoration:none;font-weight:850;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface)}
+    .cta.primary{background:linear-gradient(135deg,#0b4d86,#0fa5a5);color:#fff;border-color:transparent;box-shadow:0 10px 24px rgba(11,77,134,.22)}
+    .cta:hover{transform:translateY(-1px);box-shadow:var(--shadow-soft)}
+    .logo-panel{min-height:280px;display:grid;place-items:center;padding:24px;border-radius:24px;background:#fff;border:1px solid #dce7ef;box-shadow:var(--shadow-soft)}
+    .logo-panel img{display:block;width:100%;height:auto;max-height:340px;object-fit:contain}
+    .section{padding:28px 0}
+    .section-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:16px}
+    .section-head h2{margin:0;color:var(--navy);font-size:clamp(25px,3.2vw,38px);letter-spacing:-.025em}
+    .section-head p{margin:0;color:var(--muted);max-width:630px}
+    .tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .tool-card{position:relative;display:flex;flex-direction:column;min-height:270px;padding:23px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow-soft);overflow:hidden}
+    .tool-card::before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--card-accent,var(--teal))}
+    .tool-card.canvas{--card-accent:#0f9fa8}.tool-card.builder{--card-accent:#d69a13}.tool-card.student{--card-accent:#1f7a45}.tool-card.instructor{--card-accent:#0b4d86}.tool-card.teacher{--card-accent:#6d4cc7}.tool-card.grader{--card-accent:#b24d36}
+    .tool-icon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;margin-bottom:16px;background:color-mix(in srgb,var(--card-accent) 13%,var(--surface-2));color:var(--card-accent);border:1px solid color-mix(in srgb,var(--card-accent) 35%,var(--line))}
+    .tool-icon svg{width:27px;height:27px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .tool-card h3{font-size:22px;margin:0 0 7px;color:var(--text)}
+    .tool-card p{margin:0;color:var(--muted)}
+    .tool-meta{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0 20px}
+    .tag{font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted)}
+    .launch{margin-top:auto;min-height:43px;padding:0 14px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-weight:850;color:#fff;background:var(--card-accent);border:1px solid transparent}
+    .launch:hover{filter:brightness(1.07);transform:translateY(-1px)}
+    .workflow{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;counter-reset:step}
+    .step{counter-increment:step;padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+    .step::before{content:counter(step);display:grid;place-items:center;width:30px;height:30px;margin-bottom:11px;border-radius:9px;background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;font-weight:900}
+    .step strong{display:block;color:var(--text);margin-bottom:5px}.step span{font-size:13px;color:var(--muted)}
+    .project-status{margin:22px 0 34px;padding:23px;border:1px solid var(--line);border-left:5px solid var(--gold);border-radius:20px;background:var(--surface);box-shadow:var(--shadow-soft)}
+    .project-status h2{font-size:20px;margin:0 0 7px;color:var(--navy)}
+    .project-status p{margin:5px 0;color:var(--muted);font-size:13px}
+    .project-status .status-line{color:var(--text);font-weight:800}
+    footer{border-top:1px solid var(--line);padding:24px clamp(18px,4vw,62px) 34px;color:var(--muted);font-size:12px;text-align:center}
+    .notice{margin:0 auto;max-width:980px}
+    @media(max-width:900px){.hero-grid{grid-template-columns:1fr}.logo-panel{min-height:220px}.workflow{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:680px){.top-link{display:none}.hero{margin-top:18px;padding:23px}.tool-grid{grid-template-columns:1fr}.workflow{grid-template-columns:1fr}.section-head{display:block}.section-head p{margin-top:7px}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+    .protected-label{display:inline-flex;align-items:center;gap:5px;margin-left:7px;padding:3px 7px;border:1px solid color-mix(in srgb,var(--gold) 48%,var(--line));border-radius:999px;background:color-mix(in srgb,var(--gold) 10%,var(--surface));color:var(--gold);font-size:10px;font-weight:900;vertical-align:middle}
+    .access-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(5,18,31,.76);backdrop-filter:blur(10px)}
+    .access-modal[hidden]{display:none!important}
+    .access-card{width:min(450px,100%);padding:25px;border:1px solid var(--line);border-radius:20px;background:var(--surface);box-shadow:0 30px 90px rgba(0,0,0,.35)}
+    .access-card h2{margin:0 0 8px;color:var(--navy);font-size:23px}
+    .access-card p{margin:0 0 16px;color:var(--muted);font-size:14px}
+    .access-card label{display:block;margin-bottom:6px;font-size:12px;font-weight:850;color:var(--text)}
+    .access-input{width:100%;height:44px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--text);font:inherit;outline:none}
+    .access-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px color-mix(in srgb,var(--teal) 22%,transparent)}
+    .access-error{min-height:21px!important;margin:7px 0 0!important;color:#c33c3c!important;font-size:12px!important;font-weight:800}
+    .access-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:13px}
+    .access-button{min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font:inherit;font-weight:850;cursor:pointer}
+    .access-button.primary{border-color:transparent;background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff}
+
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="mini-brand"><span class="mini-mark">M</span><span>MAESTRA</span></div>
+    <div class="top-spacer"></div>
+    <a class="top-link" href="../index.html">Semiconductor Hub</a>
+    <a class="top-link" href="#tools">Project tools</a>
+    <a class="top-link" href="#about">Workflow</a>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light and dark appearance">Dark</button>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="pageTitle">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">MAESTRA Research Project · Proposal No. 2612403</div>
+          <h1 id="pageTitle">MAESTRA</h1>
+          <p class="project-title">Cultivating Adaptive Engineering Expertise through Metaphor-Based Socratic Artificial Intelligence and Interactive Simulation</p>
+          <p class="hero-copy">A unified environment for authoring engineering problems, creating interactive visual work, completing assignments, and supporting instructor-guided review.</p>
+          <div class="hero-actions">
+            <a class="cta primary" href="ee_problem_solving_workspace_student.html">Open Student Workspace <span aria-hidden="true">→</span></a>
+            <a class="cta" href="../index.html">Explore Semiconductor Modules</a>
+            <a class="cta" href="ee_problem_set_builder.html" data-protected-launch="ee_problem_set_builder.html">Build a Problem Set</a>
+          </div>
+        </div>
+        <div class="logo-panel">
+          <img src="maestra_logo.png" alt="MAESTRA — Metaphor-Based Socratic AI and Interactive Simulation">
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="tools" aria-labelledby="toolsTitle">
+      <div class="section-head">
+        <div><h2 id="toolsTitle">EE Problem-Solving Suite V2</h2></div>
+        <p>Launch each full-screen application directly from the GitHub Pages site. Lesson context and return navigation are shared through the MAESTRA integration bridge.</p>
+      </div>
+      <div class="tool-grid">
+        <article class="tool-card canvas">
+          <div class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19 16.5 6.5l1-3 3 3-3 1L5 20l-2 1 1-2Z"/><path d="m14.5 8.5 3 3"/><path d="M3 3h6M3 6h4"/></svg></div>
+          <h3>EE Canvas V2</h3>
+          <p>Create engineering diagrams, equations, plots, annotations, and simulation-ready visual explanations.</p>
+          <div class="tool-meta"><span class="tag">Drawing</span><span class="tag">AI assistance</span><span class="tag">SVG export</span></div>
+          <a class="launch" href="ee_canvas.html">Launch EE Canvas <span aria-hidden="true">↗</span></a>
+        </article>
+
+        <article class="tool-card builder">
+          <div class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h12v18H6z"/><path d="M9 7h6M9 11h6M9 15h3"/><path d="M4 6H2v14h12v-2"/></svg></div>
+          <h3>EE Problem Set Builder V2 <span class="protected-label" title="Password required">🔒 Restricted</span></h3>
+          <p>Author homework, quiz, practice, and exam packages with rich text, equations, images, answer fields, and EE Canvas visuals.</p>
+          <div class="tool-meta"><span class="tag">Authoring</span><span class="tag">Problem packages</span><span class="tag">Instructor keys</span></div>
+          <a class="launch" href="ee_problem_set_builder.html" data-protected-launch="ee_problem_set_builder.html">Launch Problem Set Builder <span aria-hidden="true">↗</span></a>
+        </article>
+
+        <article class="tool-card student">
+          <div class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v13H4z"/><path d="M8 21h8M12 18v3"/><path d="m8 11 2 2 5-5"/></svg></div>
+          <h3>Student Workspace V2</h3>
+          <p>Complete assigned problems, enter answers, develop canvas work, save progress, and export secure submissions.</p>
+          <div class="tool-meta"><span class="tag">Homework</span><span class="tag">Quizzes</span><span class="tag">Secure submission</span></div>
+          <a class="launch" href="ee_problem_solving_workspace_student.html">Launch Student Workspace <span aria-hidden="true">↗</span></a>
+        </article>
+
+
+        <article class="tool-card student">
+          <div class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v13H4z"/><path d="M8 21h8M12 18v3"/><path d="M7 9h10M7 13h6"/></svg></div>
+          <h3>Instructor Workspace V2 <span class="protected-label" title="Password required">🔒 Restricted</span></h3>
+          <p>Demonstrate complete solutions, inspect visual reasoning, annotate evidence, and prepare guided review or feedback.</p>
+          <div class="tool-meta"><span class="tag">Demonstration</span><span class="tag">Review</span><span class="tag">Canvas evidence</span></div>
+          <a class="launch" href="ee_problem_solving_workspace_instructor.html" data-protected-launch="ee_problem_solving_workspace_instructor.html">Launch Instructor Workspace <span aria-hidden="true">↗</span></a>
+        </article>
+
+        <article class="tool-card grader">
+          <div class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5z"/><path d="M8 8h8M8 12h5M8 16h4"/><path d="m15 16 1.5 1.5L20 14"/></svg></div>
+          <h3>Assessment Grader <span class="protected-label" title="Password required">🔒 Restricted</span></h3>
+          <p>Load student submissions and instructor keys, assign scores, review canvas evidence, and export graded feedback packages.</p>
+          <div class="tool-meta"><span class="tag">Grading</span><span class="tag">Instructor keys</span><span class="tag">Feedback release</span></div>
+          <a class="launch" href="assessment_grader.html" data-protected-launch="assessment_grader.html">Launch Assessment Grader <span aria-hidden="true">↗</span></a>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="about" aria-labelledby="workflowTitle">
+      <div class="section-head">
+        <div><h2 id="workflowTitle">Suggested workflow</h2></div>
+        <p>The tools share compatible project and assessment formats, allowing visual authoring and student work to move through one connected workflow.</p>
+      </div>
+      <div class="workflow">
+        <div class="step"><strong>Create visuals</strong><span>Develop diagrams, equations, and interactive explanations in EE Canvas.</span></div>
+        <div class="step"><strong>Build problem sets</strong><span>Package prompts, fields, rubrics, and visual resources for distribution.</span></div>
+        <div class="step"><strong>Support student work</strong><span>Students solve, draw, save, and export their completed submissions.</span></div>
+        <div class="step"><strong>Guide and review</strong><span>Instructors demonstrate, inspect, annotate, and provide structured feedback.</span></div>
+        <div class="step"><strong>Grade and release</strong><span>Load submissions and instructor keys, assign scores, and export feedback for students.</span></div>
+      </div>
+    </section>
+
+
+    <section class="project-status" aria-labelledby="securityTitle">
+      <h2 id="securityTitle">GitHub Pages deployment note</h2>
+      <p class="status-line">Learning modules, EE Canvas, and the Student Workspace can be hosted publicly. Instructor pages and answer-key data are not securely protected by a client-side password on a static website.</p>
+      <p>For production course use, place restricted instructor resources behind Canvas LMS, ODU authentication, or another server-side access-control layer. Never embed shared institutional AI keys or student records in the repository.</p>
+    </section>
+
+    <section class="project-status" aria-labelledby="statusTitle">
+      <h2 id="statusTitle">Project status</h2>
+      <p class="status-line">NSF Proposal No. 2612403 has been recommended for funding; the final award is still pending.</p>
+      <p>This page does not represent an active NSF award and does not imply endorsement by the U.S. National Science Foundation. The official NSF logo and formal funding acknowledgment will be added only after an award is issued.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p class="notice">MAESTRA is presented here as a proposed research and educational technology project. Funding status remains pending until an official award notice is issued.</p>
+  </footer>
+
+
+  <div class="access-modal" id="accessModal" role="dialog" aria-modal="true" aria-labelledby="accessTitle" hidden>
+    <form class="access-card" id="accessForm" autocomplete="off">
+      <h2 id="accessTitle">Restricted MAESTRA tool</h2>
+      <p>Enter the project access password to launch this application.</p>
+      <label for="accessPassword">Password</label>
+      <input class="access-input" id="accessPassword" type="password" autocomplete="current-password" spellcheck="false" required>
+      <p class="access-error" id="accessError" role="alert" aria-live="polite"></p>
+      <div class="access-actions">
+        <button class="access-button" id="accessCancel" type="button">Cancel</button>
+        <button class="access-button primary" id="accessSubmit" type="submit">Unlock and launch</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const button = document.getElementById('themeToggle');
+      const saved = localStorage.getItem('maestra_index_theme');
+      const initial = saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      function apply(theme){
+        root.dataset.theme = theme;
+        button.textContent = theme === 'dark' ? 'Light' : 'Dark';
+        button.setAttribute('aria-pressed', String(theme === 'dark'));
+      }
+      apply(initial);
+      button.addEventListener('click', () => {
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('maestra_index_theme', next);
+        apply(next);
+      });
+
+
+      const accessKey='maestra_suite_access_v2';
+      const accessProof='maestra-suite-v2-authorized';
+      const accessSalt='MAESTRA-EE-SUITE-V2-2026';
+      const accessVerifier='sL/TDaVCBbP4MVduAljTBcvST3ZXEzo0N0tiJQELYcU=';
+      const accessEncoder=new TextEncoder();
+      const accessModal=document.getElementById('accessModal');
+      const accessForm=document.getElementById('accessForm');
+      const accessInput=document.getElementById('accessPassword');
+      const accessError=document.getElementById('accessError');
+      const accessSubmit=document.getElementById('accessSubmit');
+      let pendingTarget='';
+      function accessBytesToBase64(bytes){let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return btoa(binary);}
+      async function verifyAccessPassword(password){
+        if(!window.crypto?.subtle)throw new Error('Secure password verification is unavailable in this browser.');
+        const key=await crypto.subtle.importKey('raw',accessEncoder.encode(password),'PBKDF2',false,['deriveBits']);
+        const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:accessEncoder.encode(accessSalt),iterations:150000,hash:'SHA-256'},key,256);
+        return accessBytesToBase64(new Uint8Array(bits))===accessVerifier;
+      }
+      function closeAccessModal(){accessModal.hidden=true;accessError.textContent='';accessInput.value='';pendingTarget='';}
+      document.querySelectorAll('[data-protected-launch]').forEach(link=>link.addEventListener('click',event=>{
+        event.preventDefault();pendingTarget=link.getAttribute('data-protected-launch')||link.getAttribute('href');accessModal.hidden=false;requestAnimationFrame(()=>accessInput.focus());
+      }));
+      document.getElementById('accessCancel').addEventListener('click',closeAccessModal);
+      accessModal.addEventListener('click',event=>{if(event.target===accessModal)closeAccessModal();});
+      accessForm.addEventListener('submit',async event=>{
+        event.preventDefault();accessError.textContent='';accessSubmit.disabled=true;accessSubmit.textContent='Checking…';
+        try{
+          if(await verifyAccessPassword(accessInput.value)){
+            try{sessionStorage.setItem(accessKey,JSON.stringify({proof:accessProof,until:Date.now()+30*60*1000}));}catch(_){}
+            const destination=pendingTarget;closeAccessModal();location.href=destination;return;
+          }
+          accessError.textContent='Incorrect password.';accessInput.select();
+        }catch(error){accessError.textContent=error?.message||'Password verification failed.';}
+        finally{accessSubmit.disabled=false;accessSubmit.textContent='Unlock and launch';}
+      });
+      document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!accessModal.hidden)closeAccessModal();});
+    })();
+  </script>
+<link rel="stylesheet" href="../shared/maestra-toolbar.css">
+<script defer src="../shared/theme-sync-v2.js"></script>
+<script defer src="../shared/maestra-bridge.js" data-maestra-role="tool-index" data-maestra-module-id="maestra-tools" data-maestra-module-title="MAESTRA Tools"></script>
+</body>
+</html>

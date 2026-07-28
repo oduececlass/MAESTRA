@@ -1,0 +1,2526 @@
+<!DOCTYPE html>
+<!-- Revised PN diode drift-diffusion simulator. Numerical solver retained; interface adapted to the Poisson Rubber-Sheet learning workspace. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PN Diode Drift-Diffusion Lab — Rubber-Sheet Learning GUI</title>
+  <script>
+    (() => {
+      const key = "pnDiodeRubberTheme";
+      let theme = "light";
+      try {
+        const saved = localStorage.getItem(key);
+        theme = saved === "dark" || saved === "light"
+          ? saved
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      } catch (_) {}
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      svg: { fontCache: 'local' },
+      options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --bg: #efefea;
+      --panel: #f7f7f5;
+      --panel-alt: #e8e8e3;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --input-bg: #ffffff;
+      --line: #c4c4be;
+      --line-strong: #a8a8a2;
+      --text: #1d1d1f;
+      --muted: #555d67;
+      --muted-2: #727984;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --green: #16a34a;
+      --green-soft: #dcfce7;
+      --amber: #d97706;
+      --amber-soft: #fef3c7;
+      --blue-soft: #dbeafe;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --purple: #7c3aed;
+      --button: #eeeeea;
+      --chat-user: #e0f2fe;
+      --chat-ai: #ffffff;
+      --shadow: rgba(15, 23, 42, 0.11);
+      --scrollbar-thumb: #aaa9a2;
+      --scrollbar-track: #e7e7e2;
+    }
+
+    html[data-theme="dark"] {
+      --bg: #090d14;
+      --panel: #111827;
+      --panel-alt: #182233;
+      --surface: #0f172a;
+      --surface-soft: #162033;
+      --input-bg: #0b1220;
+      --line: #334155;
+      --line-strong: #475569;
+      --text: #f1f5f9;
+      --muted: #cbd5e1;
+      --muted-2: #94a3b8;
+      --primary: #60a5fa;
+      --primary-soft: #172554;
+      --green: #4ade80;
+      --green-soft: #123b2a;
+      --amber: #fbbf24;
+      --amber-soft: #4a3511;
+      --blue-soft: #172554;
+      --red: #f87171;
+      --red-soft: #4c1d1d;
+      --purple: #c4b5fd;
+      --button: #1e293b;
+      --chat-user: #0c4a6e;
+      --chat-ai: #172033;
+      --shadow: rgba(0, 0, 0, 0.38);
+      --scrollbar-thumb: #475569;
+      --scrollbar-track: #111827;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+      font-size: 16px;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { color: inherit; }
+    * { scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
+    *::-webkit-scrollbar { width: 10px; height: 10px; }
+    *::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+    *::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border: 2px solid var(--scrollbar-track); border-radius: 999px; }
+
+    .app-topbar {
+      height: 66px;
+      display: grid;
+      grid-template-columns: minmax(320px, 1fr) auto auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel) 95%, transparent);
+      box-shadow: 0 3px 12px var(--shadow);
+      position: relative;
+      z-index: 100;
+    }
+    .brand-block { min-width: 0; }
+    .brand-title { font-size: 20px; font-weight: 850; letter-spacing: -0.025em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .brand-subtitle { color: var(--muted-2); font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mode-badge { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 12px; font-weight: 800; }
+    .mode-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 18%, transparent); }
+    .learning-mode-switch, .top-actions { display: flex; align-items: center; gap: 6px; }
+    .learning-mode-switch { padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-alt); }
+    .learning-mode-btn, .top-action-btn, .theme-toggle {
+      width: auto; min-height: 38px; margin: 0; padding: 7px 11px;
+      border: 1px solid transparent; border-radius: 8px; background: transparent;
+      color: var(--muted); font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap;
+    }
+    .learning-mode-btn.active { background: var(--surface); color: var(--primary); border-color: var(--line); box-shadow: 0 2px 7px var(--shadow); }
+    .top-action-btn, .theme-toggle { border-color: var(--line); background: var(--button); color: var(--text); }
+    .top-action-btn:hover, .theme-toggle:hover, .learning-mode-btn:hover { filter: brightness(1.04); }
+
+    .app-shell {
+      --right-panel-width: 410px;
+      width: 100vw;
+      height: calc(100vh - 66px);
+      display: grid;
+      grid-template-columns: minmax(298px, 330px) minmax(620px, 1fr) var(--right-panel-width);
+      gap: 10px;
+      padding: 10px;
+      transition: grid-template-columns 180ms ease;
+    }
+    .app-shell.drawer-collapsed { grid-template-columns: minmax(298px, 330px) minmax(620px, 1fr) 68px; }
+    .panel {
+      min-width: 0; min-height: 0; overflow: hidden;
+      border: 1px solid var(--line); border-radius: 12px;
+      background: var(--panel); box-shadow: 0 5px 16px var(--shadow);
+    }
+    .panel-title {
+      min-height: 46px; padding: 10px 13px; border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      font-size: 16px; font-weight: 850; flex-shrink: 0;
+    }
+    .lesson-badge {
+      display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 9px;
+      background: var(--primary-soft); color: var(--primary); border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--line));
+      font-size: 11px; font-weight: 850;
+    }
+
+    .controls-panel { display: flex; flex-direction: column; }
+    .control-scroll { overflow-y: auto; padding: 11px; flex: 1; }
+    .control-section {
+      margin-bottom: 10px; padding: 11px; border: 1px solid var(--line); border-radius: 10px;
+      background: var(--surface);
+    }
+    .section-kicker { display: block; color: var(--muted-2); font-size: 10px; font-weight: 850; letter-spacing: .09em; text-transform: uppercase; margin-bottom: 4px; }
+    .control-section h3 { margin: 0 0 9px; font-size: 14px; line-height: 1.3; }
+    .control-note { margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .preset-grid, .action-grid, .field-grid, .metric-cards { display: grid; gap: 7px; }
+    .preset-grid { grid-template-columns: repeat(3, 1fr); }
+    .action-grid { grid-template-columns: 1fr 1fr; }
+    .action-grid .wide { grid-column: 1 / -1; }
+    .field-grid { grid-template-columns: 1.05fr 1fr; align-items: center; gap: 7px 9px; }
+    .field-grid label { color: var(--muted); font-size: 12px; font-weight: 700; text-align: right; line-height: 1.2; }
+    input[type="number"], input[type="text"], input[type="password"], select, textarea {
+      width: 100%; min-width: 0; border: 1px solid var(--line-strong); border-radius: 7px;
+      background: var(--input-bg); color: var(--text); padding: 7px 8px; font-size: 13px;
+    }
+    input[type="range"] { width: 100%; accent-color: var(--primary); }
+    .slider-label { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 12px; font-weight: 800; margin-bottom: 5px; }
+    .slider-label strong { color: var(--primary); }
+    .tick-row { display: flex; justify-content: space-between; color: var(--muted-2); font-size: 10px; padding: 2px 2px 0; }
+    .preset-chip, .primary-btn, .secondary-btn, .danger-btn, .small-btn, .guide-action, .quick-prompt {
+      min-height: 38px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-weight: 800;
+    }
+    .preset-chip { background: var(--surface-soft); color: var(--text); font-size: 11px; padding: 6px 5px; }
+    .preset-chip:hover { border-color: var(--primary); color: var(--primary); }
+    .primary-btn { background: var(--primary); border-color: var(--primary); color: white; font-size: 13px; }
+    .secondary-btn { background: var(--button); color: var(--text); font-size: 12px; }
+    .danger-btn { background: var(--red-soft); color: var(--red); font-size: 12px; }
+    button:disabled { opacity: .62; cursor: wait; }
+    .metric-cards { grid-template-columns: repeat(3, 1fr); margin-top: 8px; }
+    .metric-card { min-width: 0; padding: 8px 5px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-soft); text-align: center; }
+    .metric-label { display: block; color: var(--muted-2); font-size: 9px; line-height: 1.15; }
+    .metric-value { display: block; margin-top: 3px; color: var(--text); font-size: 14px; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    details.advanced-block { margin-top: 8px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-soft); overflow: hidden; }
+    details.advanced-block > summary { list-style: none; cursor: pointer; padding: 9px 10px; color: var(--muted); font-size: 12px; font-weight: 850; display: flex; justify-content: space-between; align-items: center; }
+    details.advanced-block > summary::-webkit-details-marker { display: none; }
+    details.advanced-block > summary::after { content: "+"; color: var(--primary); font-size: 16px; }
+    details.advanced-block[open] > summary::after { content: "−"; }
+    .advanced-content { padding: 0 10px 10px; border-top: 1px solid var(--line); }
+    #status { min-height: 120px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; line-height: 1.45; }
+    .compact-status { margin-top: 7px; padding: 8px 9px; border-radius: 8px; background: var(--surface-soft); color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .compact-status.busy { color: var(--primary); border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--line)); }
+
+    .simulation-panel { display: flex; flex-direction: column; }
+    .simulation-toolbar {
+      min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 7px 11px; border-bottom: 1px solid var(--line); background: var(--panel); flex-shrink: 0;
+    }
+    .surface-title-wrap { min-width: 0; }
+    #surfaceTitle { font-weight: 900; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #surfaceSubtitle { margin-top: 2px; color: var(--muted-2); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tabs { display: flex; align-items: center; gap: 4px; overflow-x: auto; padding-bottom: 1px; }
+    .tab { width: auto; min-height: 34px; margin: 0; padding: 6px 9px; border: 1px solid transparent; border-radius: 999px; background: var(--button); color: var(--muted); font-size: 10px; font-weight: 850; cursor: pointer; white-space: nowrap; }
+    .tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .concept-banner {
+      margin: 8px 11px 0; padding: 8px 11px; border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--line));
+      border-left: 4px solid var(--primary); border-radius: 9px;
+      background: color-mix(in srgb, var(--surface-soft) 87%, var(--primary) 13%);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0;
+    }
+    .concept-main { min-width: 0; }
+    #conceptBannerText { font-size: 12px; font-weight: 850; line-height: 1.35; }
+    #conceptEquation { margin-top: 2px; color: var(--muted); font-size: 11px; }
+    .concept-action { flex-shrink: 0; border: 0; background: transparent; color: var(--primary); font-size: 11px; font-weight: 900; cursor: pointer; }
+    .surface-stage { position: relative; flex: 1 1 auto; min-height: 360px; overflow: hidden; margin: 5px 7px 0; border-radius: 9px; background: var(--surface); }
+    #plot { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .busy-overlay { position: absolute; inset: 0; z-index: 5; display: none; align-items: center; justify-content: center; background: color-mix(in srgb, var(--surface) 76%, transparent); backdrop-filter: blur(1.5px); }
+    .busy-overlay.show { display: flex; }
+    .busy-card { min-width: 190px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 12px 35px var(--shadow); text-align: center; font-size: 12px; font-weight: 850; }
+    .busy-dots { display: flex; justify-content: center; gap: 5px; margin-top: 9px; }
+    .busy-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); animation: pulse 1s infinite alternate; }
+    .busy-dots i:nth-child(2) { animation-delay: .2s; } .busy-dots i:nth-child(3) { animation-delay: .4s; }
+    @keyframes pulse { from { opacity: .2; transform: translateY(2px); } to { opacity: 1; transform: translateY(-2px); } }
+    .live-metrics { display: flex; gap: 7px; overflow-x: auto; padding: 6px 11px 8px; border-top: 1px solid var(--line); background: var(--surface-soft); flex-shrink: 0; }
+    .live-pill { flex: 0 0 auto; padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: 10px; }
+    .live-pill strong { color: var(--text); margin-left: 3px; }
+    .observation-tray { flex: 0 0 118px; min-height: 100px; border-top: 1px solid var(--line); background: var(--surface); padding: 9px 12px; overflow-y: auto; }
+    .observation-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .observation-head h3 { margin: 0; font-size: 12px; }
+    .observation-tag { padding: 3px 8px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-size: 9px; font-weight: 850; }
+    #observationText { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+
+    .right-panel { position: relative; display: grid; grid-template-columns: 68px minmax(0, 1fr); }
+    .chat-resize-handle { position: absolute; left: -6px; top: 0; bottom: 0; width: 12px; cursor: col-resize; z-index: 50; background: transparent; }
+    .chat-resize-handle::after { content: ""; position: absolute; left: 5px; top: 40%; width: 2px; height: 20%; border-radius: 2px; background: color-mix(in srgb, var(--primary) 55%, transparent); }
+    body.resizing-chat { cursor: col-resize; user-select: none; }
+    .drawer-rail { display: flex; flex-direction: column; gap: 5px; padding: 8px 6px; border-right: 1px solid var(--line); background: var(--panel-alt); }
+    .drawer-tab, .drawer-collapse { min-height: 48px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer; font-size: 9px; font-weight: 850; padding: 5px 2px; }
+    .drawer-tab.active { background: var(--surface); color: var(--primary); border-color: var(--line); box-shadow: 0 2px 7px var(--shadow); }
+    .drawer-icon { display: block; font-size: 17px; line-height: 1; margin-bottom: 3px; }
+    .drawer-collapse { margin-top: auto; font-size: 22px; }
+    .drawer-content { min-width: 0; min-height: 0; overflow: hidden; }
+    .drawer-panel { display: none; height: 100%; min-height: 0; overflow-y: auto; padding: 11px; }
+    .drawer-panel.active { display: block; }
+    .drawer-panel.ai-panel.active { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+    .drawer-heading { margin: 0; font-size: 16px; }
+    .drawer-intro { margin: 5px 0 10px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .guide-card, .challenge-card, .equation-card, .project-selector-card, .project-card {
+      border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 10px; margin-bottom: 9px;
+    }
+    .guide-card h3, .challenge-card h3, .equation-card h3, .project-card h3, .project-selector-card h3 { margin: 0 0 6px; color: var(--primary); font-size: 13px; }
+    .guide-card p, .challenge-card p, .equation-card p, .project-card p, .project-card li, .project-selector-card p { color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .project-card ol { margin: 6px 0 8px 18px; padding: 0; }
+    .metaphor-figure { width: 100%; min-height: 150px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-soft); }
+    .eq-box { padding: 8px 9px; border-left: 4px solid var(--primary); border-radius: 6px; background: var(--surface-soft); font-size: 12px; overflow-x: auto; }
+    .quick-grid, .gactions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+    .quick-prompt { min-height: 36px; padding: 6px; background: var(--primary-soft); color: var(--primary); font-size: 10px; }
+    .guide-action { min-height: 35px; padding: 6px; border: 0; color: white; font-size: 10px; }
+    .gbtn-preset { background: #64748b; } .gbtn-run { background: var(--green); } .gbtn-ask { background: var(--purple); grid-column: 1 / -1; }
+    .project-card { display: none; }
+    .project-card.active { display: block; }
+    .project-select-label { display: block; margin: 6px 0 4px; color: var(--muted); font-size: 11px; font-weight: 800; }
+
+    .app-shell.drawer-collapsed .drawer-content { display: none; }
+    .app-shell.drawer-collapsed .right-panel { grid-template-columns: 68px; }
+    .app-shell.drawer-collapsed .drawer-collapse { transform: rotate(180deg); }
+
+    .chat-wrap { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+    .chat-titlebar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px; border-bottom: 1px solid var(--line); background: var(--panel-alt); flex-shrink: 0; }
+    .chat-titlebar strong { font-size: 13px; }
+    .chat-titlebar span { color: var(--muted); font-size: 9px; }
+    .chat-settings-bar { padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--surface-soft); flex-shrink: 0; }
+    .chat-settings-bar summary { cursor: pointer; color: var(--primary); font-size: 11px; font-weight: 850; }
+    .chat-settings-bar label { display: block; margin: 7px 0 3px; color: var(--muted); font-size: 10px; font-weight: 800; }
+    .chat-settings-bar textarea { min-height: 86px; resize: vertical; }
+    #lmUrlGroupD { display: none; }
+    .save-settings-btn { width: 100%; min-height: 34px; margin-top: 7px; border: 0; border-radius: 7px; background: var(--primary); color: white; font-size: 11px; font-weight: 850; cursor: pointer; }
+    .quick-prompts { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 8px 9px 0; flex-shrink: 0; }
+    .quick-prompts button { min-height: 32px; border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--line)); border-radius: 7px; background: var(--primary-soft); color: var(--primary); font-size: 9px; font-weight: 850; cursor: pointer; }
+    .d-chat-msgs { flex: 1; min-height: 120px; overflow-y: auto; padding: 9px; background: var(--surface-soft); display: flex; flex-direction: column; gap: 7px; }
+    .d-msg { border: 1px solid var(--line); border-radius: 9px; padding: 8px; font-size: 11px; line-height: 1.43; overflow-wrap: anywhere; }
+    .d-msg .drole { display: block; margin-bottom: 3px; color: var(--muted-2); font-size: 8px; font-weight: 900; text-transform: uppercase; }
+    .d-msg.user { align-self: flex-end; width: 91%; background: var(--chat-user); }
+    .d-msg.asst { align-self: flex-start; width: 96%; background: var(--chat-ai); }
+    .d-msg.err { background: var(--red-soft); color: var(--red); }
+    .d-msg p { margin: .42em 0; }
+    .d-msg code { background: var(--panel-alt); padding: .08em .25em; border-radius: 3px; }
+    .d-msg pre { overflow-x: auto; padding: 7px; border-radius: 6px; background: #1e293b; color: #f8fafc; }
+    .mathBlock { overflow-x: auto; overflow-y: hidden; }
+    .d-composer { padding: 9px; border-top: 1px solid var(--line); background: var(--surface); flex-shrink: 0; }
+    .d-composer textarea { min-height: 72px; resize: vertical; }
+    .d-send-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+    .d-send-row label { color: var(--muted); font-size: 9px; }
+    #dChatSend { width: auto; min-width: 76px; min-height: 32px; border: 0; border-radius: 7px; background: var(--primary); color: white; font-size: 10px; font-weight: 850; cursor: pointer; }
+    .d-think { display: flex; align-items: center; gap: 9px; }
+    .d-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); animation: pulse .8s infinite alternate; }
+
+    .modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 18px; background: rgba(0,0,0,.52); }
+    .modal.hidden { display: none; }
+    .modal-card { width: min(620px, 94vw); max-height: 88vh; overflow-y: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: 0 18px 55px rgba(0,0,0,.28); padding: 18px; }
+    .modal-card h2 { margin: 0 0 9px; font-size: 20px; }
+    .modal-card p, .modal-card li { color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .modal-close { float: right; width: auto; min-height: 34px; border: 1px solid var(--line); border-radius: 8px; background: var(--button); cursor: pointer; font-weight: 850; }
+
+    .toast { position: fixed; left: 50%; bottom: 17px; transform: translateX(-50%); z-index: 2000; max-width: 75vw; padding: 8px 13px; border-radius: 8px; background: rgba(20,20,20,.93); color: white; font-size: 11px; opacity: 0; pointer-events: none; transition: opacity .18s ease; }
+    .toast.show { opacity: 1; }
+
+    @media (max-width: 1180px) {
+      body { overflow: auto; }
+      .app-topbar { height: auto; grid-template-columns: 1fr auto; }
+      .mode-badge, .learning-mode-switch { display: none; }
+      .app-shell, .app-shell.drawer-collapsed { height: auto; min-height: 100vh; grid-template-columns: 1fr; }
+      .controls-panel { min-height: 680px; }
+      .simulation-panel { min-height: 760px; }
+      .right-panel { min-height: 820px; grid-template-columns: 68px 1fr; }
+      .app-shell.drawer-collapsed .drawer-content { display: block; }
+      .app-shell.drawer-collapsed .right-panel { grid-template-columns: 68px 1fr; }
+      .chat-resize-handle { display: none; }
+    }
+    @media (max-width: 680px) {
+      .app-topbar { grid-template-columns: 1fr; }
+      .top-actions { overflow-x: auto; }
+      .top-action-label { display: none; }
+      .action-grid, .preset-grid, .metric-cards { grid-template-columns: 1fr; }
+      .field-grid { grid-template-columns: 1fr; }
+      .field-grid label { text-align: left; }
+      .simulation-toolbar { align-items: flex-start; flex-direction: column; }
+      .tabs { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-topbar">
+    <div class="brand-block">
+      <div class="brand-title">PN Diode Drift-Diffusion Lab</div>
+      <div class="brand-subtitle">Poisson equation + continuity equations + Scharfetter–Gummel transport</div>
+    </div>
+    <div class="mode-badge" title="The full drift-diffusion solver is active">
+      <span class="mode-dot"></span>
+      <span>1D Device Solver</span>
+    </div>
+    <div class="learning-mode-switch" aria-label="Learning mode">
+      <button id="modeExploreBtn" class="learning-mode-btn active" type="button">Explore</button>
+      <button id="modeGuidedBtn" class="learning-mode-btn" type="button">Guided Lab</button>
+    </div>
+    <div class="top-actions">
+      <button id="btnReset" class="top-action-btn" type="button" title="Restore default parameters">↺ <span class="top-action-label">Reset</span></button>
+      <button id="btnClear" class="top-action-btn" type="button" title="Clear calculated data">⌫ <span class="top-action-label">Clear</span></button>
+      <button id="btnCSV" class="top-action-btn" type="button" title="Download the active data as CSV">⇩ <span class="top-action-label">CSV</span></button>
+      <button id="metaphorBtn" class="top-action-btn" type="button" title="Open the rubber-sheet interpretation">▧ <span class="top-action-label">Metaphor</span></button>
+      <button id="helpBtn" class="top-action-btn" type="button" title="Open quick help">? <span class="top-action-label">Help</span></button>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">🌙 Dark</button>
+    </div>
+  </header>
+
+  <div class="app-shell drawer-collapsed" id="appShell">
+    <aside class="panel controls-panel">
+      <div class="panel-title">
+        <span>Device Controls</span>
+        <span class="lesson-badge" id="activeRegimeBadge">Ready</span>
+      </div>
+
+      <div class="control-scroll">
+        <section class="control-section">
+          <span class="section-kicker">Bias regime</span>
+          <h3>Choose a physical operating condition</h3>
+          <div class="preset-grid">
+            <button class="preset-chip" type="button" data-quick-preset="reverse">Reverse</button>
+            <button class="preset-chip" type="button" data-quick-preset="equilibrium">Equilibrium</button>
+            <button class="preset-chip" type="button" data-quick-preset="forward">Forward</button>
+          </div>
+          <div style="margin-top:10px">
+            <div class="slider-label"><span>Applied bias $V_A$</span><strong id="biasRangeValue">0.20 V</strong></div>
+            <input id="biasRange" type="range" min="-0.60" max="0.75" step="0.01" value="0.20" />
+            <div class="tick-row"><span>−0.60 V</span><span>0</span><span>+0.75 V</span></div>
+          </div>
+          <div class="field-grid" style="margin-top:8px">
+            <label for="VA">Exact $V_A$ [V]</label>
+            <input id="VA" type="number" step="any" value="0.20" />
+          </div>
+        </section>
+
+        <section class="control-section">
+          <span class="section-kicker">Run simulation</span>
+          <h3>Calculate equilibrium, one bias point, or a J–V sweep</h3>
+          <div class="action-grid">
+            <button id="btnEq" class="primary-btn" type="button">Solve Equilibrium</button>
+            <button id="btnBias" class="primary-btn" type="button">Run Applied Bias</button>
+            <button id="btnJV" class="primary-btn wide" type="button">Scan J–V Curve</button>
+          </div>
+          <div id="compactStatus" class="compact-status">Ready. Start with equilibrium, then apply bias.</div>
+          <div class="metric-cards">
+            <div class="metric-card"><span class="metric-label">Built-in voltage</span><span class="metric-value" id="metricVbi">—</span></div>
+            <div class="metric-card"><span class="metric-label">Depletion width</span><span class="metric-value" id="metricWidth">—</span></div>
+            <div class="metric-card"><span class="metric-label">Grid points</span><span class="metric-value" id="metricGrid">—</span></div>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <span class="section-kicker">Junction</span>
+          <h3>Doping and temperature</h3>
+          <div class="field-grid">
+            <label for="T">Temperature $T$ [K]</label><input id="T" type="number" step="any" value="300" />
+            <label for="Na">$N_A$ [cm$^{-3}$]</label><input id="Na" type="number" step="any" value="1e17" />
+            <label for="Nd">$N_D$ [cm$^{-3}$]</label><input id="Nd" type="number" step="any" value="1e16" />
+          </div>
+          <p class="control-note">The charge dipole bends the electrostatic potential. Doping controls both curvature and how depletion divides across the junction.</p>
+
+          <details class="advanced-block">
+            <summary>Geometry and transport</summary>
+            <div class="advanced-content">
+              <div class="field-grid" style="margin-top:9px">
+                <label for="thp">P thickness [µm]</label><input id="thp" type="number" step="any" value="0.50" />
+                <label for="thn">N thickness [µm]</label><input id="thn" type="number" step="any" value="0.50" />
+                <label for="tauN">$\tau_n$ [s]</label><input id="tauN" type="number" step="any" value="1e-7" />
+                <label for="tauP">$\tau_p$ [s]</label><input id="tauP" type="number" step="any" value="1e-7" />
+                <label for="mun">$\mu_n$ [cm²/Vs]</label><input id="mun" type="number" step="any" value="1350" />
+                <label for="mup">$\mu_p$ [cm²/Vs]</label><input id="mup" type="number" step="any" value="480" />
+              </div>
+            </div>
+          </details>
+
+          <details class="advanced-block">
+            <summary>J–V sweep and browser performance</summary>
+            <div class="advanced-content">
+              <div class="field-grid" style="margin-top:9px">
+                <label for="Vs">Sweep start [V]</label><input id="Vs" type="number" step="any" value="0.00" />
+                <label for="Ve">Sweep end [V]</label><input id="Ve" type="number" step="any" value="0.70" />
+                <label for="maxGrid">Max grid points</label><input id="maxGrid" type="number" step="1" value="1200" />
+                <label for="maxJV">Max J–V points</label><input id="maxJV" type="number" step="1" value="31" />
+              </div>
+              <p class="control-note">Browser caps preserve responsiveness; the solver reports when a cap is active.</p>
+            </div>
+          </details>
+
+          <details class="advanced-block">
+            <summary>Solver diagnostics</summary>
+            <div class="advanced-content">
+              <textarea id="status" readonly>Ready.</textarea>
+            </div>
+          </details>
+        </section>
+      </div>
+    </aside>
+
+    <main class="panel simulation-panel">
+      <div class="simulation-toolbar">
+        <div class="surface-title-wrap">
+          <div id="surfaceTitle">Carrier Density</div>
+          <div id="surfaceSubtitle">Inspect how the junction redistributes electrons and holes</div>
+        </div>
+        <nav class="tabs" aria-label="Plot tabs">
+          <button class="tab active" data-tab="carrier" type="button">Carriers</button>
+          <button class="tab" data-tab="charge" type="button">Charge</button>
+          <button class="tab" data-tab="field" type="button">Field</button>
+          <button class="tab" data-tab="potential" type="button">Potential</button>
+          <button class="tab" data-tab="fermi" type="button">Bands / $E_F$</button>
+          <button class="tab" data-tab="jv" type="button">J–V</button>
+        </nav>
+      </div>
+
+      <div class="concept-banner">
+        <div class="concept-main">
+          <div id="conceptBannerText">At equilibrium, diffusion creates a depletion charge dipole; Poisson’s equation turns that charge into field and potential.</div>
+          <div id="conceptEquation">$\dfrac{d^2\psi}{dx^2}=-\dfrac{\rho}{\varepsilon}$</div>
+        </div>
+        <button id="conceptExplainBtn" class="concept-action" type="button">Explain</button>
+      </div>
+
+      <div class="surface-stage">
+        <div id="plot"></div>
+        <div class="busy-overlay" id="busyOverlay" aria-live="polite">
+          <div class="busy-card"><span id="busyText">Solving device equations…</span><div class="busy-dots"><i></i><i></i><i></i></div></div>
+        </div>
+      </div>
+
+      <div id="liveMetrics" class="live-metrics" aria-live="polite">
+        <span class="live-pill">State <strong>Not solved</strong></span>
+        <span class="live-pill">$V_A$ <strong>0.20 V</strong></span>
+        <span class="live-pill">$N_A/N_D$ <strong>10</strong></span>
+      </div>
+
+      <section class="observation-tray">
+        <div class="observation-head">
+          <h3>Physical interpretation</h3>
+          <span class="observation-tag" id="observationTag">Predict first</span>
+        </div>
+        <p id="observationText">Before solving, predict where the electric field peaks and which side receives most of the depletion width.</p>
+      </section>
+    </main>
+
+    <aside class="panel right-panel" id="learningDrawer">
+      <div class="chat-resize-handle" id="assistantResizeHandle" title="Drag to resize the learning drawer"></div>
+      <nav class="drawer-rail" aria-label="Learning tools">
+        <button class="drawer-tab active" type="button" data-drawer="explain"><span class="drawer-icon">?</span>Explain</button>
+        <button class="drawer-tab" type="button" data-drawer="predict"><span class="drawer-icon">◇</span>Predict</button>
+        <button class="drawer-tab" type="button" data-drawer="equation"><span class="drawer-icon">ƒ</span>Equation</button>
+        <button class="drawer-tab" type="button" data-drawer="lab"><span class="drawer-icon">✓</span>Lab</button>
+        <button class="drawer-tab" type="button" data-drawer="ai"><span class="drawer-icon">✦</span>AI Tutor</button>
+        <button id="drawerCollapseBtn" class="drawer-collapse" type="button" title="Collapse learning drawer">›</button>
+      </nav>
+
+      <div class="drawer-content">
+        <section class="drawer-panel active" data-panel="explain">
+          <h2 class="drawer-heading">Rubber-sheet interpretation</h2>
+          <p class="drawer-intro">Use the metaphor for electrostatics, then return to carrier transport for the full drift-diffusion picture.</p>
+          <div class="guide-card">
+            <h3>Charge bends the potential sheet</h3>
+            <svg class="metaphor-figure" viewBox="0 0 420 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Potential barrier across a PN junction">
+              <defs>
+                <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#111827"/></marker>
+                <linearGradient id="sheetGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0" stop-color="#fecaca"/><stop offset="0.48" stop-color="#fef3c7"/><stop offset="1" stop-color="#bfdbfe"/>
+                </linearGradient>
+              </defs>
+              <rect x="10" y="12" width="400" height="150" rx="10" fill="url(#sheetGrad)" opacity="0.45"/>
+              <path d="M28 134 C98 132, 125 120, 160 80 C186 48, 231 42, 261 72 C298 111, 326 126, 393 132" fill="none" stroke="#2563eb" stroke-width="6" stroke-linecap="round"/>
+              <line x1="210" y1="22" x2="210" y2="152" stroke="#64748b" stroke-dasharray="5 5"/>
+              <g font-family="Segoe UI,Arial" font-size="13" font-weight="700">
+                <text x="58" y="35" fill="#991b1b">P region</text><text x="310" y="35" fill="#1e40af">N region</text>
+                <text x="178" y="38" fill="#475569">junction</text>
+                <text x="42" y="153" fill="#991b1b">− ionized acceptors</text><text x="260" y="153" fill="#1e40af">+ ionized donors</text>
+              </g>
+              <path d="M175 102 L245 102" stroke="#111827" stroke-width="2" marker-end="url(#arrowhead)"/>
+            </svg>
+            <p id="drawerExplanation">The fixed depletion charge creates curvature in $\psi(x)$. The slope gives $-E(x)$, while carrier gradients and this field determine diffusion and drift currents.</p>
+          </div>
+          <div class="guide-card">
+            <h3>Current plot interpretation</h3>
+            <p id="drawerPlotInterpretation">No numerical solution yet. Solve equilibrium and compare charge, electric field, and potential in that order.</p>
+          </div>
+        </section>
+
+        <section class="drawer-panel" data-panel="predict">
+          <h2 class="drawer-heading">Predict before calculating</h2>
+          <p class="drawer-intro">Choose a prompt, state your prediction, then run the appropriate simulation.</p>
+          <div class="challenge-card">
+            <h3 id="challengeQuestion">Which side of this asymmetric junction should have the wider depletion region?</h3>
+            <p>Use $N_Ax_p=N_Dx_n$ before looking at the field or charge plot.</p>
+            <div class="quick-grid">
+              <button class="quick-prompt" data-qprompt="Ask me to predict which side of the depletion region is wider for the current N_A and N_D values. Do not reveal the answer until I explain my reasoning.">Doping prediction</button>
+              <button class="quick-prompt" data-qprompt="Ask me to predict how forward bias changes the barrier, depletion width, and carrier injection before we inspect the plots.">Forward-bias prediction</button>
+              <button class="quick-prompt" data-qprompt="Ask me to predict how reverse bias changes peak electric field and depletion width before explaining.">Reverse-bias prediction</button>
+              <button class="quick-prompt" data-qprompt="Ask me to predict whether drift and diffusion currents cancel at equilibrium and why.">Current-balance prediction</button>
+            </div>
+          </div>
+          <div class="challenge-card">
+            <h3>Suggested sequence</h3>
+            <p>1. Solve equilibrium. 2. Open Charge. 3. Open Field. 4. Open Potential. 5. Apply bias and repeat.</p>
+          </div>
+        </section>
+
+        <section class="drawer-panel" data-panel="equation">
+          <h2 class="drawer-heading">Equation map</h2>
+          <p class="drawer-intro">Each plot is tied to one part of the coupled device model.</p>
+          <div class="equation-card"><h3>Electrostatics</h3><div class="eq-box">$$\frac{d^2\psi}{dx^2}=-\frac{q}{\varepsilon}(p-n+N_D^+-N_A^-)$$</div><p>Charge density sets potential curvature; $E=-d\psi/dx$.</p></div>
+          <div class="equation-card"><h3>Carrier conservation</h3><div class="eq-box">$$\frac{dJ_n}{dx}=qR,\qquad \frac{dJ_p}{dx}=-qR$$</div><p>Recombination couples the electron and hole continuity equations.</p></div>
+          <div class="equation-card"><h3>Drift + diffusion</h3><div class="eq-box">$$J_n=q\mu_n nE+qD_n\frac{dn}{dx},\qquad J_p=q\mu_p pE-qD_p\frac{dp}{dx}$$</div><p>The Scharfetter–Gummel discretization preserves stable current evaluation across steep junction gradients.</p></div>
+        </section>
+
+        <section class="drawer-panel" data-panel="lab">
+          <h2 class="drawer-heading">Guided PN-diode labs</h2>
+          <p class="drawer-intro">Load a preset, run the model, and explain the result with the tutor.</p>
+          <div class="project-selector-card">
+            <span class="lesson-badge">Guided Project</span>
+            <h3>Learning sequence</h3>
+            <label class="project-select-label" for="projectSelectD">Project</label>
+            <select id="projectSelectD">
+              <option value="equilibrium">1 — Equilibrium depletion and built-in voltage</option>
+              <option value="doping">2 — Doping asymmetry and depletion width</option>
+              <option value="bias">3 — Forward versus reverse bias</option>
+              <option value="qfermi">4 — Quasi-Fermi levels</option>
+              <option value="jv">5 — J–V curve and design</option>
+            </select>
+          </div>
+
+          <div class="project-card active" data-project="equilibrium">
+            <span class="lesson-badge">Project 1</span><h3>Equilibrium depletion and built-in voltage</h3>
+            <ol><li>Load default junction.</li><li>Run equilibrium.</li><li>Compare charge, field, potential, and bands.</li><li>Explain how $V_{bi}$ appears without external bias.</li></ol>
+            <div class="gactions"><button class="guide-action gbtn-preset" data-preset="equilibrium">Load Settings</button><button class="guide-action gbtn-run" data-run="eq">Run Equilibrium</button><button class="guide-action gbtn-ask" data-prompt="Guide me through equilibrium in this PN diode. Ask me to predict the depletion region, field direction, and built-in voltage before explaining.">Send Project Prompt</button></div>
+          </div>
+          <div class="project-card" data-project="doping">
+            <span class="lesson-badge">Project 2</span><h3>Doping asymmetry</h3>
+            <ol><li>Make one side heavily doped.</li><li>Run equilibrium.</li><li>Locate the wider depletion side.</li><li>Connect to $N_Ax_p=N_Dx_n$.</li></ol>
+            <div class="gactions"><button class="guide-action gbtn-preset" data-preset="doping">Load Settings</button><button class="guide-action gbtn-run" data-run="eq">Run Equilibrium</button><button class="guide-action gbtn-ask" data-prompt="Guide me through doping asymmetry. Ask me to predict which side has the wider depletion region, then connect it to charge neutrality and the field profile.">Send Project Prompt</button></div>
+          </div>
+          <div class="project-card" data-project="bias">
+            <span class="lesson-badge">Project 3</span><h3>Forward versus reverse bias</h3>
+            <ol><li>Run forward bias.</li><li>Run reverse bias.</li><li>Compare barrier, depletion width, injection, and current.</li></ol>
+            <div class="gactions"><button class="guide-action gbtn-preset" data-preset="forward">Forward Settings</button><button class="guide-action gbtn-run" data-run="bias">Run Bias</button><button class="guide-action gbtn-preset" data-preset="reverse">Reverse Settings</button><button class="guide-action gbtn-run" data-run="bias">Run Bias</button><button class="guide-action gbtn-ask" data-prompt="Compare forward and reverse bias using the current simulation. Ask me to predict barrier, depletion width, injection, and current first.">Send Project Prompt</button></div>
+          </div>
+          <div class="project-card" data-project="qfermi">
+            <span class="lesson-badge">Project 4</span><h3>Quasi-Fermi levels</h3>
+            <ol><li>Apply moderate forward bias.</li><li>Open Bands / $E_F$.</li><li>Explain why $E_{Fn}$ and $E_{Fp}$ split.</li></ol>
+            <div class="gactions"><button class="guide-action gbtn-preset" data-preset="qfermi">Load Settings</button><button class="guide-action gbtn-run" data-run="bias">Run Bias</button><button class="guide-action gbtn-ask" data-prompt="Guide me through quasi-Fermi levels in a forward-biased PN diode. Ask what one Fermi level means at equilibrium, then explain the splitting.">Send Project Prompt</button></div>
+          </div>
+          <div class="project-card" data-project="jv">
+            <span class="lesson-badge">Project 5</span><h3>J–V curve and design</h3>
+            <ol><li>Scan the J–V curve.</li><li>Identify turn-on behavior.</li><li>Change temperature, lifetime, or doping.</li><li>Explain the design tradeoff.</li></ol>
+            <div class="gactions"><button class="guide-action gbtn-preset" data-preset="jv">Load Settings</button><button class="guide-action gbtn-run" data-run="jv">Scan J–V</button><button class="guide-action gbtn-ask" data-prompt="Guide me through the J-V curve and diode design. Ask me to predict effects of temperature, lifetime, and doping before explaining.">Send Project Prompt</button></div>
+          </div>
+        </section>
+
+        <section class="drawer-panel ai-panel" data-panel="ai" id="aSectTutor">
+          <div class="chat-wrap">
+            <div class="chat-titlebar"><strong>AI Socratic Tutor</strong><span>Attach the active simulation state</span></div>
+            <details class="chat-settings-bar">
+              <summary>⚙ AI Tutor Settings</summary>
+              <label for="dChatProvider">Provider</label>
+              <select id="dChatProvider"><option value="google">Google AI Studio (Gemini)</option><option value="lmstudio">LM Studio (Local)</option></select>
+              <label for="dChatApiKey">API Key</label><input type="password" id="dChatApiKey" placeholder="Paste API key here" />
+              <div id="lmUrlGroupD"><label for="dChatLmUrl">LM Studio URL</label><input type="text" id="dChatLmUrl" value="http://localhost:1234/v1" /></div>
+              <label for="dChatModel">Model</label><input type="text" id="dChatModel" value="gemini-2.5-flash" />
+              <label for="dChatTemp">Temperature: <span id="dChatTempVal">0.5</span></label><input type="range" id="dChatTemp" min="0" max="1.5" step="0.1" value="0.5" />
+              <label for="dChatSys">System Prompt</label><textarea id="dChatSys">You are a semiconductor device tutor for a PN diode drift-diffusion simulator. Use a Socratic style. Ask students to predict before explaining. Connect all answers to Poisson equation, electric field, carrier density, drift, diffusion, recombination, quasi-Fermi levels, and J-V behavior. Use concise explanations with LaTeX equations.</textarea>
+              <button class="save-settings-btn" id="dSaveSettings">Save Settings</button>
+            </details>
+            <div class="quick-prompts">
+              <button data-qprompt="Ask me three conceptual questions about equilibrium depletion, built-in potential, and electric field in this PN diode simulation.">Equilibrium Quiz</button>
+              <button data-qprompt="Help me interpret the current plot and connect it to physical meaning. Ask me what I observe first.">Interpret Plot</button>
+              <button data-qprompt="Explain drift current and diffusion current in this simulated PN diode. Ask me to identify where each dominates.">Drift vs Diffusion</button>
+              <button data-qprompt="Guide me to compare forward bias and reverse bias using the current simulation state.">Bias Compare</button>
+            </div>
+            <div class="d-chat-msgs" id="dChatMsgs"><div class="d-msg asst"><span class="drole">AI Tutor</span><p>Hello! Run a simulation, choose a plot, and tell me what you observe. I will ask for your prediction before explaining.</p></div></div>
+            <div class="d-composer">
+              <textarea id="dChatInput" rows="4" placeholder="Ask about charge, field, carriers, quasi-Fermi levels, current, or J–V… (Ctrl+Enter to send)"></textarea>
+              <div class="d-send-row"><label><input type="checkbox" id="dAttachCtx" checked /> Attach simulation state</label><button id="dChatSend">Send</button></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  <div class="modal hidden" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal-card"><button class="modal-close" data-close-modal="helpModal">Close</button><h2 id="helpTitle">How to use the lab</h2><ol><li>Start with <strong>Solve Equilibrium</strong>.</li><li>Inspect Charge → Field → Potential to follow the Poisson chain.</li><li>Choose a bias and run <strong>Applied Bias</strong> to add nonequilibrium carrier transport.</li><li>Use Bands / $E_F$ to inspect quasi-Fermi-level splitting.</li><li>Use J–V only after the single-bias behavior is clear.</li></ol><p>The detailed solver log remains available under <strong>Solver diagnostics</strong>.</p></div>
+  </div>
+  <div class="modal hidden" id="metaphorModal" role="dialog" aria-modal="true" aria-labelledby="metaphorTitle">
+    <div class="modal-card"><button class="modal-close" data-close-modal="metaphorModal">Close</button><h2 id="metaphorTitle">From rubber sheet to drift–diffusion</h2><p>The rubber-sheet metaphor represents electrostatic potential. Fixed depletion charge bends the sheet according to Poisson’s equation. The sheet’s slope is related to electric field.</p><div class="eq-box">$$\rho(x)\longrightarrow \frac{d^2\psi}{dx^2},\qquad E(x)=-\frac{d\psi}{dx}$$</div><p>A PN diode requires one additional layer: electrons and holes move on this landscape. Their drift and diffusion currents, together with recombination and continuity, must be solved self-consistently with Poisson’s equation.</p><div class="eq-box">$$\{\psi,n,p\}\ \text{are coupled and solved iteratively.}$$</div></div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script>
+/* PN Diode Drift-Diffusion Web GUI
+   Ported from the MATLAB uifigure app PNDiodeGUIV0.m.
+   Runs entirely in the browser. Plotting uses Plotly loaded from CDN. */
+
+"use strict";
+
+// ==========================================================================
+// State and UI bindings
+// ==========================================================================
+const S = {
+  params: null,
+  fi_eq: null,
+  n_eq: null,
+  p_eq: null,
+  eq_profiles: null,
+  bias: null,
+  junction_data: null,
+  currentTab: "carrier",
+};
+
+const fieldIds = ["T", "Na", "Nd", "thp", "thn", "tauN", "tauP", "mun", "mup", "Vs", "Ve", "VA", "maxGrid", "maxJV"];
+
+const defaults = {
+  T: 300,
+  Na: 1e17,
+  Nd: 1e16,
+  thp: 0.50,
+  thn: 0.50,
+  tauN: 1e-7,
+  tauP: 1e-7,
+  mun: 1350,
+  mup: 480,
+  Vs: 0.00,
+  Ve: 0.70,
+  VA: 0.20,
+  maxGrid: 1200,
+  maxJV: 31,
+};
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+function getNumber(id) {
+  const v = Number($(id).value);
+  if (!Number.isFinite(v)) {
+    throw new Error(`Invalid numeric value in ${id}.`);
+  }
+  return v;
+}
+
+function setStatus(msg) {
+  $("status").value = String(msg);
+}
+
+function appendStatus(msg) {
+  $("status").value = `${$("status").value}\n${msg}`;
+  $("status").scrollTop = $("status").scrollHeight;
+}
+
+function setBusy(isBusy) {
+  for (const id of ["btnEq", "btnBias", "btnJV", "btnReset", "btnClear", "btnCSV"]) {
+    $(id).disabled = isBusy;
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function linspace(a, b, n) {
+  if (n <= 1) return [a];
+  const out = new Array(n);
+  const step = (b - a) / (n - 1);
+  for (let i = 0; i < n; i++) out[i] = a + step * i;
+  return out;
+}
+
+function zeros(n) {
+  return new Array(n).fill(0);
+}
+
+function ones(n) {
+  return new Array(n).fill(1);
+}
+
+function arrayMaxAbs(a) {
+  let m = 0;
+  for (const v of a) {
+    const av = Math.abs(v);
+    if (av > m) m = av;
+  }
+  return m;
+}
+
+function mean(a) {
+  let s = 0, c = 0;
+  for (const v of a) {
+    if (Number.isFinite(v)) {
+      s += v;
+      c++;
+    }
+  }
+  return c > 0 ? s / c : NaN;
+}
+
+function std(a) {
+  const m = mean(a);
+  if (!Number.isFinite(m) || a.length <= 1) return 0;
+  let s = 0, c = 0;
+  for (const v of a) {
+    if (Number.isFinite(v)) {
+      const d = v - m;
+      s += d * d;
+      c++;
+    }
+  }
+  return c > 1 ? Math.sqrt(s / (c - 1)) : 0;
+}
+
+function clamp(x, lo, hi) {
+  return Math.min(Math.max(x, lo), hi);
+}
+
+// ==========================================================================
+// Numerical helper functions
+// ==========================================================================
+function expClip(x) {
+  return Math.exp(clamp(x, -80, 80));
+}
+
+function expClipArray(a) {
+  const out = new Array(a.length);
+  for (let i = 0; i < a.length; i++) out[i] = expClip(a[i]);
+  return out;
+}
+
+function BER(dphi) {
+  if (Math.abs(dphi) < 1e-3) {
+    return 1 - dphi / 2 + dphi * dphi / 12;
+  }
+  if (dphi > 80) return 0;
+  if (dphi < -80) return -dphi;
+  return dphi / (Math.exp(dphi) - 1);
+}
+
+function thomasSolve(a, b, c, f) {
+  const n = b.length;
+  const alpha = zeros(n);
+  const beta = zeros(n);
+  const v = zeros(n);
+  const x = zeros(n);
+
+  alpha[0] = b[0];
+  if (Math.abs(alpha[0]) < Number.MIN_VALUE) {
+    throw new Error("Thomas solver failed: zero pivot at row 1.");
+  }
+
+  for (let i = 1; i < n; i++) {
+    beta[i] = a[i] / alpha[i - 1];
+    alpha[i] = b[i] - beta[i] * c[i - 1];
+
+    if (Math.abs(alpha[i]) < Number.MIN_VALUE) {
+      throw new Error(`Thomas solver failed: zero pivot at row ${i + 1}.`);
+    }
+  }
+
+  v[0] = f[0];
+  for (let i = 1; i < n; i++) v[i] = f[i] - beta[i] * v[i - 1];
+
+  x[n - 1] = v[n - 1] / alpha[n - 1];
+  for (let i = n - 2; i >= 0; i--) x[i] = (v[i] - c[i] * x[i + 1]) / alpha[i];
+
+  return x;
+}
+
+function SRHNormalized(n, p, TAUN0, TAUP0) {
+  let denom = TAUP0 * (n + 1) + TAUN0 * (p + 1);
+  if (denom <= 0 || !Number.isFinite(denom)) denom = Number.MIN_VALUE;
+  return (p * n - 1) / denom;
+}
+
+function mobilitySaturation(mu0, E, Vsat, beta) {
+  E = Math.abs(E);
+  if (Vsat <= 0 || beta <= 0 || !Number.isFinite(E)) return mu0;
+  const denom = Math.pow(1 + Math.pow(mu0 * E / Vsat, beta), 1 / beta);
+  return mu0 / denom;
+}
+
+function maxRelativeChange(newVal, oldVal, floorVal) {
+  let r = 0;
+  for (let i = 0; i < newVal.length; i++) {
+    const denom = Math.max(Math.abs(oldVal[i]), floorVal);
+    const val = Math.abs(newVal[i] - oldVal[i]) / denom;
+    if (val > r) r = val;
+  }
+  return Number.isFinite(r) ? r : Infinity;
+}
+
+function carrierRelaxation(relChange) {
+  if (relChange > 1e3) return 0.03;
+  if (relChange > 1e2) return 0.07;
+  if (relChange > 1e1) return 0.15;
+  if (relChange > 1) return 0.30;
+  if (relChange > 0.1) return 0.60;
+  return 1.00;
+}
+
+function computePoissonResidual(fi, dop, dx2) {
+  let rmax = 0;
+  for (let i = 1; i < fi.length - 1; i++) {
+    const lap = (fi[i + 1] - 2 * fi[i] + fi[i - 1]) / dx2;
+    const rho = expClip(fi[i]) - expClip(-fi[i]) - dop[i];
+    rmax = Math.max(rmax, Math.abs(lap - rho));
+  }
+  return rmax;
+}
+
+// ==========================================================================
+// Parameter setup
+// ==========================================================================
+function initParameters(thP, thN, Na, Nd, T, TAUN0, TAUP0, mun0, mup0, Vstart, Vend) {
+  if (thP <= 0) throw new Error("P-region thickness must be positive.");
+  if (thN <= 0) throw new Error("N-region thickness must be positive.");
+  if (Na <= 0) throw new Error("Acceptor concentration N_A must be positive.");
+  if (Nd <= 0) throw new Error("Donor concentration N_D must be positive.");
+  if (T <= 0) throw new Error("Temperature must be positive.");
+  if (TAUN0 <= 0 || TAUP0 <= 0) throw new Error("Carrier lifetimes must be positive.");
+  if (mun0 <= 0 || mup0 <= 0) throw new Error("Mobilities must be positive.");
+  if (Vstart > Vend) throw new Error("Vstart must be less than or equal to Vend.");
+
+  const params = {};
+  params.q = 1.602176634e-19;
+  params.kb = 1.380649e-23;
+  params.T = T;
+  params.Vt = params.kb * params.T / params.q;
+  params.eps = 11.7 * 8.8541878128e-14;
+  params.ni = 1.5e10;
+  params.RNc = 2.8e19;
+
+  params.TAUN0 = TAUN0;
+  params.TAUP0 = TAUP0;
+  params.mun0 = mun0;
+  params.mup0 = mup0;
+  params.Na = Na;
+  params.Nd = Nd;
+
+  params.dEc = params.Vt * Math.log(params.RNc / params.ni);
+  params.Vbi = params.Vt * Math.log(params.Na * params.Nd / (params.ni * params.ni));
+
+  params.Ldn = Math.sqrt(params.eps * params.Vt / (params.q * params.Nd));
+  params.Ldp = Math.sqrt(params.eps * params.Vt / (params.q * params.Na));
+  params.Ldi = Math.sqrt(params.eps * params.Vt / (params.q * params.ni));
+
+  const xTotalCm = (thP + thN) * 1e-4;
+  let dxTargetCm;
+  if (Na >= 1e17 || Nd >= 1e17) dxTargetCm = Math.min(params.Ldn, params.Ldp) / 35;
+  else dxTargetCm = Math.min(params.Ldn, params.Ldp) / 20;
+
+  let nMaxOriginal = Math.round(xTotalCm / dxTargetCm) + 1;
+  nMaxOriginal = Math.max(nMaxOriginal, 101);
+  nMaxOriginal = Math.min(nMaxOriginal, 5000);
+
+  const gridCap = Math.max(101, Math.floor(getNumber("maxGrid")));
+  let nMax = Math.min(nMaxOriginal, gridCap);
+  if (nMax % 2 === 0) nMax += 1;
+
+  const dxUnormCm = xTotalCm / (nMax - 1);
+  params.dx = dxUnormCm / params.Ldi;
+  params.dx2 = params.dx * params.dx;
+  params.n_max = nMax;
+  params.n_max_original = nMaxOriginal;
+  params.used_grid_cap = nMax < nMaxOriginal;
+
+  params.x_um = linspace(-thP, thN, nMax);
+
+  params.dop = zeros(nMax);
+  for (let i = 0; i < nMax; i++) {
+    params.dop[i] = params.x_um[i] < 0 ? -params.Na / params.ni : params.Nd / params.ni;
+  }
+
+  params.phi_left_eq = Math.log(params.ni / params.Na);
+  params.phi_right_eq = Math.log(params.Nd / params.ni);
+
+  params.fi = zeros(nMax);
+  params.n = zeros(nMax);
+  params.p = zeros(nMax);
+
+  for (let i = 0; i < nMax; i++) {
+    const zz = 0.5 * params.dop[i];
+    let xx;
+    if (zz > 0) xx = zz * (1 + Math.sqrt(1 + 1 / (zz * zz)));
+    else if (zz < 0) xx = zz * (1 - Math.sqrt(1 + 1 / (zz * zz)));
+    else xx = 1;
+
+    xx = Math.max(xx, 1e-40);
+    params.fi[i] = Math.log(xx);
+    params.n[i] = xx;
+    params.p[i] = 1 / xx;
+  }
+
+  params.fi[0] = params.phi_left_eq;
+  params.fi[nMax - 1] = params.phi_right_eq;
+  params.delta_acc = 1e-5;
+
+  params.a = ones(nMax).map(() => 1 / params.dx2);
+  params.c = ones(nMax).map(() => 1 / params.dx2);
+  params.b = zeros(nMax);
+  params.f = zeros(nMax);
+
+  for (let i = 0; i < nMax; i++) {
+    const epos = expClip(params.fi[i]);
+    const eneg = expClip(-params.fi[i]);
+    params.b[i] = -(2 / params.dx2 + epos + eneg);
+    params.f[i] = epos - eneg - params.dop[i] - params.fi[i] * (epos + eneg);
+  }
+
+  params.b[0] = 1;
+  params.a[0] = 0;
+  params.c[0] = 0;
+  params.f[0] = params.phi_left_eq;
+
+  params.b[nMax - 1] = 1;
+  params.a[nMax - 1] = 0;
+  params.c[nMax - 1] = 0;
+  params.f[nMax - 1] = params.phi_right_eq;
+
+  params.TL = 300;
+  params.BETAN = 2.0;
+  params.BETAP = 1.0;
+  params.VSATN = 2.4e7 / (1 + 0.8 * Math.exp(params.TL / 600));
+  params.VSATP = params.VSATN;
+
+  params.Vstep = 0.33 * params.Vt;
+  const maxJV = Math.max(2, Math.floor(getNumber("maxJV")));
+
+  if (Math.abs(Vend - Vstart) < 1e-15) {
+    params.Total_Steps = 1;
+    params.Vplot = [Vstart];
+    params.Total_Steps_original = 1;
+  } else {
+    let totalStepsOriginal = Math.round((Vend - Vstart) / params.Vstep) + 1;
+    totalStepsOriginal = Math.max(totalStepsOriginal, 2);
+    params.Total_Steps_original = totalStepsOriginal;
+    params.Total_Steps = Math.min(totalStepsOriginal, maxJV);
+    params.Vplot = linspace(Vstart, Vend, params.Total_Steps);
+    params.used_jv_cap = params.Total_Steps < totalStepsOriginal;
+  }
+
+  return params;
+}
+
+function readParameters() {
+  return initParameters(
+    getNumber("thp"),
+    getNumber("thn"),
+    getNumber("Na"),
+    getNumber("Nd"),
+    getNumber("T"),
+    getNumber("tauN"),
+    getNumber("tauP"),
+    getNumber("mun"),
+    getNumber("mup"),
+    getNumber("Vs"),
+    getNumber("Ve")
+  );
+}
+
+// ==========================================================================
+// Equilibrium and non-equilibrium solvers
+// ==========================================================================
+function equilibriumSolver(params) {
+  const nMax = params.n_max;
+  const dx2 = params.dx2;
+  const dx = params.dx;
+  const Ldi = params.Ldi;
+  const Vt = params.Vt;
+  const dop = params.dop;
+
+  let fi = params.fi.slice();
+  const a = params.a.slice();
+  let b = params.b.slice();
+  const c = params.c.slice();
+  let f = params.f.slice();
+
+  const maxIter = 2500;
+  const dmax = 0.35;
+  let lastDelta = Infinity;
+  let lastResidual = Infinity;
+
+  for (let iter = 0; iter < maxIter; iter++) {
+    const newFi = thomasSolve(a, b, c, f);
+    const proposed = zeros(nMax);
+
+    let deltaRaw = 0;
+    for (let i = 0; i < nMax; i++) {
+      const delta = clamp(newFi[i] - fi[i], -dmax, dmax);
+      proposed[i] = fi[i] + delta;
+      deltaRaw = Math.max(deltaRaw, Math.abs(proposed[i] - fi[i]));
+    }
+
+    let lambda = 1.0;
+    if (deltaRaw > 0.1) lambda = 0.3;
+    else if (deltaRaw > 0.01) lambda = 0.6;
+
+    const fiOld = fi.slice();
+    for (let i = 0; i < nMax; i++) fi[i] = fi[i] + lambda * (proposed[i] - fi[i]);
+
+    for (let i = 1; i < nMax - 1; i++) fi[i] = clamp(fi[i], -40, 40);
+    fi[0] = params.phi_left_eq;
+    fi[nMax - 1] = params.phi_right_eq;
+
+    lastDelta = 0;
+    for (let i = 0; i < nMax; i++) lastDelta = Math.max(lastDelta, Math.abs(fi[i] - fiOld[i]));
+
+    if (lastDelta < params.delta_acc) break;
+
+    for (let i = 1; i < nMax - 1; i++) {
+      const epos = expClip(fi[i]);
+      const eneg = expClip(-fi[i]);
+      b[i] = -(2 / dx2 + epos + eneg);
+      f[i] = epos - eneg - dop[i] - fi[i] * (epos + eneg);
+    }
+
+    b[0] = 1;
+    f[0] = params.phi_left_eq;
+    b[nMax - 1] = 1;
+    f[nMax - 1] = params.phi_right_eq;
+
+    if (iter === maxIter - 1) lastResidual = computePoissonResidual(fi, dop, dx2);
+  }
+
+  const nEq = expClipArray(fi);
+  const pEq = expClipArray(fi.map(v => -v));
+  const xUm = params.x_um;
+
+  const Ec = zeros(nMax);
+  const ro = zeros(nMax);
+  const elField1 = zeros(nMax);
+  const elField2 = zeros(nMax);
+  const nf = zeros(nMax);
+  const pf = zeros(nMax);
+
+  for (let i = 0; i < nMax; i++) {
+    Ec[i] = params.dEc - Vt * fi[i];
+    ro[i] = -params.ni * (nEq[i] - pEq[i] - dop[i]);
+    nf[i] = nEq[i] * params.ni;
+    pf[i] = pEq[i] * params.ni;
+  }
+
+  for (let i = 0; i < nMax - 1; i++) {
+    elField1[i] = -(fi[i + 1] - fi[i]) * Vt / (dx * Ldi);
+  }
+  elField1[nMax - 1] = elField1[nMax - 2];
+
+  for (let i = 1; i < nMax - 1; i++) {
+    elField2[i] = -(fi[i + 1] - fi[i - 1]) * Vt / (2 * dx * Ldi);
+  }
+  elField2[0] = elField2[1];
+  elField2[nMax - 1] = elField2[nMax - 2];
+
+  const eqProfiles = {
+    fi_eq: fi,
+    xx1: xUm,
+    Ec,
+    ro,
+    el_field1: elField1,
+    el_field2: elField2,
+    nf,
+    pf,
+    last_delta: lastDelta,
+    last_residual: lastResidual,
+  };
+
+  return [fi, nEq, pEq, eqProfiles];
+}
+
+function nonEquilibriumSolver(VA, params, fiEq, nEq, pEq) {
+  const nMax = params.n_max;
+  const dx = params.dx;
+  const dx2 = params.dx2;
+  const Ldi = params.Ldi;
+  const Vt = params.Vt;
+  const dop = params.dop;
+
+  const maxIter = 800;
+  const minCarrier = 1e-40;
+  const phiClip = 40;
+  const dphiMax = 0.20;
+  const tolPhi = params.delta_acc;
+  const tolCarrier = 1e-6;
+
+  const phiLeft = params.phi_left_eq;
+  const phiRight = params.phi_right_eq - VA / Vt;
+
+  const eta = linspace(0, 1, nMax);
+  let fi = zeros(nMax);
+  let n = zeros(nMax);
+  let p = zeros(nMax);
+
+  for (let i = 0; i < nMax; i++) {
+    fi[i] = fiEq[i] - (VA / Vt) * eta[i];
+    n[i] = Math.max(nEq[i], minCarrier);
+    p[i] = Math.max(pEq[i], minCarrier);
+  }
+
+  fi[0] = phiLeft;
+  fi[nMax - 1] = phiRight;
+  n[0] = Math.max(nEq[0], minCarrier);
+  n[nMax - 1] = Math.max(nEq[nMax - 1], minCarrier);
+  p[0] = Math.max(pEq[0], minCarrier);
+  p[nMax - 1] = Math.max(pEq[nMax - 1], minCarrier);
+
+  const a = params.a.slice();
+  const c = params.c.slice();
+  a[0] = 0;
+  c[0] = 0;
+  a[nMax - 1] = 0;
+  c[nMax - 1] = 0;
+
+  let converged = false;
+  let errPhi = Infinity;
+  let errN = Infinity;
+  let errP = Infinity;
+
+  for (let iter = 0; iter < maxIter; iter++) {
+    const fiOldIter = fi.slice();
+    const nOldIter = n.slice();
+    const pOldIter = p.slice();
+
+    const EHalf = zeros(nMax - 1);
+    const munHalf = zeros(nMax - 1);
+    const mupHalf = zeros(nMax - 1);
+
+    for (let k = 0; k < nMax - 1; k++) {
+      EHalf[k] = Math.abs(fi[k + 1] - fi[k]) * Vt / (dx * Ldi);
+      munHalf[k] = mobilitySaturation(params.mun0, EHalf[k], params.VSATN, params.BETAN);
+      mupHalf[k] = mobilitySaturation(params.mup0, EHalf[k], params.VSATP, params.BETAP);
+    }
+
+    const an = zeros(nMax);
+    const bn = zeros(nMax);
+    const cn = zeros(nMax);
+    const fn = zeros(nMax);
+
+    bn[0] = 1;
+    fn[0] = nEq[0];
+    bn[nMax - 1] = 1;
+    fn[nMax - 1] = nEq[nMax - 1];
+
+    for (let i = 1; i < nMax - 1; i++) {
+      const muL = munHalf[i - 1];
+      const muR = munHalf[i];
+      const dphiL = fi[i] - fi[i - 1];
+      const dphiR = fi[i + 1] - fi[i];
+
+      an[i] = muL * BER(-dphiL);
+      cn[i] = muR * BER(dphiR);
+      bn[i] = -(muL * BER(dphiL) + muR * BER(-dphiR));
+
+      const Rsrh = SRHNormalized(n[i], p[i], params.TAUN0, params.TAUP0);
+      fn[i] = (Ldi * Ldi * dx2 / Vt) * Rsrh;
+    }
+
+    const newN = thomasSolve(an, bn, cn, fn);
+    const relNTrial = maxRelativeChange(newN, n, minCarrier);
+    const lambdaN = carrierRelaxation(relNTrial);
+
+    for (let i = 0; i < nMax; i++) n[i] = Math.max((1 - lambdaN) * n[i] + lambdaN * newN[i], minCarrier);
+    n[0] = Math.max(nEq[0], minCarrier);
+    n[nMax - 1] = Math.max(nEq[nMax - 1], minCarrier);
+
+    const ap = zeros(nMax);
+    const bp = zeros(nMax);
+    const cp = zeros(nMax);
+    const fp = zeros(nMax);
+
+    bp[0] = 1;
+    fp[0] = pEq[0];
+    bp[nMax - 1] = 1;
+    fp[nMax - 1] = pEq[nMax - 1];
+
+    for (let i = 1; i < nMax - 1; i++) {
+      const muL = mupHalf[i - 1];
+      const muR = mupHalf[i];
+      const dphiL = fi[i] - fi[i - 1];
+      const dphiR = fi[i + 1] - fi[i];
+
+      ap[i] = muL * BER(dphiL);
+      cp[i] = muR * BER(-dphiR);
+      bp[i] = -(muL * BER(-dphiL) + muR * BER(dphiR));
+
+      const Rsrh = SRHNormalized(n[i], p[i], params.TAUN0, params.TAUP0);
+      fp[i] = (Ldi * Ldi * dx2 / Vt) * Rsrh;
+    }
+
+    const newP = thomasSolve(ap, bp, cp, fp);
+    const relPTrial = maxRelativeChange(newP, p, minCarrier);
+    const lambdaP = carrierRelaxation(relPTrial);
+
+    for (let i = 0; i < nMax; i++) p[i] = Math.max((1 - lambdaP) * p[i] + lambdaP * newP[i], minCarrier);
+    p[0] = Math.max(pEq[0], minCarrier);
+    p[nMax - 1] = Math.max(pEq[nMax - 1], minCarrier);
+
+    const b = zeros(nMax);
+    const f = zeros(nMax);
+    b[0] = 1;
+    f[0] = phiLeft;
+    b[nMax - 1] = 1;
+    f[nMax - 1] = phiRight;
+
+    for (let i = 1; i < nMax - 1; i++) {
+      b[i] = -(2 / dx2 + n[i] + p[i]);
+      f[i] = n[i] - p[i] - dop[i] - fi[i] * (n[i] + p[i]);
+    }
+
+    const newFi = thomasSolve(a, b, c, f);
+    const proposedFi = zeros(nMax);
+    let deltaRaw = 0;
+
+    for (let i = 0; i < nMax; i++) {
+      let deltaPhi = newFi[i] - fi[i];
+      if (i > 0 && i < nMax - 1) deltaPhi = clamp(deltaPhi, -dphiMax, dphiMax);
+      proposedFi[i] = fi[i] + deltaPhi;
+      deltaRaw = Math.max(deltaRaw, Math.abs(proposedFi[i] - fi[i]));
+    }
+
+    let lambdaPhi = 1.0;
+    if (deltaRaw > 0.10) lambdaPhi = 0.25;
+    else if (deltaRaw > 0.03) lambdaPhi = 0.50;
+    else if (deltaRaw > 0.01) lambdaPhi = 0.75;
+
+    for (let i = 0; i < nMax; i++) fi[i] = fi[i] + lambdaPhi * (proposedFi[i] - fi[i]);
+
+    for (let i = 1; i < nMax - 1; i++) fi[i] = clamp(fi[i], -phiClip, phiClip);
+    fi[0] = phiLeft;
+    fi[nMax - 1] = phiRight;
+
+    errPhi = 0;
+    for (let i = 0; i < nMax; i++) errPhi = Math.max(errPhi, Math.abs(fi[i] - fiOldIter[i]));
+    errN = maxRelativeChange(n, nOldIter, minCarrier);
+    errP = maxRelativeChange(p, pOldIter, minCarrier);
+
+    if (errPhi < tolPhi && errN < tolCarrier && errP < tolCarrier) {
+      converged = true;
+      break;
+    }
+
+    for (let i = 0; i < nMax; i++) {
+      if (!Number.isFinite(fi[i]) || !Number.isFinite(n[i]) || !Number.isFinite(p[i])) {
+        throw new Error(`non_equilibrium_solver failed: non-finite value at V_A = ${VA}.`);
+      }
+    }
+  }
+
+  for (let i = 0; i < nMax; i++) {
+    n[i] = Math.max(n[i], minCarrier);
+    p[i] = Math.max(p[i], minCarrier);
+  }
+
+  fi[0] = phiLeft;
+  fi[nMax - 1] = phiRight;
+  n[0] = Math.max(nEq[0], minCarrier);
+  n[nMax - 1] = Math.max(nEq[nMax - 1], minCarrier);
+  p[0] = Math.max(pEq[0], minCarrier);
+  p[nMax - 1] = Math.max(pEq[nMax - 1], minCarrier);
+
+  return { fi, n, p, converged, errPhi, errN, errP };
+}
+
+async function calculateJV(params, fiEq, nEq, pEq, progressFcn) {
+  const nMax = params.n_max;
+  const dx = params.dx;
+  const Ldi = params.Ldi;
+  const Vt = params.Vt;
+  const ni = params.ni;
+  const q = params.q;
+
+  const Vplot = params.Vplot;
+  const totalSteps = Vplot.length;
+
+  const Jelec = [];
+  const Jhole = [];
+  const Jtotal = [];
+
+  const JnPlot = zeros(totalSteps);
+  const JpPlot = zeros(totalSteps);
+  const JtotPlot = zeros(totalSteps);
+
+  let fiFinal = null;
+  let nFinal = null;
+  let pFinal = null;
+
+  for (let idxV = 0; idxV < totalSteps; idxV++) {
+    const VA = Vplot[idxV];
+
+    const sol = nonEquilibriumSolver(VA, params, fiEq, nEq, pEq);
+    const fi = sol.fi;
+    const n = sol.n;
+    const p = sol.p;
+
+    fiFinal = fi;
+    nFinal = n;
+    pFinal = p;
+
+    const EHalf = zeros(nMax - 1);
+    const munHalf = zeros(nMax - 1);
+    const mupHalf = zeros(nMax - 1);
+
+    for (let k = 0; k < nMax - 1; k++) {
+      EHalf[k] = Math.abs(fi[k + 1] - fi[k]) * Vt / (dx * Ldi);
+      munHalf[k] = mobilitySaturation(params.mun0, EHalf[k], params.VSATN, params.BETAN);
+      mupHalf[k] = mobilitySaturation(params.mup0, EHalf[k], params.VSATP, params.BETAP);
+    }
+
+    const JnHalf = zeros(nMax - 1);
+    const JpHalf = zeros(nMax - 1);
+
+    for (let k = 0; k < nMax - 1; k++) {
+      const dphi = fi[k + 1] - fi[k];
+      const prefN = q * munHalf[k] * Vt * ni / (dx * Ldi);
+      const prefP = q * mupHalf[k] * Vt * ni / (dx * Ldi);
+
+      JnHalf[k] = prefN * (n[k + 1] * BER(dphi) - n[k] * BER(-dphi));
+      JpHalf[k] = prefP * (p[k] * BER(dphi) - p[k + 1] * BER(-dphi));
+    }
+
+    const je = zeros(nMax);
+    const jh = zeros(nMax);
+
+    je[0] = JnHalf[0];
+    je[nMax - 1] = JnHalf[nMax - 2];
+    jh[0] = JpHalf[0];
+    jh[nMax - 1] = JpHalf[nMax - 2];
+
+    for (let i = 1; i < nMax - 1; i++) {
+      je[i] = 0.5 * (JnHalf[i - 1] + JnHalf[i]);
+      jh[i] = 0.5 * (JpHalf[i - 1] + JpHalf[i]);
+    }
+
+    const jt = zeros(nMax);
+    for (let i = 0; i < nMax; i++) jt[i] = je[i] + jh[i];
+
+    Jelec.push(je);
+    Jhole.push(jh);
+    Jtotal.push(jt);
+
+    const idxPick = Math.max(1, Math.min(nMax - 2, Math.round(nMax / 2)));
+    JnPlot[idxV] = je[idxPick];
+    JpPlot[idxV] = jh[idxPick];
+    JtotPlot[idxV] = jt[idxPick];
+
+    const Jint = jt.slice(1, -1);
+    const Jscale = arrayMaxAbs(Jint);
+    const Jstd = std(Jint);
+    const relCurrentError = Jscale > 1e-12 ? Jstd / Jscale : 0;
+    const conservationMsg = Jscale > 1e-12 && relCurrentError > 0.25
+      ? `, current conservation warning std/max=${relCurrentError.toExponential(2)}`
+      : "";
+
+    progressFcn(`J-V point ${idxV + 1}/${totalSteps}: V_A=${VA.toFixed(4)} V, J=${JtotPlot[idxV].toExponential(4)} A/cm²${conservationMsg}`);
+    await sleep(1);
+  }
+
+  return {
+    Vplot,
+    Jelec,
+    Jhole,
+    Jtotal,
+    Jn_plot: JnPlot,
+    Jp_plot: JpPlot,
+    Jtot_plot: JtotPlot,
+    fi_final: fiFinal,
+    n_final: nFinal,
+    p_final: pFinal,
+  };
+}
+
+// ==========================================================================
+// Plot conversion helpers
+// ==========================================================================
+function buildBiasProfiles(sol, params, VA) {
+  const nMax = params.n_max;
+  const nPhys = zeros(nMax);
+  const pPhys = zeros(nMax);
+  const Ec = zeros(nMax);
+  const Ev = zeros(nMax);
+  const Ei = zeros(nMax);
+  const Efn = zeros(nMax);
+  const Efp = zeros(nMax);
+  const ro = zeros(nMax);
+  const Efield = zeros(nMax);
+
+  for (let i = 0; i < nMax; i++) {
+    nPhys[i] = Math.max(sol.n[i] * params.ni, 1);
+    pPhys[i] = Math.max(sol.p[i] * params.ni, 1);
+    Ec[i] = params.dEc - params.Vt * sol.fi[i];
+    Ev[i] = Ec[i] - 1.12;
+    Ei[i] = Ec[i] - 0.56;
+    Efn[i] = Ei[i] + params.Vt * Math.log(Math.max(nPhys[i], 1) / params.ni);
+    Efp[i] = Ei[i] - params.Vt * Math.log(Math.max(pPhys[i], 1) / params.ni);
+    ro[i] = -params.ni * (sol.n[i] - sol.p[i] - params.dop[i]);
+  }
+
+  for (let i = 1; i < nMax - 1; i++) {
+    Efield[i] = -(sol.fi[i + 1] - sol.fi[i - 1]) * params.Vt / (2 * params.dx * params.Ldi);
+  }
+  Efield[0] = Efield[1];
+  Efield[nMax - 1] = Efield[nMax - 2];
+
+  return { nPhys, pPhys, Ec, Ev, Ei, Efn, Efp, ro, Efield, VA };
+}
+
+function buildEquilibriumFermi(eq, params) {
+  const x = eq.xx1;
+  const Ec = eq.fi_eq.map(v => params.dEc - params.Vt * v);
+  const Ev = Ec.map(v => v - 1.12);
+  const Ei = Ec.map(v => v - 0.56);
+  let Efn = zeros(x.length);
+  let Efp = zeros(x.length);
+
+  for (let i = 0; i < x.length; i++) {
+    Efn[i] = Ei[i] + params.Vt * Math.log(Math.max(eq.nf[i], 1) / params.ni);
+    Efp[i] = Ei[i] - params.Vt * Math.log(Math.max(eq.pf[i], 1) / params.ni);
+  }
+
+  const fermi = mean(Efn.concat(Efp));
+  Efn = Efn.map(() => fermi);
+  Efp = Efp.map(() => fermi);
+  return { x, Ec, Ev, Ei, Efn, Efp };
+}
+
+function getActiveProfiles() {
+  if (S.bias) return { mode: "bias", data: S.bias, VA: S.bias.VA };
+  if (S.eq_profiles) return { mode: "eq", data: S.eq_profiles, VA: 0 };
+  return null;
+}
+
+function trace(x, y, name, options = {}) {
+  return {
+    x,
+    y,
+    name,
+    type: "scatter",
+    mode: "lines",
+    line: { width: options.width || 2, dash: options.dash || "solid", color: options.color },
+    hovertemplate: "%{x:.4g}, %{y:.4g}<extra>" + name + "</extra>",
+  };
+}
+
+function plotLayout(title, xTitle, yTitle, options = {}) {
+  return {
+    title: { text: title, x: 0.04, xanchor: "left" },
+    xaxis: { title: xTitle, zeroline: true, showgrid: true },
+    yaxis: { title: yTitle, type: options.logY ? "log" : "linear", showgrid: true },
+    margin: { l: 72, r: 26, t: 68, b: 62 },
+    legend: { orientation: "h", y: -0.22 },
+    template: "plotly_white",
+  };
+}
+
+function updatePlot() {
+  if (typeof Plotly === "undefined") {
+    $("plot").innerHTML = "<p style='padding:24px'>Plotly could not load. Connect to the internet or download Plotly locally and update index.html.</p>";
+    return;
+  }
+
+  const active = getActiveProfiles();
+  let data = [];
+  let layout = plotLayout("Ready", "x", "y");
+
+  if (S.currentTab !== "jv" && !active) {
+    Plotly.react("plot", [], plotLayout("No data yet — click Solve Equilibrium.", "x", "y"));
+    return;
+  }
+
+  const params = S.params;
+  const x = active ? (active.mode === "eq" ? active.data.xx1 : params.x_um) : null;
+
+  if (S.currentTab === "carrier") {
+    if (active.mode === "eq") {
+      const eq = active.data;
+      data = [trace(eq.xx1, eq.nf.map(v => Math.max(v, 1)), "n"), trace(eq.xx1, eq.pf.map(v => Math.max(v, 1)), "p")];
+      layout = plotLayout("Equilibrium Carrier Density", "x [µm]", "Carrier Density [cm⁻³]", { logY: true });
+    } else {
+      const b = active.data;
+      data = [trace(x, b.nPhys, "n"), trace(x, b.pPhys, "p")];
+      layout = plotLayout(`Carrier Density at V_A = ${active.VA.toFixed(3)} V`, "x [µm]", "Carrier Density [cm⁻³]", { logY: true });
+    }
+  }
+
+  if (S.currentTab === "charge") {
+    if (active.mode === "eq") {
+      const eq = active.data;
+      data = [trace(eq.xx1, eq.ro.map(v => params.q * v), "ρ")];
+      layout = plotLayout("Equilibrium Charge Density", "x [µm]", "ρ [C/cm³]");
+    } else {
+      const b = active.data;
+      data = [trace(x, b.ro.map(v => params.q * v), "ρ")];
+      layout = plotLayout(`Charge Density at V_A = ${active.VA.toFixed(3)} V`, "x [µm]", "ρ [C/cm³]");
+    }
+  }
+
+  if (S.currentTab === "field") {
+    if (active.mode === "eq") {
+      const eq = active.data;
+      data = [trace(eq.xx1, eq.el_field2, "E")];
+      layout = plotLayout("Equilibrium Electric Field", "x [µm]", "E [V/cm]");
+    } else {
+      const b = active.data;
+      data = [trace(x, b.Efield, "E")];
+      layout = plotLayout(`Electric Field at V_A = ${active.VA.toFixed(3)} V`, "x [µm]", "E [V/cm]");
+    }
+  }
+
+  if (S.currentTab === "potential") {
+    if (active.mode === "eq") {
+      const eq = active.data;
+      data = [trace(eq.xx1, eq.fi_eq.map(v => params.Vt * v), "ψ")];
+      layout = plotLayout("Equilibrium Electrostatic Potential", "x [µm]", "ψ [V]");
+    } else {
+      const b = active.data;
+      data = [trace(x, b.Ec.map((_, i) => params.Vt * S.biasFi[i]), "ψ")];
+      layout = plotLayout(`Electrostatic Potential at V_A = ${active.VA.toFixed(3)} V`, "x [µm]", "ψ [V]");
+    }
+  }
+
+  if (S.currentTab === "fermi") {
+    let fermi;
+    if (active.mode === "eq") {
+      fermi = buildEquilibriumFermi(active.data, params);
+      data = [
+        trace(fermi.x, fermi.Ec, "E_c", { color: "#111827" }),
+        trace(fermi.x, fermi.Ev, "E_v", { color: "#111827" }),
+        trace(fermi.x, fermi.Ei, "E_i", { color: "#111827", dash: "dash" }),
+        trace(fermi.x, fermi.Efn, "E_Fn"),
+        trace(fermi.x, fermi.Efp, "E_Fp"),
+      ];
+      layout = plotLayout("Equilibrium Band Diagram and Fermi Level", "x [µm]", "Energy [eV]");
+    } else {
+      const b = active.data;
+      data = [
+        trace(x, b.Ec, "E_c", { color: "#111827" }),
+        trace(x, b.Ev, "E_v", { color: "#111827" }),
+        trace(x, b.Ei, "E_i", { color: "#111827", dash: "dash" }),
+        trace(x, b.Efn, "E_Fn"),
+        trace(x, b.Efp, "E_Fp"),
+      ];
+      layout = plotLayout(`Quasi-Fermi Levels at V_A = ${active.VA.toFixed(3)} V`, "x [µm]", "Energy [eV]");
+    }
+  }
+
+  if (S.currentTab === "jv") {
+    if (!S.junction_data) {
+      Plotly.react("plot", [], plotLayout("No J-V data yet — click Scan J-V.", "Applied Voltage V_A [V]", "Current Density J [A/cm²]"));
+      return;
+    }
+    const jd = S.junction_data;
+    data = [
+      trace(jd.Vplot, jd.Jtot_plot, "J_total"),
+      trace(jd.Vplot, jd.Jn_plot, "J_n", { dash: "dash" }),
+      trace(jd.Vplot, jd.Jp_plot, "J_p", { dash: "dash" }),
+    ];
+    layout = plotLayout("PN Diode J-V Characteristic", "Applied Voltage V_A [V]", "Current Density J [A/cm²]");
+  }
+
+  Plotly.react("plot", data, layout, { responsive: true, displaylogo: false });
+}
+
+// ==========================================================================
+// Button callbacks
+// ==========================================================================
+async function solveEquilibrium() {
+  try {
+    setBusy(true);
+    setStatus("Initializing parameters...");
+    await sleep(1);
+
+    S.params = readParameters();
+    const capMsg = S.params.used_grid_cap
+      ? `\nBrowser grid cap active: using ${S.params.n_max} of MATLAB-estimated ${S.params.n_max_original} grid points.`
+      : "";
+
+    setStatus(`Solving equilibrium Poisson equation...${capMsg}`);
+    await sleep(1);
+
+    const [fiEq, nEq, pEq, eqProfiles] = equilibriumSolver(S.params);
+    S.fi_eq = fiEq;
+    S.n_eq = nEq;
+    S.p_eq = pEq;
+    S.eq_profiles = eqProfiles;
+    S.bias = null;
+    S.biasFi = null;
+
+    updatePlot();
+
+    setStatus(`Equilibrium solved.
+Vbi = ${S.params.Vbi.toFixed(4)} V
+Grid points = ${S.params.n_max}
+dx = ${(S.params.dx * S.params.Ldi).toExponential(3)} cm${capMsg}`);
+  } catch (err) {
+    alert(err.message);
+    setStatus("Equilibrium solve failed.\n" + err.message);
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function solveAppliedBias() {
+  try {
+    setBusy(true);
+    if (!S.params || !S.fi_eq) {
+      await solveEquilibrium();
+    }
+
+    const VA = getNumber("VA");
+    setStatus(`Solving applied bias V_A = ${VA.toFixed(4)} V...`);
+    await sleep(1);
+
+    const sol = nonEquilibriumSolver(VA, S.params, S.fi_eq, S.n_eq, S.p_eq);
+    S.bias = buildBiasProfiles(sol, S.params, VA);
+    S.biasFi = sol.fi;
+
+    updatePlot();
+
+    const conv = sol.converged ? "converged" : "did not fully converge";
+    setStatus(`Applied-bias solution ${conv} at V_A = ${VA.toFixed(4)} V.
+err_phi = ${sol.errPhi.toExponential(3)}
+err_n = ${sol.errN.toExponential(3)}
+err_p = ${sol.errP.toExponential(3)}`);
+  } catch (err) {
+    alert(err.message);
+    setStatus("Applied-bias solve failed.\n" + err.message);
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function scanJV() {
+  try {
+    setBusy(true);
+    if (!S.params || !S.fi_eq) {
+      await solveEquilibrium();
+    }
+
+    S.params = readParameters();
+    const capMsg = [
+      S.params.used_grid_cap ? `grid cap: ${S.params.n_max}/${S.params.n_max_original}` : "",
+      S.params.used_jv_cap ? `J-V cap: ${S.params.Total_Steps}/${S.params.Total_Steps_original}` : "",
+    ].filter(Boolean).join(", ");
+
+    setStatus(`Re-solving equilibrium before J-V scan${capMsg ? " (" + capMsg + ")" : ""}...`);
+    await sleep(1);
+
+    const [fiEq, nEq, pEq, eqProfiles] = equilibriumSolver(S.params);
+    S.fi_eq = fiEq;
+    S.n_eq = nEq;
+    S.p_eq = pEq;
+    S.eq_profiles = eqProfiles;
+    S.bias = null;
+    S.biasFi = null;
+
+    setStatus("Scanning J-V curve...");
+    await sleep(1);
+
+    S.junction_data = await calculateJV(S.params, S.fi_eq, S.n_eq, S.p_eq, (txt) => setStatus(txt));
+    S.currentTab = "jv";
+    setActiveTabButton("jv");
+    updatePlot();
+
+    setStatus(`J-V scan completed.
+Voltage points = ${S.params.Total_Steps}
+Grid points = ${S.params.n_max}${capMsg ? "\nBrowser caps used: " + capMsg : ""}`);
+  } catch (err) {
+    alert(err.message);
+    setStatus("J-V scan failed.\n" + err.message);
+  } finally {
+    setBusy(false);
+  }
+}
+
+function resetDefaults() {
+  for (const [id, value] of Object.entries(defaults)) {
+    $(id).value = String(value);
+  }
+  setStatus("Defaults restored.");
+}
+
+function clearAllPlots() {
+  S.params = null;
+  S.fi_eq = null;
+  S.n_eq = null;
+  S.p_eq = null;
+  S.eq_profiles = null;
+  S.bias = null;
+  S.biasFi = null;
+  S.junction_data = null;
+  Plotly.react("plot", [], plotLayout("Plots cleared.", "x", "y"), { responsive: true, displaylogo: false });
+  setStatus("Plots cleared.");
+}
+
+function setActiveTabButton(tabName) {
+  for (const btn of document.querySelectorAll(".tab")) {
+    btn.classList.toggle("active", btn.dataset.tab === tabName);
+  }
+}
+
+function downloadCSV() {
+  if (!S.junction_data && !S.eq_profiles && !S.bias) {
+    alert("No data to download yet.");
+    return;
+  }
+
+  let rows = [];
+  let filename = "pn_diode_data.csv";
+
+  if (S.currentTab === "jv" && S.junction_data) {
+    const jd = S.junction_data;
+    rows.push(["V_A_V", "J_total_A_per_cm2", "J_n_A_per_cm2", "J_p_A_per_cm2"]);
+    for (let i = 0; i < jd.Vplot.length; i++) {
+      rows.push([jd.Vplot[i], jd.Jtot_plot[i], jd.Jn_plot[i], jd.Jp_plot[i]]);
+    }
+    filename = "pn_diode_jv.csv";
+  } else if (S.bias) {
+    rows.push(["x_um", "n_cm3", "p_cm3", "rho_C_cm3", "E_V_cm", "Ec_eV", "Ev_eV", "Ei_eV", "Efn_eV", "Efp_eV"]);
+    for (let i = 0; i < S.params.n_max; i++) {
+      rows.push([
+        S.params.x_um[i],
+        S.bias.nPhys[i],
+        S.bias.pPhys[i],
+        S.params.q * S.bias.ro[i],
+        S.bias.Efield[i],
+        S.bias.Ec[i],
+        S.bias.Ev[i],
+        S.bias.Ei[i],
+        S.bias.Efn[i],
+        S.bias.Efp[i],
+      ]);
+    }
+    filename = "pn_diode_bias_profiles.csv";
+  } else if (S.eq_profiles) {
+    const eq = S.eq_profiles;
+    rows.push(["x_um", "n_cm3", "p_cm3", "rho_C_cm3", "E_V_cm", "psi_V"]);
+    for (let i = 0; i < eq.xx1.length; i++) {
+      rows.push([
+        eq.xx1[i],
+        eq.nf[i],
+        eq.pf[i],
+        S.params.q * eq.ro[i],
+        eq.el_field2[i],
+        S.params.Vt * eq.fi_eq[i],
+      ]);
+    }
+    filename = "pn_diode_equilibrium_profiles.csv";
+  }
+
+  const csv = rows.map(row => row.map(v => {
+    const s = String(v);
+    return s.includes(",") || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
+  }).join(",")).join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// ==========================================================================
+// App initialization
+// ==========================================================================
+function wireEvents() {
+  $("btnEq").addEventListener("click", solveEquilibrium);
+  $("btnBias").addEventListener("click", solveAppliedBias);
+  $("btnJV").addEventListener("click", scanJV);
+  $("btnReset").addEventListener("click", resetDefaults);
+  $("btnClear").addEventListener("click", clearAllPlots);
+  $("btnCSV").addEventListener("click", downloadCSV);
+
+  for (const btn of document.querySelectorAll(".tab")) {
+    btn.addEventListener("click", () => {
+      S.currentTab = btn.dataset.tab;
+      setActiveTabButton(S.currentTab);
+      updatePlot();
+    });
+  }
+
+  window.addEventListener("resize", () => {
+    if (typeof Plotly !== "undefined") Plotly.Plots.resize("plot");
+  });
+}
+
+wireEvents();
+
+if (typeof Plotly !== "undefined") {
+  Plotly.newPlot("plot", [], plotLayout("No data yet — click Solve Equilibrium.", "x", "y"), { responsive: true, displaylogo: false });
+}
+
+setStatus("Ready.");
+
+
+
+// ═══════════════════════════════════════════════════════════════════
+// ASSISTANT PANEL — Guided Projects + AI Tutor
+// ═══════════════════════════════════════════════════════════════════
+(function() {
+  "use strict";
+
+  // ── Dropdown project selector + always-visible chat ───────────────
+  const projectSelectD = document.getElementById('projectSelectD');
+
+  function showAsstTab(which) {
+    const input = document.getElementById('dChatInput');
+    if (input) input.focus();
+  }
+
+  function showProject(projectName) {
+    document.querySelectorAll('.project-card').forEach(card => {
+      card.classList.toggle('active', card.dataset.project === projectName);
+    });
+    if (window.MathJax?.typesetPromise) MathJax.typesetPromise();
+  }
+
+  if (projectSelectD) {
+    projectSelectD.addEventListener('change', () => showProject(projectSelectD.value));
+    showProject(projectSelectD.value);
+  }
+
+  // ── AI state ─────────────────────────────────────────────────────
+  const D = {
+    provider: 'google', apiKey: '', lmUrl: 'http://localhost:1234/v1',
+    model: 'gemini-2.5-flash', temperature: 0.5, sysPrompt: '',
+    history: []
+  };
+
+  function loadSettings() {
+    try {
+      const s = JSON.parse(localStorage.getItem('pnDiodeTutorConfig') || '{}');
+      D.provider = s.provider || 'google';
+      D.apiKey = s.apiKey || '';
+      D.lmUrl = s.lmUrl || 'http://localhost:1234/v1';
+      D.model = s.model || 'gemini-2.5-flash';
+      D.temperature = s.temperature ?? 0.5;
+      D.sysPrompt = s.sysPrompt || document.getElementById('dChatSys').value;
+    } catch(e) {}
+    syncSettingsUI();
+  }
+
+  function syncSettingsUI() {
+    document.getElementById('dChatProvider').value = D.provider;
+    document.getElementById('dChatApiKey').value = D.apiKey;
+    document.getElementById('dChatLmUrl').value = D.lmUrl;
+    document.getElementById('dChatModel').value = D.model;
+    document.getElementById('dChatTemp').value = D.temperature;
+    document.getElementById('dChatTempVal').textContent = Number(D.temperature).toFixed(1);
+    document.getElementById('dChatSys').value = D.sysPrompt;
+    document.getElementById('lmUrlGroupD').style.display = D.provider === 'lmstudio' ? 'block' : 'none';
+  }
+
+  function saveSettings() {
+    D.provider = document.getElementById('dChatProvider').value;
+    D.apiKey = document.getElementById('dChatApiKey').value.trim();
+    D.lmUrl = document.getElementById('dChatLmUrl').value.trim();
+    D.model = document.getElementById('dChatModel').value.trim();
+    D.temperature = Number(document.getElementById('dChatTemp').value);
+    D.sysPrompt = document.getElementById('dChatSys').value.trim();
+    try {
+      const cfg = JSON.stringify({ provider:D.provider, apiKey:D.apiKey, lmUrl:D.lmUrl, model:D.model, temperature:D.temperature, sysPrompt:D.sysPrompt });
+      localStorage.setItem('pnDiodeTutorConfig', cfg);
+      localStorage.setItem('rubberSheetChatConfig', cfg);
+    } catch(e) {}
+  }
+
+  document.getElementById('dSaveSettings').addEventListener('click', saveSettings);
+  document.getElementById('dChatProvider').addEventListener('change', function() {
+    document.getElementById('lmUrlGroupD').style.display = this.value === 'lmstudio' ? 'block' : 'none';
+    if (this.value === 'google') document.getElementById('dChatModel').value = 'gemini-2.5-flash';
+    if (this.value === 'lmstudio') document.getElementById('dChatModel').value = 'local-model';
+  });
+  document.getElementById('dChatTemp').addEventListener('input', function() {
+    document.getElementById('dChatTempVal').textContent = Number(this.value).toFixed(1);
+  });
+
+  // ── Project presets ──────────────────────────────────────────────
+  const PRESETS = {
+    equilibrium: { T:300, Na:1e17, Nd:1e16, VA:0.00, Vs:0.00, Ve:0.70, tab:'field' },
+    doping:      { T:300, Na:1e18, Nd:1e15, VA:0.00, Vs:0.00, Ve:0.70, tab:'charge' },
+    forward:     { T:300, Na:1e17, Nd:1e16, VA:0.35, tab:'carrier' },
+    reverse:     { T:300, Na:1e17, Nd:1e16, VA:-0.30, tab:'field' },
+    qfermi:      { T:300, Na:1e17, Nd:1e16, VA:0.30, tab:'fermi' },
+    jv:          { T:300, Na:1e17, Nd:1e16, Vs:-0.20, Ve:0.70, VA:0.20, maxJV:41, tab:'jv' }
+  };
+
+  function applyPreset(name) {
+    const p = PRESETS[name];
+    if (!p) return;
+    for (const [id, val] of Object.entries(p)) {
+      if (id === 'tab') continue;
+      const el = document.getElementById(id);
+      if (el) el.value = String(val);
+    }
+    if (p.tab) {
+      S.currentTab = p.tab;
+      setActiveTabButton(S.currentTab);
+      updatePlot();
+    }
+  }
+
+  document.querySelectorAll('.gbtn-preset').forEach(btn => {
+    btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+  });
+  document.querySelectorAll('.gbtn-run').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const a = btn.dataset.run;
+      if (a === 'eq') solveEquilibrium();
+      else if (a === 'bias') solveAppliedBias();
+      else if (a === 'jv') scanJV();
+    });
+  });
+  document.querySelectorAll('.gbtn-ask').forEach(btn => {
+    btn.addEventListener('click', () => {
+      loadPrompt(btn.dataset.prompt);
+      showAsstTab('tutor');
+    });
+  });
+  document.querySelectorAll('[data-qprompt]').forEach(btn => {
+    btn.addEventListener('click', () => loadPrompt(btn.dataset.qprompt));
+  });
+
+  function loadPrompt(txt) {
+    document.getElementById('dChatInput').value = txt;
+    document.getElementById('dChatInput').focus();
+  }
+
+  // ── Chat ─────────────────────────────────────────────────────────
+  function collectSimContext() {
+    const lines = ['PN Diode Drift-Diffusion Simulation State'];
+    lines.push(`Current tab: ${S.currentTab}`);
+    lines.push(`Inputs: T=${$('T').value} K, N_A=${$('Na').value}, N_D=${$('Nd').value}, V_A=${$('VA').value} V`);
+    if (S.params) lines.push(`Computed Vbi=${S.params.Vbi.toFixed(4)} V, grid=${S.params.n_max}`);
+    if (S.eq_profiles) lines.push(`Equilibrium solved. last_delta=${S.eq_profiles.last_delta?.toExponential(3)}`);
+    if (S.bias) lines.push(`Applied bias at V_A=${S.bias.VA.toFixed(4)} V`);
+    if (S.junction_data) {
+      const jd = S.junction_data;
+      lines.push(`J-V: ${jd.Vplot.length} pts, J_tot last=${jd.Jtot_plot[jd.Jtot_plot.length-1]?.toExponential(3)} A/cm²`);
+    }
+    lines.push(`Status: ${$('status').value.slice(-800)}`);
+    return lines.join('\n');
+  }
+
+  function appendMsg(role, text) {
+    const msgs = document.getElementById('dChatMsgs');
+    const div = document.createElement('div');
+    div.className = `d-msg ${role}`;
+    const label = role === 'user' ? 'You' : role === 'asst' ? 'AI Tutor' : 'Error';
+    div.innerHTML = `<span class="drole">${label}</span>${role === 'err' ? escapeHtml(text) : renderMd(text)}`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    if (role !== 'err') typesetMath(div);
+    return div;
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function typesetMath(target) {
+    const run = () => {
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([target]).catch(() => {});
+      }
+    };
+    if (window.MathJax && window.MathJax.typesetPromise) run();
+    else setTimeout(run, 250);
+  }
+
+  function renderMd(txt) {
+    const lines = escapeHtml(txt).split('\n');
+    let html = '';
+    let inCode = false;
+    let codeLines = [];
+    let inMath = false;
+    let mathLines = [];
+
+    for (let line of lines) {
+      const t = line.trim();
+
+      if (inMath) {
+        mathLines.push(line);
+        if (t.endsWith('$$') || t.endsWith('\\]')) {
+          html += `<div class="mathBlock">${mathLines.join('\n')}</div>`;
+          inMath = false;
+        }
+        continue;
+      }
+
+      if (t.startsWith('$$') || t.startsWith('\\[')) {
+        if ((t.startsWith('$$') && t.endsWith('$$') && t.length > 2) ||
+            (t.startsWith('\\[') && t.endsWith('\\]') && t.length > 4)) {
+          html += `<div class="mathBlock">${line}</div>`;
+        } else {
+          inMath = true;
+          mathLines = [line];
+        }
+        continue;
+      }
+
+      if (t.startsWith('```')) {
+        if (inCode) {
+          html += `<pre><code>${codeLines.join('\n')}</code></pre>`;
+          inCode = false;
+        } else {
+          inCode = true;
+          codeLines = [];
+        }
+        continue;
+      }
+      if (inCode) { codeLines.push(line); continue; }
+      if (!t) continue;
+
+      let m = t.match(/^(#{1,3})\s+(.+)/);
+      if (m) { html += `<p><strong>${formatInline(m[2])}</strong></p>`; continue; }
+      m = t.match(/^([-*]|\d+\.)\s+(.+)/);
+      if (m) { html += `<p>• ${formatInline(m[2])}</p>`; continue; }
+      html += `<p>${formatInline(line)}</p>`;
+    }
+
+    if (inCode) html += `<pre><code>${codeLines.join('\n')}</code></pre>`;
+    if (inMath) html += `<div class="mathBlock">${mathLines.join('\n')}</div>`;
+    return html || '<p></p>';
+  }
+
+  function formatInline(str) {
+    return str
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  }
+
+  async function handleSend() {
+    const raw = document.getElementById('dChatInput').value.trim();
+    if (!raw) return;
+    saveSettings();
+    if (D.provider === 'google' && !D.apiKey) {
+      alert('Please enter your Google API Key in AI Tutor Settings.');
+      document.getElementById('aSectTutor').querySelector('details').open = true;
+      return;
+    }
+    let userContent = raw;
+    if (document.getElementById('dAttachCtx').checked) {
+      userContent = '[Simulation Context]\n' + collectSimContext() + '\n\n[Student Question]\n' + raw;
+    }
+    document.getElementById('dChatInput').value = '';
+    appendMsg('user', raw);
+    D.history.push({ role:'user', content: userContent });
+
+    const send = document.getElementById('dChatSend');
+    send.disabled = true;
+    const loading = appendMsg('asst', '');
+    loading.innerHTML = '<span class="drole">AI Tutor</span><div class="d-think"><span style="color:#475569;font-size:.83rem">Thinking</span><div class="d-dot"></div></div>';
+
+    try {
+      const reply = D.provider === 'google' ? await callGemini() : await callLMStudio();
+      loading.remove();
+      appendMsg('asst', reply);
+      D.history.push({ role:'model', content: reply });
+    } catch(err) {
+      loading.remove();
+      appendMsg('err', err.message || String(err));
+    } finally {
+      send.disabled = false;
+    }
+  }
+
+  async function callGemini() {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(D.model)}:generateContent`;
+    const contents = D.history.map(m => ({ role: m.role === 'model' ? 'model' : 'user', parts: [{ text: m.content }] }));
+    const body = { contents, generationConfig: { temperature: D.temperature }, systemInstruction: { parts: [{ text: D.sysPrompt }] } };
+    const res = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', 'x-goog-api-key': D.apiKey }, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+    return data?.candidates?.[0]?.content?.parts?.map(p=>p.text).join('') || '';
+  }
+
+  async function callLMStudio() {
+    const url = `${D.lmUrl.replace(/\/$/, '')}/chat/completions`;
+    const messages = [{ role:'system', content: D.sysPrompt }];
+    D.history.forEach(m => messages.push({ role: m.role === 'model' ? 'assistant' : 'user', content: m.content }));
+    const headers = { 'Content-Type':'application/json' };
+    if (D.apiKey) headers.Authorization = `Bearer ${D.apiKey}`;
+    const res = await fetch(url, { method:'POST', headers, body: JSON.stringify({ model:D.model, messages, temperature:D.temperature }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+    return data?.choices?.[0]?.message?.content || '';
+  }
+
+  document.getElementById('dChatSend').addEventListener('click', handleSend);
+  document.getElementById('dChatInput').addEventListener('keydown', ev => {
+    if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); handleSend(); }
+  });
+
+  loadSettings();
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+
+  const appShell = document.getElementById("appShell");
+  const themeToggle = document.getElementById("themeToggle");
+  const biasRange = document.getElementById("biasRange");
+  const biasInput = document.getElementById("VA");
+  const compactStatus = document.getElementById("compactStatus");
+  const busyOverlay = document.getElementById("busyOverlay");
+  const busyText = document.getElementById("busyText");
+  const toast = document.getElementById("toast");
+  const THEME_KEY = "pnDiodeRubberTheme";
+
+  const TAB_COPY = {
+    carrier: {
+      title: "Carrier Density",
+      subtitle: "Electron and hole populations across the junction",
+      banner: "Carrier gradients drive diffusion; the electrostatic field drives drift. At equilibrium the two contributions balance.",
+      equation: "$J_n=q\\mu_n nE+qD_n\\,dn/dx$ and $J_p=q\\mu_p pE-qD_p\\,dp/dx$",
+      observation: "Compare majority and minority carriers on the logarithmic scale. Under forward bias, minority-carrier injection should rise near both depletion edges."
+    },
+    charge: {
+      title: "Space-Charge Density",
+      subtitle: "The source term that bends the electrostatic potential",
+      banner: "The depletion dipole contains negative ionized acceptors on the P side and positive ionized donors on the N side.",
+      equation: "$\\rho=q(p-n+N_D^+-N_A^-)$",
+      observation: "The total uncovered charge on both sides must balance. The lightly doped side therefore extends farther into depletion."
+    },
+    field: {
+      title: "Electric Field",
+      subtitle: "The slope of the potential landscape",
+      banner: "Electric field points from the positively charged donor side toward the negatively charged acceptor side.",
+      equation: "$E=-d\\psi/dx$ and $dE/dx=\\rho/\\varepsilon$",
+      observation: "The field peaks near the metallurgical junction. Reverse bias generally increases both peak field and depletion width."
+    },
+    potential: {
+      title: "Electrostatic Potential",
+      subtitle: "The one-dimensional rubber-sheet profile",
+      banner: "Charge controls potential curvature, while the integrated field sets the barrier across the junction.",
+      equation: "$d^2\\psi/dx^2=-\\rho/\\varepsilon$",
+      observation: "Forward bias lowers the effective barrier; reverse bias raises it. Compare the potential difference with the built-in voltage."
+    },
+    fermi: {
+      title: "Band Diagram and Quasi-Fermi Levels",
+      subtitle: "Energy landscape and nonequilibrium carrier populations",
+      banner: "At equilibrium one Fermi level describes the device. Under bias, electron and hole quasi-Fermi levels split.",
+      equation: "$n=n_i e^{(E_{Fn}-E_i)/kT}$, $p=n_i e^{(E_i-E_{Fp})/kT}$",
+      observation: "A visible $E_{Fn}$–$E_{Fp}$ separation signals nonequilibrium. Its contact-to-contact separation is tied to the applied voltage."
+    },
+    jv: {
+      title: "J–V Characteristic",
+      subtitle: "Terminal current from the coupled transport solution",
+      banner: "The terminal curve combines electron and hole currents after the internal electrostatics and carrier profiles converge.",
+      equation: "$J_{total}=J_n+J_p$",
+      observation: "Use the separate electron and hole traces to identify which carrier contribution dominates as forward bias increases."
+    }
+  };
+
+  function typeset(target) {
+    if (window.MathJax?.typesetPromise) {
+      window.MathJax.typesetPromise(target ? [target] : undefined).catch(() => {});
+    }
+  }
+
+  function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => toast.classList.remove("show"), 1800);
+  }
+
+  function setTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    try { localStorage.setItem(THEME_KEY, theme); } catch (_) {}
+    const dark = theme === "dark";
+    themeToggle.textContent = dark ? "☀ Light" : "🌙 Dark";
+    themeToggle.setAttribute("aria-pressed", String(dark));
+    themeToggle.title = dark ? "Switch to light mode" : "Switch to dark mode";
+    if (typeof updatePlot === "function") updatePlot();
+  }
+
+  themeToggle.addEventListener("click", () => {
+    setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+  });
+  setTheme(document.documentElement.dataset.theme || "light");
+
+  const originalTrace = trace;
+  trace = function (x, y, name, options = {}) {
+    const dark = document.documentElement.dataset.theme === "dark";
+    if (dark && options.color === "#111827") options = { ...options, color: "#e5e7eb" };
+    return originalTrace(x, y, name, options);
+  };
+
+  const originalPlotLayout = plotLayout;
+  plotLayout = function (title, xTitle, yTitle, options = {}) {
+    const dark = document.documentElement.dataset.theme === "dark";
+    const text = dark ? "#e5e7eb" : "#1f2937";
+    const grid = dark ? "#334155" : "#d9dde3";
+    const paper = dark ? "#0f172a" : "#ffffff";
+    return {
+      title: { text: title, x: 0.035, xanchor: "left", font: { size: 17, color: text } },
+      xaxis: { title: xTitle, zeroline: true, showgrid: true, gridcolor: grid, zerolinecolor: grid, color: text, automargin: true },
+      yaxis: { title: yTitle, type: options.logY ? "log" : "linear", showgrid: true, gridcolor: grid, zerolinecolor: grid, color: text, automargin: true },
+      margin: { l: 76, r: 25, t: 58, b: 58 },
+      legend: { orientation: "h", y: -0.18, font: { color: text } },
+      paper_bgcolor: paper,
+      plot_bgcolor: paper,
+      font: { family: "Segoe UI, Arial, sans-serif", color: text, size: 12 },
+      hoverlabel: { bgcolor: dark ? "#111827" : "#ffffff", font: { color: text } }
+    };
+  };
+
+  const originalSetStatus = setStatus;
+  setStatus = function (message) {
+    originalSetStatus(message);
+    const firstLine = String(message).split("\n")[0];
+    compactStatus.textContent = firstLine;
+    compactStatus.title = String(message);
+    document.getElementById("drawerPlotInterpretation").textContent = firstLine;
+    updateRegimeAndMetrics();
+  };
+
+  const originalAppendStatus = appendStatus;
+  appendStatus = function (message) {
+    originalAppendStatus(message);
+    compactStatus.textContent = String(message).split("\n").slice(-1)[0];
+  };
+
+  const originalSetBusy = setBusy;
+  setBusy = function (isBusy) {
+    originalSetBusy(isBusy);
+    busyOverlay.classList.toggle("show", isBusy);
+    compactStatus.classList.toggle("busy", isBusy);
+    busyText.textContent = S.currentTab === "jv" ? "Scanning the J–V curve…" : "Solving coupled device equations…";
+  };
+
+  const originalUpdatePlot = updatePlot;
+  updatePlot = function () {
+    originalUpdatePlot();
+    refreshLearningUI();
+    updateRegimeAndMetrics();
+  };
+
+  function currentBias() {
+    const value = Number(biasInput.value);
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  function regimeName(va) {
+    if (Math.abs(va) <= 0.025) return "Equilibrium";
+    return va > 0 ? "Forward bias" : "Reverse bias";
+  }
+
+  function theoreticalWidthUm() {
+    const T = Number(document.getElementById("T").value);
+    const Na = Number(document.getElementById("Na").value);
+    const Nd = Number(document.getElementById("Nd").value);
+    if (!(T > 0 && Na > 0 && Nd > 0)) return NaN;
+    const q = 1.602176634e-19;
+    const kb = 1.380649e-23;
+    const eps = 11.7 * 8.8541878128e-14;
+    const ni = 1.5e10;
+    const Vt = kb * T / q;
+    const Vbi = Vt * Math.log(Na * Nd / (ni * ni));
+    const barrier = Math.max(0.005, Vbi - currentBias());
+    return 1e4 * Math.sqrt((2 * eps / q) * (1 / Na + 1 / Nd) * barrier);
+  }
+
+  function formatSci(value, digits = 2) {
+    if (!Number.isFinite(value)) return "—";
+    return value.toExponential(digits);
+  }
+
+  function maxAbs(values) {
+    if (!Array.isArray(values) || !values.length) return NaN;
+    let m = 0;
+    for (const value of values) if (Number.isFinite(value)) m = Math.max(m, Math.abs(value));
+    return m;
+  }
+
+  function updateRegimeAndMetrics() {
+    const va = currentBias();
+    const regime = regimeName(va);
+    document.getElementById("activeRegimeBadge").textContent = regime;
+    document.getElementById("metricVbi").textContent = S.params ? `${S.params.Vbi.toFixed(3)} V` : "—";
+    const width = theoreticalWidthUm();
+    document.getElementById("metricWidth").textContent = Number.isFinite(width) ? `${width.toFixed(3)} µm` : "—";
+    document.getElementById("metricGrid").textContent = S.params ? String(S.params.n_max) : "—";
+
+    const Na = Number(document.getElementById("Na").value);
+    const Nd = Number(document.getElementById("Nd").value);
+    const ratio = Na > 0 && Nd > 0 ? Na / Nd : NaN;
+    const active = getActiveProfiles();
+    const state = S.junction_data && S.currentTab === "jv" ? "J–V solved" : active ? (active.mode === "bias" ? "Bias solved" : "Equilibrium solved") : "Not solved";
+    let peakField = NaN;
+    if (active?.mode === "eq") peakField = maxAbs(active.data.el_field2);
+    if (active?.mode === "bias") peakField = maxAbs(active.data.Efield);
+    let current = NaN;
+    if (S.junction_data?.Jtot_plot?.length) current = S.junction_data.Jtot_plot[S.junction_data.Jtot_plot.length - 1];
+
+    document.getElementById("liveMetrics").innerHTML = `
+      <span class="live-pill">State <strong>${state}</strong></span>
+      <span class="live-pill">Regime <strong>${regime}</strong></span>
+      <span class="live-pill">$V_A$ <strong>${va.toFixed(3)} V</strong></span>
+      <span class="live-pill">$N_A/N_D$ <strong>${Number.isFinite(ratio) ? ratio.toPrecision(3) : "—"}</strong></span>
+      <span class="live-pill">Peak $|E|$ <strong>${formatSci(peakField)} V/cm</strong></span>
+      <span class="live-pill">Last $J$ <strong>${formatSci(current)} A/cm²</strong></span>`;
+    typeset(document.getElementById("liveMetrics"));
+
+    const lightlyDoped = Na < Nd ? "P side" : Nd < Na ? "N side" : "both sides equally";
+    document.getElementById("challengeQuestion").textContent = `With N_A = ${formatSci(Na)} and N_D = ${formatSci(Nd)}, where should depletion extend farther?`;
+    document.getElementById("drawerExplanation").innerHTML = `The fixed depletion charge bends $\\psi(x)$. Because charge neutrality requires $N_Ax_p=N_Dx_n$, depletion should extend farther into <strong>${lightlyDoped}</strong>.`;
+    typeset(document.getElementById("drawerExplanation"));
+  }
+
+  function refreshLearningUI() {
+    const copy = TAB_COPY[S.currentTab] || TAB_COPY.carrier;
+    document.getElementById("surfaceTitle").textContent = copy.title;
+    document.getElementById("surfaceSubtitle").textContent = copy.subtitle;
+    document.getElementById("conceptBannerText").textContent = copy.banner;
+    document.getElementById("conceptEquation").textContent = copy.equation;
+    document.getElementById("observationText").textContent = copy.observation;
+    document.getElementById("observationTag").textContent = S.bias ? regimeName(S.bias.VA) : S.eq_profiles ? "Equilibrium" : "Predict first";
+    document.getElementById("drawerPlotInterpretation").textContent = copy.observation;
+    typeset(document.getElementById("conceptEquation"));
+  }
+
+  function syncBiasFromRange() {
+    biasInput.value = Number(biasRange.value).toFixed(2);
+    document.getElementById("biasRangeValue").textContent = `${Number(biasRange.value).toFixed(2)} V`;
+    updateRegimeAndMetrics();
+  }
+  function syncBiasFromInput() {
+    const value = Math.max(Number(biasRange.min), Math.min(Number(biasRange.max), Number(biasInput.value)));
+    if (Number.isFinite(value)) biasRange.value = String(value);
+    document.getElementById("biasRangeValue").textContent = `${Number(biasInput.value || 0).toFixed(2)} V`;
+    updateRegimeAndMetrics();
+  }
+  biasRange.addEventListener("input", syncBiasFromRange);
+  biasRange.addEventListener("change", () => showToast(`${regimeName(currentBias())}: V_A = ${currentBias().toFixed(2)} V`));
+  biasInput.addEventListener("input", syncBiasFromInput);
+
+  document.querySelectorAll("[data-quick-preset]").forEach(button => {
+    button.addEventListener("click", () => {
+      const preset = button.dataset.quickPreset;
+      const values = {
+        reverse: { VA: -0.30, tab: "field" },
+        equilibrium: { VA: 0.00, tab: "charge" },
+        forward: { VA: 0.35, tab: "carrier" }
+      }[preset];
+      if (!values) return;
+      biasInput.value = values.VA.toFixed(2);
+      syncBiasFromInput();
+      S.currentTab = values.tab;
+      setActiveTabButton(values.tab);
+      updatePlot();
+      showToast(`${regimeName(values.VA)} preset loaded.`);
+    });
+  });
+
+  document.querySelectorAll("#T,#Na,#Nd,#thp,#thn,#tauN,#tauP,#mun,#mup,#Vs,#Ve,#maxGrid,#maxJV").forEach(input => {
+    input.addEventListener("input", updateRegimeAndMetrics);
+  });
+
+  function openDrawer(panelName, expand = true) {
+    if (expand) appShell.classList.remove("drawer-collapsed");
+    document.querySelectorAll(".drawer-tab").forEach(button => button.classList.toggle("active", button.dataset.drawer === panelName));
+    document.querySelectorAll(".drawer-panel").forEach(panel => panel.classList.toggle("active", panel.dataset.panel === panelName));
+    if (panelName === "ai") setTimeout(() => document.getElementById("dChatInput")?.focus(), 100);
+    setTimeout(() => { if (window.Plotly) Plotly.Plots.resize("plot"); }, 190);
+  }
+
+  document.querySelectorAll(".drawer-tab").forEach(button => button.addEventListener("click", () => openDrawer(button.dataset.drawer)));
+  document.getElementById("drawerCollapseBtn").addEventListener("click", () => {
+    appShell.classList.toggle("drawer-collapsed");
+    setTimeout(() => { if (window.Plotly) Plotly.Plots.resize("plot"); }, 190);
+  });
+  document.getElementById("modeExploreBtn").addEventListener("click", () => {
+    document.getElementById("modeExploreBtn").classList.add("active");
+    document.getElementById("modeGuidedBtn").classList.remove("active");
+    openDrawer("explain", false);
+    appShell.classList.add("drawer-collapsed");
+  });
+  document.getElementById("modeGuidedBtn").addEventListener("click", () => {
+    document.getElementById("modeGuidedBtn").classList.add("active");
+    document.getElementById("modeExploreBtn").classList.remove("active");
+    openDrawer("lab", true);
+  });
+  document.getElementById("conceptExplainBtn").addEventListener("click", () => openDrawer("explain", true));
+
+  document.querySelectorAll(".gbtn-ask,[data-qprompt]").forEach(button => {
+    button.addEventListener("click", () => openDrawer("ai", true));
+  });
+
+  function openModal(id) {
+    document.getElementById(id).classList.remove("hidden");
+    typeset(document.getElementById(id));
+  }
+  document.getElementById("helpBtn").addEventListener("click", () => openModal("helpModal"));
+  document.getElementById("metaphorBtn").addEventListener("click", () => openModal("metaphorModal"));
+  document.querySelectorAll("[data-close-modal]").forEach(button => button.addEventListener("click", () => document.getElementById(button.dataset.closeModal).classList.add("hidden")));
+  document.querySelectorAll(".modal").forEach(modal => modal.addEventListener("click", event => { if (event.target === modal) modal.classList.add("hidden"); }));
+  window.addEventListener("keydown", event => { if (event.key === "Escape") document.querySelectorAll(".modal").forEach(modal => modal.classList.add("hidden")); });
+
+  const resizeHandle = document.getElementById("assistantResizeHandle");
+  let dragging = false;
+  try {
+    const saved = localStorage.getItem("pnDiodeLearningWidth");
+    if (saved) appShell.style.setProperty("--right-panel-width", saved);
+  } catch (_) {}
+  resizeHandle.addEventListener("mousedown", event => { dragging = true; document.body.classList.add("resizing-chat"); event.preventDefault(); });
+  window.addEventListener("mousemove", event => {
+    if (!dragging || window.innerWidth <= 1180) return;
+    const width = Math.max(320, Math.min(window.innerWidth * 0.55, window.innerWidth - event.clientX - 10));
+    const value = `${Math.round(width)}px`;
+    appShell.style.setProperty("--right-panel-width", value);
+    try { localStorage.setItem("pnDiodeLearningWidth", value); } catch (_) {}
+    if (window.Plotly) Plotly.Plots.resize("plot");
+  });
+  window.addEventListener("mouseup", () => { dragging = false; document.body.classList.remove("resizing-chat"); });
+
+  document.getElementById("btnReset").addEventListener("click", () => {
+    setTimeout(() => {
+      syncBiasFromInput();
+      updateRegimeAndMetrics();
+      refreshLearningUI();
+      showToast("Default PN-junction parameters restored.");
+    }, 0);
+  });
+  document.querySelectorAll(".gbtn-preset").forEach(button => {
+    button.addEventListener("click", () => setTimeout(() => {
+      syncBiasFromInput();
+      updateRegimeAndMetrics();
+      refreshLearningUI();
+    }, 0));
+  });
+
+  syncBiasFromInput();
+  refreshLearningUI();
+  updateRegimeAndMetrics();
+  compactStatus.textContent = document.getElementById("status").value || "Ready.";
+  typeset(document.body);
+})();
+</script>
+
+<!-- maestra-integration-v4 -->
+<link rel="stylesheet" href="../shared/maestra-toolbar.css">
+<script defer src="../shared/theme-sync-v2.js"></script>
+<script defer src="../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="pn-diode" data-maestra-module-title="PN Diode" data-maestra-topic-title="Pndiode Driftdiffusion Simulator Standalone" data-maestra-canvas-template="pn-junction"></script>
+</body>
+</html>

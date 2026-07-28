@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Animated Schottky Barrier: Thermionic Emission</title>
+<style>
+  :root{
+    --bg:#07111f;
+    --panel:#0e1b2d;
+    --panel2:#12243a;
+    --line:#2b4665;
+    --text:#edf5ff;
+    --muted:#a8bdd3;
+    --cyan:#36d6ff;
+    --blue:#5a9cff;
+    --yellow:#ffd166;
+    --pink:#ff73b9;
+    --green:#70e6a2;
+    --red:#ff7b7b;
+    --metal:#263b55;
+    --semi:#152d46;
+    --shadow:0 18px 50px rgba(0,0,0,.28);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%,rgba(54,214,255,.11),transparent 32%),
+      radial-gradient(circle at 85% 5%,rgba(255,115,185,.09),transparent 28%),
+      var(--bg);
+    color:var(--text);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  .app{max-width:1480px;margin:0 auto;padding:22px}
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;gap:20px;
+    padding:18px 20px 22px;
+  }
+  h1{margin:0;font-size:clamp(2rem,4vw,3.5rem);line-height:1.02;letter-spacing:-.04em}
+  .eyebrow{color:var(--cyan);font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:.78rem;margin-bottom:8px}
+  .subtitle{margin:10px 0 0;color:var(--muted);font-size:1.05rem;max-width:850px;line-height:1.55}
+  .badge{border:1px solid var(--line);background:rgba(14,27,45,.72);padding:10px 14px;border-radius:999px;color:var(--muted);white-space:nowrap}
+  .grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,.75fr);gap:18px;align-items:stretch}
+  .card{
+    background:linear-gradient(180deg,rgba(18,36,58,.96),rgba(10,23,39,.96));
+    border:1px solid rgba(92,133,176,.32);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;
+  }
+  .grid>.card,.lower>.card{display:flex;flex-direction:column;height:100%;align-self:stretch}
+  .grid>.card>.card-body,.lower>.card>.card-body{flex:1}
+  .controls.compact{height:100%;align-content:start}
+  .card-head{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:18px 20px;border-bottom:1px solid rgba(92,133,176,.24)}
+  .card-head h2,.card-head h3{margin:0;font-size:1.12rem}
+  .card-body{padding:18px 20px}
+  .controls{display:grid;gap:11px}
+  .controls.compact{gap:10px}
+  .mode-row,.segmented{display:flex;gap:8px;flex-wrap:wrap}
+  button{
+    border:1px solid var(--line);background:#10243a;color:var(--text);border-radius:11px;
+    padding:10px 13px;font-weight:750;cursor:pointer;transition:.2s ease;font-size:.92rem;
+  }
+  button:hover{transform:translateY(-1px);border-color:#4f7daa}
+  button.active{background:linear-gradient(135deg,#0a7390,#1a4f83);border-color:var(--cyan);box-shadow:0 0 0 2px rgba(54,214,255,.12)}
+  button.primary{background:linear-gradient(135deg,#087b9a,#2858a7);border-color:#4fe0ff}
+  button.ghost{background:transparent}
+  .control-block{padding:11px 13px;border:1px solid rgba(92,133,176,.24);border-radius:14px;background:rgba(5,16,29,.35)}
+  .control-label{display:flex;justify-content:space-between;gap:10px;margin-bottom:7px;color:var(--muted);font-size:.88rem}
+  .control-label strong{color:var(--text)}
+  input[type="range"]{width:100%;accent-color:var(--cyan)}
+  input[type="number"],select{
+    width:100%;background:#091829;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 11px;font-size:.95rem;
+  }
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .small{font-size:.79rem;color:var(--muted);line-height:1.35}
+  .diagram-wrap{padding:10px 12px 16px;flex:1;display:flex;flex-direction:column}
+  #bandSvg{display:block;width:100%;height:auto;min-height:390px;flex:1}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;padding:0 20px 18px;color:var(--muted);font-size:.84rem}
+  .legend span{display:flex;align-items:center;gap:7px}.dot{width:10px;height:10px;border-radius:50%}
+  .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .metric{padding:10px 11px;border-radius:13px;background:rgba(5,16,29,.52);border:1px solid rgba(92,133,176,.23);min-height:68px}
+  .metric .k{color:var(--muted);font-size:.67rem;text-transform:uppercase;letter-spacing:.07em;line-height:1.2}
+  .metric .v{font-size:1.02rem;font-weight:800;margin-top:5px;word-break:break-word;line-height:1.2}
+  .metric .u{font-size:.68rem;color:var(--muted);margin-left:3px}
+  .explain{margin-top:10px;padding:11px 12px;border-left:4px solid var(--cyan);border-radius:10px;background:rgba(54,214,255,.07);line-height:1.45;color:#dcecff;font-size:.94rem}
+  .lower{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:18px;margin-top:18px;align-items:stretch}
+  .status-wide{margin-top:18px}
+  .state-panel{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,1fr);gap:14px;align-items:stretch}
+  .status-wide .metrics{grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+  .status-wide .metric{min-height:86px;padding:14px 14px 12px}
+  .status-wide .metric .k{font-size:.72rem}
+  .status-wide .metric .v{font-size:1.18rem}
+  .status-wide .explain{margin-top:0;height:100%;display:flex;align-items:center;font-size:1rem}
+  #ivSvg{display:block;width:100%;height:auto;min-height:390px;flex:1}
+  .plot-readout{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:0 20px 18px;color:var(--muted);font-size:.9rem}
+  .plot-readout strong{color:var(--yellow)}
+  .derivation-shell{min-height:430px;display:flex;flex-direction:column}
+  .step-indicator{color:var(--cyan);font-weight:800;font-size:.82rem;text-transform:uppercase;letter-spacing:.1em}
+  .eq-box{margin:18px 0 12px;padding:18px;border-radius:14px;background:#081727;border:1px solid rgba(92,133,176,.3);font-size:clamp(1.05rem,2vw,1.45rem);overflow-x:auto;text-align:center}
+  .step-title{font-size:1.3rem;font-weight:850;margin-top:8px}
+  .step-text{color:var(--muted);line-height:1.65;min-height:90px}
+  .derive-controls{display:flex;justify-content:space-between;gap:10px;margin-top:auto;padding-top:14px}
+  .numerical{margin-top:12px;border-top:1px solid rgba(92,133,176,.24);padding-top:14px;color:#dcecff;line-height:1.7}.numerical div{margin:8px 0}
+  .regimes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+  .regime{padding:15px;border:1px solid rgba(92,133,176,.25);border-radius:15px;background:rgba(8,23,39,.66);cursor:pointer;transition:.2s ease}
+  .regime:hover{transform:translateY(-2px);border-color:#4f7daa}.regime.active{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(54,214,255,.1)}
+  .regime h4{margin:0 0 8px}.regime p{margin:0;color:var(--muted);font-size:.86rem;line-height:1.45}
+  .arrowline{height:14px;position:relative;margin:12px 0 10px}.arrowline:before,.arrowline:after{content:"";position:absolute;top:5px;height:4px;background:var(--cyan);border-radius:4px}.arrowline:before{left:5%;width:42%}.arrowline:after{right:5%;width:42%}.arrowline i{position:absolute;left:48%;top:0;color:var(--cyan);font-style:normal;font-weight:900}
+  .footer-note{margin-top:18px;padding:16px 18px;border:1px dashed rgba(168,189,211,.32);border-radius:14px;color:var(--muted);font-size:.88rem;line-height:1.55}
+  .warning{color:#ffd9a0}
+  .pulse{animation:pulse 1.5s ease-in-out infinite}@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+  @media(max-width:1240px){.status-wide .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.state-panel{grid-template-columns:1fr}}
+  @media(max-width:1180px){.metrics{grid-template-columns:1fr 1fr}}
+  @media(max-width:1050px){.grid,.lower{grid-template-columns:1fr}.controls,.controls.compact{grid-template-columns:1fr 1fr}.derivation-shell{min-height:380px}.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media(max-width:720px){.app{padding:10px}header{align-items:flex-start;flex-direction:column;padding:16px 8px}.badge{white-space:normal}.controls,.controls.compact,.two-col,.metrics,.regimes,.status-wide .metrics{grid-template-columns:1fr}.card-head{align-items:flex-start;flex-direction:column}#bandSvg{min-height:300px}.card-body{padding:15px}.state-panel{grid-template-columns:1fr}}
+</style>
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'}};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style id="mesfet-main-menu-style">
+.mesfet-mainmenu-wrap{position:sticky;top:0;z-index:9999;display:flex;justify-content:flex-end;padding:12px 14px 0;pointer-events:none;}
+.mesfet-mainmenu-btn{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;padding:12px 20px;border-radius:999px;text-decoration:none;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:800;font-size:16px;letter-spacing:-0.01em;color:#06233a;background:linear-gradient(135deg,#3fd0ff,#8e82ff);box-shadow:0 10px 24px rgba(38,104,187,.25);border:1px solid rgba(255,255,255,.65);}
+.mesfet-mainmenu-btn:hover{filter:brightness(1.03);transform:translateY(-1px);}
+@media print{.mesfet-mainmenu-wrap{display:none!important;}}
+</style>
+
+</head>
+<body>
+<div class="mesfet-mainmenu-wrap"><a class="mesfet-mainmenu-btn" href="../../../index.html" title="Return to main menu">&#8592; Main Menu</a></div>
+
+<div class="app">
+  <header>
+    <div>
+      <div class="eyebrow">Interactive semiconductor physics</div>
+      <h1>Schottky Barrier Thermionic Emission</h1>
+      <p class="subtitle">Watch the two opposing electron fluxes, the bias-dependent effective barrier, depletion width, and current density evolve together. The animation follows the ideal metal–n-type-semiconductor thermionic-emission model.</p>
+    </div>
+    <div class="badge">Ideal contact · no tunneling · no series resistance</div>
+  </header>
+
+  <section class="grid">
+    <article class="card">
+      <div class="card-head">
+        <h2>Animated energy-band picture</h2>
+        <div class="mode-row" id="modeButtons">
+          <button data-v="-0.25">Reverse bias</button>
+          <button data-v="0" class="active">Equilibrium</button>
+          <button data-v="0.18">Forward bias</button>
+          <button id="sweepBtn" class="primary">▶ Bias sweep</button>
+        </div>
+      </div>
+      <div class="diagram-wrap">
+        <svg id="bandSvg" viewBox="0 0 900 470" role="img" aria-label="Animated Schottky barrier energy band diagram">
+          <defs>
+            <linearGradient id="metalGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#304b69"/><stop offset="1" stop-color="#1b2d43"/></linearGradient>
+            <linearGradient id="semiGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#183753"/><stop offset="1" stop-color="#10253b"/></linearGradient>
+            <linearGradient id="depGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#36d6ff" stop-opacity=".25"/><stop offset="1" stop-color="#36d6ff" stop-opacity=".02"/></linearGradient>
+            <marker id="arrowCyan" markerWidth="7" markerHeight="7" refX="6.3" refY="2.3" orient="auto"><path d="M0,0 L0,4.6 L6.6,2.3 z" fill="#36d6ff"/></marker>
+            <marker id="arrowYellow" markerWidth="7" markerHeight="7" refX="6.3" refY="2.3" orient="auto"><path d="M0,0 L0,4.6 L6.6,2.3 z" fill="#ffd166"/></marker>
+            <marker id="arrowPink" markerWidth="7" markerHeight="7" refX="6.3" refY="2.3" orient="auto"><path d="M0,0 L0,4.6 L6.6,2.3 z" fill="#ff73b9"/></marker>
+            <filter id="glow"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <rect x="38" y="70" width="824" height="355" rx="18" fill="#071523" stroke="#2b4665"/>
+          <rect x="55" y="88" width="245" height="320" rx="12" fill="url(#metalGrad)"/>
+          <rect x="300" y="88" width="545" height="320" rx="12" fill="url(#semiGrad)"/>
+          <rect id="depletionFill" x="300" y="88" width="160" height="320" fill="url(#depGrad)"/>
+          <line x1="300" y1="78" x2="300" y2="418" stroke="#e8f3ff" stroke-width="3"/>
+          <text x="175" y="112" fill="#dcecff" text-anchor="middle" font-size="24" font-weight="800">METAL</text>
+          <text x="570" y="112" fill="#dcecff" text-anchor="middle" font-size="24" font-weight="800">n-TYPE SEMICONDUCTOR</text>
+          <text id="biasLabel" x="450" y="28" fill="#ffd166" text-anchor="middle" font-size="22" font-weight="850">Thermal equilibrium: V = 0 V</text>
+
+          <line id="fluxMS" x1="150" y1="54" x2="272" y2="54" stroke="#36d6ff" stroke-width="6" stroke-linecap="round" marker-end="url(#arrowCyan)"/>
+          <line id="fluxSM" x1="455" y1="54" x2="333" y2="54" stroke="#ff73b9" stroke-width="6" stroke-linecap="round" marker-end="url(#arrowPink)"/>
+          <text x="118" y="50" fill="#36d6ff" text-anchor="end" font-size="16" font-weight="800">Jₘ→ₛ</text>
+          <text x="484" y="50" fill="#ff73b9" font-size="16" font-weight="800">Jₛ→ₘ</text>
+
+          <line id="efMetal" x1="82" y1="0" x2="282" y2="0" stroke="#ffd166" stroke-width="4"/>
+          <text id="efMetalLabel" x="76" y="0" fill="#ffd166" text-anchor="end" dominant-baseline="middle" font-size="18" font-weight="800">E<tspan baseline-shift="sub" font-size="13">F,m</tspan></text>
+          <line id="efSemi" x1="330" y1="0" x2="817" y2="0" stroke="#ffd166" stroke-width="3" stroke-dasharray="10 8"/>
+          <text id="efSemiLabel" x="823" y="0" fill="#ffd166" dominant-baseline="middle" font-size="18" font-weight="800">E<tspan baseline-shift="sub" font-size="13">F,s</tspan></text>
+
+          <path id="ecPath" d="" fill="none" stroke="#5a9cff" stroke-width="5"/>
+          <path id="evPath" d="" fill="none" stroke="#70e6a2" stroke-width="5"/>
+          <text id="ecLabel" x="820" y="0" fill="#8bb7ff" font-size="19" font-weight="850">E<tspan baseline-shift="sub" font-size="13">C</tspan></text>
+          <text id="evLabel" x="820" y="0" fill="#90f0b8" font-size="19" font-weight="850">E<tspan baseline-shift="sub" font-size="13">V</tspan></text>
+
+          <line id="barrierConst" x1="255" x2="255" y1="0" y2="0" stroke="#36d6ff" stroke-width="3" marker-start="url(#arrowCyan)" marker-end="url(#arrowCyan)"/>
+          <text id="barrierConstLabel" x="245" y="0" fill="#9eeeff" text-anchor="end" font-size="16" font-weight="800">qφ<tspan baseline-shift="sub" font-size="12">Bn</tspan></text>
+          <line id="guideEcI" x1="300" x2="470" y1="0" y2="0" stroke="#5a9cff" stroke-opacity=".45" stroke-width="2" stroke-dasharray="5 6"/>
+          <line id="guideEcBulk" x1="300" x2="800" y1="0" y2="0" stroke="#5a9cff" stroke-opacity=".35" stroke-width="2" stroke-dasharray="5 6"/>
+          <line id="barrierEff" x1="452" x2="452" y1="0" y2="0" stroke="#ff73b9" stroke-width="3" marker-start="url(#arrowPink)" marker-end="url(#arrowPink)"/>
+          <text id="barrierEffLabel" x="462" y="0" fill="#ff9bce" font-size="16" font-weight="800">q(V<tspan baseline-shift="sub" font-size="12">bi</tspan>−V)<tspan id="barrierEffVal" font-size="13" font-weight="700" fill="#ffc2e0"></tspan></text>
+          <line id="vnArrow" x1="700" x2="700" y1="0" y2="0" stroke="#ffd166" stroke-width="2.5" marker-start="url(#arrowYellow)" marker-end="url(#arrowYellow)"/>
+          <text id="vnLabel" x="710" y="0" fill="#ffd166" font-size="13.5" font-weight="800">qV<tspan baseline-shift="sub" font-size="11">n</tspan><tspan id="vnVal" font-size="12.5" font-weight="700" fill="#ffe4a8"></tspan></text>
+
+          <line id="wArrow" x1="305" x2="460" y1="390" y2="390" stroke="#ffd166" stroke-width="2.5" marker-start="url(#arrowYellow)" marker-end="url(#arrowYellow)"/>
+          <text id="wLabel" x="382" y="382" fill="#ffd166" text-anchor="middle" font-size="16" font-weight="800">W</text>
+
+          <path id="pathMS" d="" fill="none" stroke="#36d6ff" stroke-opacity=".16" stroke-width="2" stroke-dasharray="5 7"/>
+          <path id="pathSM" d="" fill="none" stroke="#ff73b9" stroke-opacity=".16" stroke-width="2" stroke-dasharray="5 7"/>
+          <g id="particlesMS"></g><g id="particlesSM"></g>
+          <text x="78" y="446" fill="#8199b4" font-size="14">Electron energy increases upward</text>
+          <text id="fluxRatioLabel" x="824" y="446" fill="#dcecff" text-anchor="end" font-size="14">Flux ratio = 1</text>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--blue)"></i>Conduction band E<sub>C</sub></span>
+        <span><i class="dot" style="background:var(--green)"></i>Valence band E<sub>V</sub></span>
+        <span><i class="dot" style="background:var(--cyan)"></i>Metal → semiconductor flux</span>
+        <span><i class="dot" style="background:var(--pink)"></i>Semiconductor → metal flux</span>
+      </div>
+    </article>
+
+    <aside class="card">
+      <div class="card-head" style="padding:14px 16px"><h2>Bias and material controls</h2><button id="resetBtn" class="ghost">Reset</button></div>
+      <div class="card-body controls compact" style="padding:14px 16px 16px">
+        <div class="control-block">
+          <div class="control-label"><strong>Applied bias V</strong><span id="vOut">0.000 V</span></div>
+          <input id="voltage" type="range" min="-0.45" max="0.45" value="0" step="0.005" />
+          <div class="small">Positive V is forward bias for the metal/n-type semiconductor contact.</div>
+        </div>
+        <div class="two-col">
+          <div><label class="small" for="material">Material</label><select id="material"><option value="si">n-type Si</option><option value="gaas">n-type GaAs</option><option value="custom">Custom A*</option></select></div>
+          <div><label class="small" for="astar">A* [A K⁻² cm⁻²]</label><input id="astar" type="number" value="110" min="0.01" step="1" /></div>
+        </div>
+        <div class="control-block">
+          <div class="control-label"><strong>Barrier height φ<sub>Bn</sub></strong><span id="phiOut">0.750 eV</span></div>
+          <input id="phi" type="range" min="0.35" max="1.05" value="0.75" step="0.005" />
+        </div>
+        <div class="control-block">
+          <div class="control-label"><strong>Temperature T</strong><span id="tOut">300 K</span></div>
+          <input id="temperature" type="range" min="180" max="500" value="300" step="5" />
+        </div>
+        <div class="control-block">
+          <div class="control-label"><strong>Donor concentration N<sub>D</sub></strong><span id="ndOut">1.00 × 10¹⁶ cm⁻³</span></div>
+          <input id="ndLog" type="range" min="14" max="18.5" value="16" step="0.05" />
+          <div class="small">N<sub>D</sub> changes band bending and depletion width; the ideal thermionic saturation current is controlled mainly by A*, T, and φ<sub>Bn</sub>.</div>
+        </div>
+
+      </div>
+    </aside>
+  </section>
+
+  <section class="card status-wide">
+      <div class="card-head"><h2>Live value states + physical interpretation</h2></div>
+      <div class="card-body state-panel">
+        <div class="metrics">
+          <div class="metric"><div class="k">Thermal voltage</div><div class="v" id="mVT">25.85 <span class="u">mV</span></div></div>
+          <div class="metric"><div class="k">Activation energy q(&#966;<sub>Bn</sub>&#8722;V)</div><div class="v" id="mBarrier">0.750 <span class="u">eV</span></div></div>
+          <div class="metric"><div class="k">Saturation current J<sub>s</sub></div><div class="v" id="mJs">—</div></div>
+          <div class="metric"><div class="k">Net current J</div><div class="v" id="mJ">—</div></div>
+          <div class="metric"><div class="k">Depletion width W</div><div class="v" id="mW">—</div></div>
+          <div class="metric"><div class="k">Peak field |E<sub>max</sub>|</div><div class="v" id="mE">—</div></div>
+        </div>
+        <div class="explain" id="physicsText">At equilibrium, the two thermionic electron fluxes are equal: \(J_{s\to m}=J_{m\to s}\). Large microscopic exchange occurs, but the net current is \(J=0\).</div>
+      </div>
+    </section>
+
+  <section class="lower">
+    <article class="card">
+      <div class="card-head">
+        <h2>Current–voltage characteristic</h2>
+        <div class="segmented"><button id="linearBtn">Linear J</button><button id="logBtn" class="active">Signed-log view</button></div>
+      </div>
+      <div class="diagram-wrap"><svg id="ivSvg" viewBox="0 0 760 440" role="img" aria-label="Schottky diode current voltage plot"></svg></div>
+      <div class="plot-readout"><span>Selected point: <strong id="pointReadout">V = 0 V, J = 0 A/cm²</strong></span><span id="axisNote">Vertical axis: sgn(J) log₁₀(1+|J|/Jₛ)</span></div>
+    </article>
+
+    <article class="card derivation-shell">
+      <div class="card-head"><h2>Math + physical meaning</h2><button id="autoDeriveBtn" class="primary">▶ Animate derivation</button></div>
+      <div class="card-body" style="display:flex;flex-direction:column;flex:1">
+        <div class="step-indicator" id="stepIndicator">Step 1 of 6</div>
+        <div class="step-title" id="stepTitle">Thermal population above the barrier</div>
+        <div class="eq-box" id="stepEquation">\[n_{m0}=N_C\exp\!\left(-\frac{q\phi_{Bn}}{kT}\right)\]</div>
+        <div class="step-text" id="stepText"></div>
+        <div class="numerical" id="numerical"></div>
+        <div class="derive-controls"><button id="prevStep">← Previous</button><button id="nextStep">Next →</button></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="regimes" id="regimes">
+    <div class="regime" data-v="-0.25"><h4>Reverse bias</h4><div class="arrowline"><i>⇄</i></div><p>The semiconductor-to-metal flux is suppressed. The metal-to-semiconductor flux remains nearly unchanged, so \(J \to -J_s\).</p></div>
+    <div class="regime active" data-v="0"><h4>Thermal equilibrium</h4><div class="arrowline"><i>⇄</i></div><p>Equal opposing thermionic fluxes produce zero net current even though electrons continue crossing in both directions: \(J_{s\to m}=J_{m\to s}\), so \(J=0\).</p></div>
+    <div class="regime" data-v="0.18"><h4>Forward bias</h4><div class="arrowline"><i>⇄</i></div><p>The band bending falls from \(V_{bi}\) to \(V_{bi}-V\), so the activation energy falls from \(\phi_{Bn}\) to \(\phi_{Bn}-V\) and that flux grows by \(\exp(V/V_T)\).</p></div>
+  </section>
+
+  <div class="footer-note">
+    <strong>Model boundaries.</strong> The ideal Richardson thermionic-emission law assumes carriers pass over the barrier. Real Schottky contacts can also show image-force barrier lowering, interface states, tunneling/thermionic-field emission, an ideality factor different from 1, series resistance, and high-injection effects. <span class="warning">The depletion width shown uses the depletion approximation and is a teaching aid; it is not part of the Richardson current prefactor.</span>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const kEv = 8.617333262145e-5;      // eV/K = V/K for q-normalized energies
+  const q = 1.602176634e-19;          // C
+  const eps0 = 8.8541878128e-14;      // F/cm
+  const EgSi = 1.12;
+  const state = { plotMode:'log', deriveStep:0, sweep:false, sweepStart:0, lastSweepUpdate:0, autoDerive:null, particlesPaused:false, rates:{ms:1,sm:1} };
+  const $ = id => document.getElementById(id);
+  const els = {
+    V:$('voltage'), phi:$('phi'), T:$('temperature'), ndLog:$('ndLog'), material:$('material'), astar:$('astar'),
+    band:$('bandSvg'), iv:$('ivSvg')
+  };
+  const materials = {
+    si:{A:110,Nc300:2.8e19,epsr:11.7,Eg:1.12,name:'n-type Si'},
+    gaas:{A:8,Nc300:4.7e17,epsr:12.9,Eg:1.42,name:'n-type GaAs'},
+    custom:{A:null,Nc300:2.8e19,epsr:11.7,Eg:1.12,name:'custom'}
+  };
+
+  const derivation = [
+    {
+      title:'Thermal population above the barrier',
+      eq:'\\[n_{m0}=N_C\\exp\\!\\left(-\\frac{q\\phi_{Bn}}{kT}\\right)\\]',
+      text:'Only the high-energy tail of the electron distribution can climb over the metal–semiconductor barrier. The Boltzmann factor makes the available population exponentially sensitive to barrier height and temperature.'
+    },
+    {
+      title:'Equilibrium means equal opposing fluxes',
+      eq:'\\[|J_{m\\to s}|=|J_{s\\to m}|=C_1N_C\\exp\\!\\left(-\\frac{q\\phi_{Bn}}{kT}\\right)\\]',
+      text:'At thermal equilibrium, electrons cross in both directions continuously. Detailed balance makes the two flux magnitudes equal, so their difference—and therefore the measured current—is zero.'
+    },
+    {
+      title:'Forward bias lowers one effective barrier',
+      eq:'\\[n_{ms}=N_C\\exp\\!\\left[-\\frac{q(\\phi_{Bn}-V)}{kT}\\right]\\]',
+      text:'The interfacial barrier measured from the metal Fermi level stays at qφBn, but the semiconductor quasi-Fermi level moves by qV. The conduction-band step the electrons actually climb, measured from the neutral bulk, is q(V_bi − V) — shown by the pink arrow. Adding the qV_n needed to populate E_C gives the activation energy q(φBn−V) in the expression for n_ms.'
+    },
+    {
+      title:'Subtract the two directed currents',
+      eq:'\\[J=J_{s\\to m}-J_{m\\to s}=C_1N_Ce^{-q\\phi_{Bn}/kT}\\left(e^{qV/kT}-1\\right)\\]',
+      text:'The metal-to-semiconductor flux is nearly bias independent in the ideal model. The semiconductor-to-metal flux is multiplied by exp(qV/kT). Net current is the difference between these two large microscopic flows.'
+    },
+    {
+      title:'Identify the Richardson saturation current',
+      eq:'\\[J_s=A^*T^2\\exp\\!\\left(-\\frac{q\\phi_{Bn}}{kT}\\right)\\]',
+      text:'Velocity averaging and the three-dimensional density of states combine into the Richardson prefactor A*T². The exponential barrier term usually dominates the magnitude of Js.'
+    },
+    {
+      title:'Ideal Schottky diode equation',
+      eq:'\\[\\boxed{J=J_s\\left(e^{qV/kT}-1\\right)}\\qquad V_T=\\frac{kT}{q}\\]',
+      text:'Forward bias produces exponential growth. For sufficiently negative bias, exp(V/VT) becomes negligible and J approaches −Js. In a real device, an ideality factor n is often inserted as exp[qV/(nkT)].'
+    }
+  ];
+
+  function formatSci(x, digits=3){
+    if(!Number.isFinite(x)) return 'overflow';
+    if(x === 0) return '0';
+    const a=Math.abs(x);
+    if(a>=1e-2 && a<1e4) return x.toFixed(a<1?4:3).replace(/\.?0+$/,'');
+    const e=Math.floor(Math.log10(a));
+    const m=x/Math.pow(10,e);
+    return `${m.toFixed(digits)} × 10<sup>${e}</sup>`;
+  }
+  function formatSciLatex(x, digits=3){
+    if(!Number.isFinite(x)) return '\\text{overflow}';
+    if(x === 0) return '0';
+    const a=Math.abs(x);
+    if(a>=1e-2 && a<1e4) return x.toFixed(a<1?4:3).replace(/\.?0+$/,'');
+    const e=Math.floor(Math.log10(a));
+    const m=x/Math.pow(10,e);
+    return `${m.toFixed(digits)}\\times 10^{${e}}`;
+  }
+
+  function superscriptNumber(n){
+    const map={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+    return String(n).split('').map(c=>map[c]||c).join('');
+  }
+  function currentValues(V=null){
+    const v = V===null ? +els.V.value : V;
+    const T = +els.T.value;
+    const phi = +els.phi.value;
+    const A = Math.max(1e-12,+els.astar.value || 110);
+    const Nd = Math.pow(10,+els.ndLog.value);
+    const mat=materials[els.material.value];
+    const VT=kEv*T;
+    const expoBarrier=Math.max(-745,-phi/VT);
+    const Js=A*T*T*Math.exp(expoBarrier);
+    const z=Math.max(-745,Math.min(700,v/VT));
+    const J=Js*Math.expm1(z);
+    const Nc=mat.Nc300*Math.pow(T/300,1.5);
+    const xi=Math.max(0.015,VT*Math.log(Math.max(1.000001,Nc/Nd)));
+    const Vbi=Math.max(0.005,phi-xi);
+    const depPotential=Math.max(0.001,Vbi-v);
+    const eps=mat.epsr*eps0;
+    const Wcm=Math.sqrt(2*eps*depPotential/(q*Nd));
+    const Wum=Wcm*1e4;
+    const Emax=q*Nd*Wcm/eps;
+    const fluxRatio=Math.exp(Math.max(-30,Math.min(30,v/VT)));
+    return {v,T,phi,A,Nd,VT,Js,J,Nc,xi,Vbi,Wcm,Wum,Emax,fluxRatio,mat};
+  }
+
+  function energyY(E){
+    const Emin=-1.2, Emax=1.12, top=128, bottom=365;
+    return top+(Emax-E)/(Emax-Emin)*(bottom-top);
+  }
+  function makeBandPath(fn,x0=300,x1=825,n=100){
+    let d='';
+    for(let i=0;i<=n;i++){
+      const x=x0+(x1-x0)*i/n;
+      const y=energyY(fn(x));
+      d += (i?' L ':'M ')+x.toFixed(2)+' '+y.toFixed(2);
+    }
+    return d;
+  }
+  function updateBand(){
+    const c=currentValues();
+    const Eg=c.mat.Eg || EgSi;
+    const EFm=0;
+    const EFs=c.v;
+    const ECi=c.phi;
+    const ECbulk=EFs+c.xi;
+    /* drawn depletion width (log-compressed so W stays visible over decades) */
+    const widthPx=Math.max(38,Math.min(380,70+95*Math.log10(1+c.Wum/0.02)));
+    /* depletion approximation: E_C bends parabolically over W, then is flat in the
+       neutral bulk.  ECi-ECbulk = phi - v - xi = V_bi - V, so the drawn bending
+       equals q(V_bi-V) and the curve terminates exactly at the W arrow. */
+    const EC=x=>{
+      const u=(x-300)/widthPx;
+      return u>=1 ? ECbulk : ECbulk+(ECi-ECbulk)*(1-u)*(1-u);
+    };
+    const yEFm=energyY(EFm), yEFs=energyY(EFs), yECi=energyY(ECi), yECbulk=energyY(ECbulk), yEVbulk=energyY(ECbulk-Eg);
+    $('efMetal').setAttribute('y1',yEFm);$('efMetal').setAttribute('y2',yEFm);
+    $('efMetalLabel').setAttribute('y',yEFm);
+    $('efSemi').setAttribute('y1',yEFs);$('efSemi').setAttribute('y2',yEFs);
+    $('efSemiLabel').setAttribute('y',yEFs);
+    $('ecPath').setAttribute('d',makeBandPath(EC));
+    $('evPath').setAttribute('d',makeBandPath(x=>EC(x)-Eg));
+    $('ecLabel').setAttribute('y',yECbulk+5);$('evLabel').setAttribute('y',yEVbulk+5);
+    $('barrierConst').setAttribute('y1',yEFm);$('barrierConst').setAttribute('y2',yECi);
+    $('barrierConstLabel').setAttribute('y',(yEFm+yECi)/2);
+    /* Semiconductor-side barrier = band bending measured from the neutral-bulk E_C:
+       E_C(0) - E_C(bulk) = q(V_bi - V).  The previous label q(phi_Bn - V) was drawn
+       across E_C(0) - E_F,s, which is the activation energy (barrier + qV_n). */
+    const bend=Math.max(0,c.Vbi-c.v);
+    const bendX=Math.max(330,Math.min(560,300+widthPx*0.62));
+    $('barrierEff').setAttribute('x1',bendX);$('barrierEff').setAttribute('x2',bendX);
+    $('barrierEffLabel').setAttribute('x',bendX+10);
+    $('guideEcI').setAttribute('x2',Math.max(bendX+8,470));
+    $('guideEcI').setAttribute('y1',yECi);$('guideEcI').setAttribute('y2',yECi);
+    $('guideEcBulk').setAttribute('y1',yECbulk);$('guideEcBulk').setAttribute('y2',yECbulk);
+    $('barrierEff').setAttribute('y1',yECbulk);$('barrierEff').setAttribute('y2',yECi);
+    $('barrierEffLabel').setAttribute('y',(yECbulk+yECi)/2);
+    $('barrierEffVal').textContent=` = ${bend.toFixed(3)} eV`;
+    const bendVisible=bend>0.012;
+    ['guideEcI','barrierEff','barrierEffLabel'].forEach(id=>$(id).setAttribute('opacity',bendVisible?'1':'0'));
+    /* qV_n = E_C - E_F in the neutral bulk */
+    $('vnArrow').setAttribute('y1',yECbulk);$('vnArrow').setAttribute('y2',yEFs);
+    $('vnLabel').setAttribute('y',(yECbulk+yEFs)/2+5);
+    $('vnVal').textContent=` = ${c.xi.toFixed(3)} eV`;
+
+    $('depletionFill').setAttribute('width',widthPx);
+    $('wArrow').setAttribute('x2',300+widthPx);
+    $('wLabel').setAttribute('x',300+widthPx/2);
+    $('wLabel').textContent=`W = ${c.Wum<1?c.Wum.toFixed(3):c.Wum.toFixed(2)} μm`;
+
+    const label=c.v>0.005?`Forward bias: V = +${c.v.toFixed(3)} V`:c.v<-0.005?`Reverse bias: V = ${c.v.toFixed(3)} V`:'Thermal equilibrium: V = 0 V';
+    $('biasLabel').textContent=label;
+    const topY=Math.max(112,yECi-24), endY=Math.max(135,yECbulk-18);
+    $('pathMS').setAttribute('d',`M 135 ${yEFm-18} C 220 ${yEFm-58}, 260 ${topY}, 310 ${topY} S 520 ${endY}, 775 ${endY}`);
+    $('pathSM').setAttribute('d',`M 775 ${endY+18} C 560 ${endY+25}, 390 ${topY+8}, 310 ${topY+8} S 220 ${yEFm-8}, 135 ${yEFm-8}`);
+
+    /* In the ideal model J_(m->s) does not depend on bias; only J_(s->m) is
+       multiplied by exp(V/V_T).  So the metal->semiconductor stream is held fixed
+       and the semiconductor->metal stream grows/shrinks around it (log-compressed
+       so that a x10^7 ratio stays drawable). */
+    const logRatio=Math.max(-5,Math.min(5,Math.log10(c.fluxRatio)));
+    const ms=1;
+    const sm=Math.max(.08,Math.min(4,Math.pow(10,Math.max(-2.2,Math.min(0.6,logRatio)))));
+    const wOf=r=>2.2+5.4*Math.min(r,1)+4.5*Math.max(0,Math.log10(Math.max(1,r))/0.6);
+    const opOf=r=>Math.min(1,0.28+0.72*r);
+    $('fluxMS').setAttribute('stroke-width',wOf(ms).toFixed(1));$('fluxMS').setAttribute('opacity',opOf(ms).toFixed(2));
+    $('fluxSM').setAttribute('stroke-width',wOf(sm).toFixed(1));$('fluxSM').setAttribute('opacity',opOf(sm).toFixed(2));
+    $('fluxRatioLabel').textContent=`Jₛ→ₘ / Jₘ→ₛ = exp(V/Vₜ) = ${c.fluxRatio>1e6?c.fluxRatio.toExponential(2):c.fluxRatio<1e-5?c.fluxRatio.toExponential(2):c.fluxRatio.toFixed(c.fluxRatio<10?3:1)}`;
+    state.rates={ms,sm};
+    return state.rates;
+  }
+
+  function initParticles(){
+    const mk=(groupId,color)=>{
+      const g=$(groupId);
+      for(let i=0;i<10;i++){
+        const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+        c.setAttribute('r',i%3===0?5.5:4);c.setAttribute('fill',color);c.setAttribute('filter','url(#glow)');c.dataset.i=i;g.appendChild(c);
+      }
+    };
+    mk('particlesMS','#36d6ff');mk('particlesSM','#ff73b9');
+  }
+  function animateParticles(t){
+    const rates=state.rates;
+    const run=(group,pathId,rate,reverse=false)=>{
+      const path=$(pathId),len=path.getTotalLength();
+      [...group.children].forEach((c,i)=>{
+        const phase=((t*0.00016*(0.45+1.2*Math.min(rate,2.2))+i/10)%1);
+        const p=path.getPointAtLength((reverse?1-phase:phase)*len);
+        c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);
+        const visible=i<Math.max(1,Math.round(10*Math.min(rate,1)));
+        c.setAttribute('opacity',visible?Math.min(1,0.35+0.65*rate):0);
+      });
+    };
+    run($('particlesMS'),'pathMS',rates.ms,false);
+    run($('particlesSM'),'pathSM',rates.sm,false);
+    if(state.sweep && t-state.lastSweepUpdate>70){
+      state.lastSweepUpdate=t;
+      const elapsed=(t-state.sweepStart)/1000;
+      const phase=(elapsed%7)/7;
+      const v=phase<.5 ? -0.35+1.4*phase : 0.35-1.4*(phase-.5);
+      els.V.value=v.toFixed(3);updateAll(true);
+    }
+    requestAnimationFrame(animateParticles);
+  }
+
+  function svgEl(name,attrs={},text=''){
+    const e=document.createElementNS('http://www.w3.org/2000/svg',name);
+    Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v)); if(text)e.textContent=text; return e;
+  }
+  function updatePlot(){
+    const svg=els.iv; while(svg.firstChild)svg.removeChild(svg.firstChild);
+    const W=760,H=440,m={l:82,r:30,t:30,b:65},pw=W-m.l-m.r,ph=H-m.t-m.b;
+    const vmin=-.45,vmax=.45;
+    const data=[];for(let i=0;i<=280;i++){const v=vmin+(vmax-vmin)*i/280;data.push(currentValues(v));}
+    let ymin,ymax,transform;
+    if(state.plotMode==='linear'){
+      const maxAbs=Math.max(...data.map(d=>Math.abs(d.J)),1e-30);ymin=-maxAbs*.08;ymax=maxAbs*1.05;transform=j=>j;
+    }else{
+      transform=j=>{const js=Math.max(currentValues().Js,1e-300);return Math.sign(j)*Math.log10(1+Math.abs(j)/js)};
+      const ys=data.map(d=>transform(d.J));ymin=Math.min(-.5,...ys);ymax=Math.max(1,...ys);
+    }
+    const X=v=>m.l+(v-vmin)/(vmax-vmin)*pw;
+    const Y=y=>m.t+(ymax-y)/(ymax-ymin)*ph;
+    svg.appendChild(svgEl('rect',{x:0,y:0,width:W,height:H,rx:14,fill:'#071523'}));
+    const xTicks=[-.4,-.2,0,.2,.4];
+    xTicks.forEach(v=>{const x=X(v);svg.appendChild(svgEl('line',{x1:x,y1:m.t,x2:x,y2:m.t+ph,stroke:'#27435f','stroke-width':1}));svg.appendChild(svgEl('text',{x,y:H-34,fill:'#9fb5cb','font-size':14,'text-anchor':'middle'},v.toFixed(1)));});
+    const yTickCount=6;
+    for(let i=0;i<=yTickCount;i++){
+      const yv=ymin+(ymax-ymin)*i/yTickCount,y=Y(yv);svg.appendChild(svgEl('line',{x1:m.l,y1:y,x2:m.l+pw,y2:y,stroke:'#27435f','stroke-width':1}));
+      let lab=state.plotMode==='linear'? (Math.abs(yv)<1e-14?'0':yv.toExponential(1)) : yv.toFixed(1);
+      svg.appendChild(svgEl('text',{x:m.l-12,y:y+5,fill:'#9fb5cb','font-size':13,'text-anchor':'end'},lab));
+    }
+    svg.appendChild(svgEl('line',{x1:m.l,y1:Y(0),x2:m.l+pw,y2:Y(0),stroke:'#dcecff','stroke-width':1.5}));
+    svg.appendChild(svgEl('line',{x1:X(0),y1:m.t,x2:X(0),y2:m.t+ph,stroke:'#dcecff','stroke-width':1.5}));
+    let d='';data.forEach((p,i)=>{const x=X(p.v),y=Y(transform(p.J));d+=(i?' L ':'M ')+x.toFixed(2)+' '+y.toFixed(2)});
+    svg.appendChild(svgEl('path',{d,fill:'none',stroke:'#36d6ff','stroke-width':4,'stroke-linecap':'round','stroke-linejoin':'round'}));
+    const c=currentValues(),cx=X(c.v),cy=Y(transform(c.J));
+    svg.appendChild(svgEl('line',{x1:cx,y1:m.t,x2:cx,y2:m.t+ph,stroke:'#ffd166','stroke-width':2,'stroke-dasharray':'6 7'}));
+    svg.appendChild(svgEl('circle',{cx,cy,r:7,fill:'#ffd166',stroke:'#fff','stroke-width':2}));
+    svg.appendChild(svgEl('text',{x:m.l+pw/2,y:H-8,fill:'#dcecff','font-size':17,'font-weight':700,'text-anchor':'middle'},'Applied bias V (V)'));
+    const yl=state.plotMode==='linear'?'Current density J (A/cm²)':'sgn(J) log₁₀(1 + |J|/Jₛ)';
+    const yText=svgEl('text',{x:18,y:m.t+ph/2,fill:'#dcecff','font-size':16,'font-weight':700,'text-anchor':'middle',transform:`rotate(-90 18 ${m.t+ph/2})`},yl);svg.appendChild(yText);
+    $('pointReadout').innerHTML=`V = ${c.v>=0?'+':''}${c.v.toFixed(3)} V, J = ${formatSci(c.J)} A/cm²`;
+    $('axisNote').textContent=state.plotMode==='linear'?'Vertical axis: current density J (A/cm²)':'Vertical axis: sgn(J) log₁₀(1+|J|/Jₛ)';
+  }
+
+  function updateMetrics(){
+    const c=currentValues();
+    $('vOut').textContent=`${c.v>=0?'+':''}${c.v.toFixed(3)} V`;$('phiOut').textContent=`${c.phi.toFixed(3)} eV`;$('tOut').textContent=`${c.T.toFixed(0)} K`;
+    const nde=Math.floor(Math.log10(c.Nd)),ndm=c.Nd/Math.pow(10,nde);$('ndOut').textContent=`${ndm.toFixed(2)} × 10${superscriptNumber(nde)} cm⁻³`;
+    $('mVT').innerHTML=`${(1000*c.VT).toFixed(2)} <span class="u">mV</span>`;
+    $('mBarrier').innerHTML=`${Math.max(0,c.phi-c.v).toFixed(3)} <span class="u">eV</span>`;
+    $('mJs').innerHTML=`${formatSci(c.Js)} <span class="u">A/cm²</span>`;
+    $('mJ').innerHTML=`${formatSci(c.J)} <span class="u">A/cm²</span>`;
+    $('mW').innerHTML=`${c.Wum<1?c.Wum.toFixed(3):c.Wum.toFixed(2)} <span class="u">μm</span>`;
+    $('mE').innerHTML=`${formatSci(c.Emax)} <span class="u">V/cm</span>`;
+    const mult=c.fluxRatio;
+    if(c.v>0.005) $('physicsText').innerHTML=`Forward bias raises the semiconductor electron quasi-Fermi level relative to the metal. The effective activation barrier is reduced to \\(\\phi_{Bn}-V = ${(c.phi-c.v).toFixed(3)}\\,\\text{eV}\\), so the semiconductor \\(\\to\\) metal flux is multiplied by \\(\\exp(V/V_T) = ${mult>1e6?mult.toExponential(2):mult.toFixed(1)}\\). The net current becomes positive and grows exponentially.`;
+    else if(c.v<-0.005) $('physicsText').innerHTML=`Reverse bias increases the semiconductor-to-metal activation barrier to \\(\\phi_{Bn}-V = ${(c.phi-c.v).toFixed(3)}\\,\\text{eV}\\). That flux is suppressed, while the opposite flux is nearly unchanged. Therefore \\(J \\to -J_s\\).`;
+    else $('physicsText').innerHTML='At equilibrium, the two thermionic electron fluxes are equal: \\(J_{s\\to m}=J_{m\\to s}\\). Large microscopic exchange occurs, but the net current is \\(J=0\\).';
+    $('numerical').innerHTML=`<strong>Current numerical state</strong><div>\\[V_T=\\frac{kT}{q}=${(1000*c.VT).toFixed(2)}\\,\\mathrm{mV}\\]</div><div>\\[\\exp\\!\\left(\\frac{V}{V_T}\\right)=${c.fluxRatio>1e7?formatSciLatex(c.fluxRatio):c.fluxRatio.toFixed(4)}\\]</div><div>\\[J_s=${formatSciLatex(c.Js)}\\,\\mathrm{A\\,cm^{-2}}\\]</div><div>\\[J=${formatSciLatex(c.J)}\\,\\mathrm{A\\,cm^{-2}}\\]</div>`;
+    if(window.MathJax?.typesetPromise) MathJax.typesetPromise([$('physicsText'),$('numerical'),$('regimes')]).catch(()=>{});
+  }
+
+  function setActiveMode(){
+    const v=+els.V.value;
+    document.querySelectorAll('#modeButtons button[data-v],#regimes .regime').forEach(b=>{
+      const target=+b.dataset.v;b.classList.toggle('active',Math.abs(v-target)<.012);
+    });
+  }
+  function updateDerivation(){
+    const s=derivation[state.deriveStep];$('stepIndicator').textContent=`Step ${state.deriveStep+1} of ${derivation.length}`;$('stepTitle').textContent=s.title;$('stepEquation').innerHTML=s.eq;$('stepText').textContent=s.text;
+    if(window.MathJax?.typesetPromise) MathJax.typesetPromise([$('stepEquation'),$('physicsText'),$('numerical'),$('regimes')]).catch(()=>{});
+  }
+  function updateAll(updateBandNow=true){
+    updateMetrics(); if(updateBandNow)updateBand(); updatePlot();setActiveMode();
+  }
+  function setVoltage(v){state.sweep=false;$('sweepBtn').textContent='▶ Bias sweep';els.V.value=v;updateAll();}
+
+  document.querySelectorAll('[data-v]').forEach(b=>b.addEventListener('click',()=>setVoltage(+b.dataset.v)));
+  ['input','change'].forEach(evt=>{
+    [els.V,els.phi,els.T,els.ndLog,els.astar].forEach(e=>e.addEventListener(evt,()=>{state.sweep=false;$('sweepBtn').textContent='▶ Bias sweep';updateAll();}));
+  });
+  els.material.addEventListener('change',()=>{const m=materials[els.material.value];if(m.A!==null)els.astar.value=m.A;els.astar.disabled=m.A!==null;updateAll();});
+  $('sweepBtn').addEventListener('click',()=>{state.sweep=!state.sweep;state.sweepStart=performance.now();$('sweepBtn').textContent=state.sweep?'■ Stop sweep':'▶ Bias sweep';});
+  $('resetBtn').addEventListener('click',()=>{els.material.value='si';els.astar.value=110;els.astar.disabled=true;els.V.value=0;els.phi.value=.75;els.T.value=300;els.ndLog.value=16;state.plotMode='log';$('linearBtn').classList.remove('active');$('logBtn').classList.add('active');setVoltage(0);});
+  $('linearBtn').addEventListener('click',()=>{state.plotMode='linear';$('linearBtn').classList.add('active');$('logBtn').classList.remove('active');updatePlot();});
+  $('logBtn').addEventListener('click',()=>{state.plotMode='log';$('logBtn').classList.add('active');$('linearBtn').classList.remove('active');updatePlot();});
+  $('prevStep').addEventListener('click',()=>{state.deriveStep=(state.deriveStep-1+derivation.length)%derivation.length;updateDerivation();});
+  $('nextStep').addEventListener('click',()=>{state.deriveStep=(state.deriveStep+1)%derivation.length;updateDerivation();});
+  $('autoDeriveBtn').addEventListener('click',()=>{
+    if(state.autoDerive){clearInterval(state.autoDerive);state.autoDerive=null;$('autoDeriveBtn').textContent='▶ Animate derivation';return;}
+    $('autoDeriveBtn').textContent='■ Stop derivation';state.autoDerive=setInterval(()=>{state.deriveStep=(state.deriveStep+1)%derivation.length;updateDerivation();},3800);
+  });
+
+  initParticles();els.astar.disabled=true;updateDerivation();updateAll();requestAnimationFrame(animateParticles);
+})();
+</script>
+
+<!-- maestra-integration-v4 -->
+<link rel="stylesheet" href="../../../shared/maestra-toolbar.css">
+<script defer src="../../../shared/theme-sync-v2.js"></script>
+<script defer src="../../../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="mesfet" data-maestra-module-title="MESFET and Schottky Devices" data-maestra-topic-title="01 Schottky Thermionic Emission" data-maestra-canvas-template="mesfet-device"></script>
+</body>
+</html>
