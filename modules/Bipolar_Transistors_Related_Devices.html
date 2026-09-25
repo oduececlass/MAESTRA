@@ -457,6 +457,114 @@ html[data-theme="dark"] .thySection .figure{box-shadow:0 7px 22px rgba(0,0,0,.23
 @media(max-width:900px){.thySection .twoCol{grid-template-columns:1fr}.thySection{font-size:16px}.thySection .lead{font-size:17px}.thySection iframe.sim{min-height:720px}}
 
 </style>
+<style id="bjtVirtualLabStyles">
+/* ===== 3.10 Virtual Labs ===== */
+/* labs: plot on top at full width, controls in a responsive grid below */
+.bjt-lab .simLayout{grid-template-columns:1fr}
+.bjt-lab .simCanvasWrap{order:-1}
+.bjt-lab .simControls{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px 16px}
+.bjt-lab .simControls .labPresets,.bjt-lab .simControls .simMetrics,.bjt-lab .simControls .labActions{grid-column:1/-1}
+.bjt-lab .simMetrics{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.bjt-lab .simMetric b{text-transform:none!important;letter-spacing:0!important}
+.bjt-lab .labActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.bjt-lab .labActions button,.bjt-lab .labDataHead button,.bjt-lab .labPresets button{border:1px solid #cbd5e1;background:#fff;color:#1f2937;border-radius:9px;padding:7px 11px;font-weight:700;font-size:13px;cursor:pointer}
+.bjt-lab .labActions button:hover,.bjt-lab .labDataHead button:hover,.bjt-lab .labPresets button:hover{border-color:#2563eb;color:#1d4ed8}
+.bjt-lab .labActions .labPrimary{background:#0f766e;border-color:#0f766e;color:#fff}
+.bjt-lab .labActions .labPrimary:hover{background:#115e59;color:#fff}
+.bjt-lab .labActions .labPrimary.labFlash{box-shadow:0 0 0 4px rgba(15,118,110,.28)}
+.bjt-lab .labPresets{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.bjt-lab .labPresets span{font-size:11.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#64748b;margin-right:2px}
+.bjt-lab .labPresets button{padding:5px 9px;font-size:12px;font-weight:600}
+.bjt-lab .simMetric span{font-size:13.5px}
+.bjt-lab .labData{margin-top:14px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;overflow:hidden}
+.bjt-lab .labDataHead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 12px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+.bjt-lab .labDataHead b{font-size:14px;color:#0f172a}
+.bjt-lab .labDataHead [data-lab-count]{font-size:12px;color:#64748b}
+.bjt-lab .labSpacer{flex:1}
+.bjt-lab .labTableWrap{overflow-x:auto;max-height:280px}
+.bjt-lab .labTable{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+.bjt-lab .labTable th,.bjt-lab .labTable td{padding:6px 10px;border-bottom:1px solid #eef2f7;text-align:right;white-space:nowrap}
+.bjt-lab .labTable th{position:sticky;top:0;background:#f1f5f9;color:#334155;font-weight:800;text-align:right}
+.bjt-lab .labTable th:first-child,.bjt-lab .labTable td:first-child{text-align:center;color:#64748b}
+.bjt-lab .labTable .labEmpty td{text-align:center;color:#94a3b8;font-style:italic;padding:14px}
+.labSteps{margin:10px 0 18px;padding-left:24px;display:grid;gap:8px;font-size:17px;line-height:1.55}
+.labSteps li::marker{font-weight:800;color:#0f766e}
+.labIndex{display:grid;gap:8px;font-size:17px;line-height:1.5}
+html[data-theme="dark"] .bjt-lab .labActions button,html[data-theme="dark"] .bjt-lab .labDataHead button,html[data-theme="dark"] .bjt-lab .labPresets button{background:#111827;border-color:#334155;color:#e5e7eb}
+html[data-theme="dark"] .bjt-lab .labActions .labPrimary{background:#0f766e;border-color:#0f766e;color:#fff}
+html[data-theme="dark"] .bjt-lab .labData{background:#0f172a;border-color:#334155}
+html[data-theme="dark"] .bjt-lab .labDataHead{background:#111827;border-color:#334155}
+html[data-theme="dark"] .bjt-lab .labDataHead b{color:#f1f5f9}
+html[data-theme="dark"] .bjt-lab .labTable th{background:#1e293b;color:#cbd5e1}
+html[data-theme="dark"] .bjt-lab .labTable td{border-color:#1e293b;color:#e5e7eb}
+html[data-theme="dark"] .labSteps li::marker{color:#5eead4}
+</style>
+<style id="bjtSimLabStyles">
+/* ===== Per-simulator guided labs ===== */
+.simLabs{margin:18px 0 30px;border:1px solid #cfe3ee;border-radius:18px;background:linear-gradient(180deg,#f4fbfd 0%,#ffffff 60%);box-shadow:0 8px 24px rgba(15,23,42,.06);overflow:hidden}
+.simLabs .slHead{padding:14px 18px 0;border-bottom:1px solid #dbeaf1;background:#eef8fb}
+.simLabs .slEyebrow{display:block;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#0f766e}
+.simLabs h4{margin:3px 0 10px!important;font-size:19px;color:#0f172a}
+.simLabs .slTabs{display:flex;flex-wrap:wrap;gap:6px}
+.simLabs .slTab{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:1px solid #cbd5e1;border-bottom:none;border-radius:10px 10px 0 0;background:#fff;color:#334155;padding:7px 12px;font-size:13.5px;font-weight:700;cursor:pointer;text-align:left}
+.simLabs .slTab .slTabNum{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b}
+.simLabs .slTab .slTabTitle{display:block;white-space:nowrap;line-height:1.3}
+.simLabs .slTab .slTabTitle i{font-style:italic}
+.simLabs .slTab .slTabTitle sub{font-size:.72em;line-height:0;vertical-align:-.25em}
+.simLabs .slTab.on{background:#0f766e;border-color:#0f766e;color:#fff}
+.simLabs .slTab.on .slTabNum{color:#ccfbf1}
+.simLabs .slLab{padding:16px 18px 18px}
+.simLabs .slLab[hidden]{display:none}
+.simLabs h5{margin:14px 0 6px;font-size:14px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#0f766e}
+.simLabs .slObjective{background:#fff;border:1px solid #bfe3dc;border-left:4px solid #0f766e;border-radius:0 10px 10px 0;padding:10px 14px;font-size:16px;line-height:1.5}
+.simLabs .slCols2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px}
+.simLabs .slSteps{margin:0;padding-left:22px;display:grid;gap:6px;font-size:15.5px;line-height:1.5}
+.simLabs .slSteps li::marker{font-weight:800;color:#0f766e}
+.simLabs .slLook{margin:0;font-size:15px;line-height:1.55;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 12px}
+.simLabs .slNotebook{border:1px solid #e2e8f0;border-radius:12px;background:#fff;overflow:hidden}
+.simLabs .slBar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:8px 10px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+.simLabs .slBar button,.simLabs .slCheck button{border:1px solid #cbd5e1;background:#fff;color:#1f2937;border-radius:8px;padding:6px 10px;font-weight:700;font-size:12.5px;cursor:pointer}
+.simLabs .slBar button:hover,.simLabs .slCheck button:hover{border-color:#0f766e;color:#0f766e}
+.simLabs .slBar .slPrimary{background:#0f766e;border-color:#0f766e;color:#fff}
+.simLabs .slBar .slPrimary:hover{color:#fff;background:#115e59}
+.simLabs .slBar .slPrimary.slFlash{box-shadow:0 0 0 4px rgba(15,118,110,.28)}
+.simLabs .slHint{flex-basis:100%;font-size:12px;color:#64748b}
+.simLabs .slTableWrap{overflow-x:auto;max-height:300px}
+.simLabs .slTable{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+.simLabs .slTable th{position:sticky;top:0;background:#f1f5f9;color:#334155;font-weight:800;padding:7px 9px;text-align:left;white-space:nowrap;z-index:1}
+.simLabs .slTable td{padding:4px 9px;border-top:1px solid #eef2f7;white-space:nowrap}
+.simLabs .slTable td:first-child{color:#94a3b8;width:28px;text-align:center}
+.simLabs .slTable td.slAuto{background:#f1f5f9;color:#0f172a}
+.simLabs .slTable input{width:100%;min-width:90px;border:1px solid #dbe3ec;border-radius:6px;padding:4px 6px;font:inherit;background:#fff;color:#0f172a}
+.simLabs .slTable .slEmpty td{text-align:center;color:#94a3b8;font-style:italic;padding:12px}
+.simLabs .slQ{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:11px 14px;margin:10px 0;font-size:15.5px;line-height:1.5}
+.simLabs .slCheck{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.simLabs .slCheck input{width:180px;border:1px solid #cbd5e1;border-radius:8px;padding:6px 9px;font:inherit}
+.simLabs .slFeedback{font-weight:800;font-size:13.5px}
+.simLabs .slFeedback.ok{color:#15803d}
+.simLabs .slFeedback.bad{color:#b91c1c}
+.simLabs .slAnswer{margin-top:8px}
+.simLabs .slAnswer summary{cursor:pointer;font-weight:700;color:#a54600;font-size:14px}
+.simLabs .slAnswer div{margin-top:6px;padding:8px 11px;background:#f8fafc;border-radius:8px}
+@media(max-width:860px){.simLabs .slCols2{grid-template-columns:1fr}}
+html[data-theme="dark"] .simLabs{background:linear-gradient(180deg,#0f2230 0%,#111827 60%);border-color:#29485a;box-shadow:0 10px 26px rgba(0,0,0,.3)}
+html[data-theme="dark"] .simLabs .slHead{background:#102a38;border-color:#29485a}
+html[data-theme="dark"] .simLabs h4{color:#f1f5f9}
+html[data-theme="dark"] .simLabs .slEyebrow,html[data-theme="dark"] .simLabs h5{color:#5eead4}
+html[data-theme="dark"] .simLabs .slTab{background:#111827;border-color:#334155;color:#cbd5e1}
+html[data-theme="dark"] .simLabs .slTab.on{background:#0f766e;border-color:#0f766e;color:#fff}
+html[data-theme="dark"] .simLabs .slObjective,html[data-theme="dark"] .simLabs .slQ,html[data-theme="dark"] .simLabs .slNotebook{background:#0f172a;border-color:#334155;color:#e5e7eb}
+html[data-theme="dark"] .simLabs .slLook{background:#2a2410;border-color:#6b5a1d;color:#fef3c7}
+html[data-theme="dark"] .simLabs .slBar{background:#111827;border-color:#334155}
+html[data-theme="dark"] .simLabs .slBar button,html[data-theme="dark"] .simLabs .slCheck button{background:#111827;border-color:#334155;color:#e5e7eb}
+html[data-theme="dark"] .simLabs .slBar .slPrimary{background:#0f766e;border-color:#0f766e;color:#fff}
+html[data-theme="dark"] .simLabs .slTable th{background:#1e293b;color:#cbd5e1}
+html[data-theme="dark"] .simLabs .slTable td{border-color:#1e293b;color:#e5e7eb}
+html[data-theme="dark"] .simLabs .slTable td.slAuto{background:#1e293b;color:#f1f5f9}
+html[data-theme="dark"] .simLabs .slTable input,html[data-theme="dark"] .simLabs .slCheck input{background:#111827;border-color:#334155;color:#f1f5f9}
+html[data-theme="dark"] .simLabs .slAnswer div{background:#111827}
+html[data-theme="dark"] .simLabs .slSteps li::marker{color:#5eead4}
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -1142,6 +1250,167 @@ function decodeHtml64(value){
   }
 }
 
+
+/* ===================== 3.10 Virtual Labs — page content ===================== */
+const labSlider = (key, label, min, max, step, value) => `<label class="cg-slider"><span class="cg-lab">${label}</span><output data-out="${key}"></output><input type="range" min="${min}" max="${max}" step="${step}" value="${value}" data-param="${key}"></label>`;
+const labMetric = (key, label) => `<div class="simMetric"><b>${label}</b><span data-metric="${key}">—</span></div>`;
+const labPresets = list => `<div class="labPresets"><span>Presets</span>${list.map(([label, values]) => `<button type="button" data-lab-act="preset" data-values='${JSON.stringify(values)}'>${label}</button>`).join('')}</div>`;
+const labInstrument = (lab, title, lead, sliders, metrics, note, presets = '') => `
+<div class="simPanel bjt-lab" data-lab="${lab}">
+  <h4>${title}</h4>
+  <p>${lead}</p>
+  <div class="simLayout">
+    <div class="simControls">
+      ${sliders.join('')}
+      ${presets}
+      <div class="simMetrics">${metrics.join('')}</div>
+      <div class="labActions"><button type="button" class="labPrimary" data-lab-act="record">● Record reading</button><button type="button" data-lab-act="reset">Reset controls</button></div>
+    </div>
+    <div class="simCanvasWrap"><canvas class="bjtSimCanvas" width="1000" height="540"></canvas><p class="simNote">${note}</p></div>
+  </div>
+  <div class="labData">
+    <div class="labDataHead"><b>Lab notebook</b><span data-lab-count>0 readings</span><span class="labSpacer"></span><button type="button" data-lab-act="undo">Undo last</button><button type="button" data-lab-act="clear">Clear</button><button type="button" data-lab-act="csv">Download CSV</button></div>
+    <div class="labTableWrap"><table class="labTable"><thead></thead><tbody></tbody></table></div>
+  </div>
+</div>`;
+const labSteps = steps => `<ol class="labSteps">${steps.map(s => `<li>${s}</li>`).join('')}</ol>`;
+const labQuiz = (q, a) => `<details class="quizCard"><summary>${q}</summary><p>${a}</p></details>`;
+
+const lab1Body = String.raw`
+<div class="callout learningGoal"><b>Objective:</b> Measure a Gummel plot, extract the collector and base ideality factors, and explain why the current gain \(\beta\) falls at both low and high collector current (Sections 3.2 and 3.7.4).</div>
+<h3 class="subtopic">Background</h3>
+<p>In a Gummel measurement the collector–base voltage is held at zero and the emitter–base forward bias is swept. Plotting \(\log I_C\) and \(\log I_B\) against \(V_{EB}\) separates the physical current mechanisms, because each one has its own slope.</p>
+<div class="eqBox">\[
+I_C=\frac{I_S\,e^{V_{EB}'/V_T}}{q_b},\qquad q_b=\tfrac12\Bigl(1+\sqrt{1+4I_Se^{V_{EB}'/V_T}/I_{KF}}\Bigr),\qquad
+I_B=\frac{I_S}{\beta_F}e^{V_{EB}'/V_T}+I_{SE}\,e^{V_{EB}'/n_EV_T}
+\]</div>
+<p>Here \(V_{EB}'=V_{EB}-I_Br_B-I_Er_E\) is the internal junction voltage. An ideal diffusion current rises by one decade every \(2.303\,V_T\approx 59.5\ \text{mV}\) at 300 K (ideality \(n=1\)). Recombination in the emitter–base depletion region gives \(n_E\approx 2\) and dominates \(I_B\) at low bias; high-level injection in the base (the knee current \(I_{KF}\)) pushes the \(I_C\) slope toward \(2V_T\) per e-fold; series resistance bends both curves over at the top.</p>
+${labInstrument('gummel', 'Lab 1 instrument — Gummel plot analyzer', 'Sweep is computed with the Gummel–Poon high-injection factor and series resistance. Move the measurement cursor \\(V_{EB}\\) to read local slopes.',
+[labSlider('v', 'Measurement cursor \\(V_{EB}\\)', 0.30, 1.00, 0.005, 0.65), labSlider('T', 'Temperature \\(T\\)', 250, 400, 5, 300), labSlider('bf', 'Ideal gain \\(\\beta_F\\)', 50, 400, 5, 150), labSlider('is', 'Saturation current \\(\\log_{10} I_S\\)', -17, -13, 0.1, -15), labSlider('ise', 'Recombination \\(\\log_{10} I_{SE}\\)', -16, -11, 0.1, -13.5), labSlider('ne', 'Recombination ideality \\(n_E\\)', 1.2, 2.5, 0.05, 2), labSlider('ikf', 'Knee current \\(\\log_{10} I_{KF}\\)', -4, -1, 0.05, -2.3), labSlider('rb', 'Base resistance \\(r_B\\)', 0, 500, 5, 100), labSlider('re', 'Emitter resistance \\(r_E\\)', 0, 20, 0.5, 2)],
+[labMetric('ic', 'I_C at cursor'), labMetric('ib', 'I_B at cursor'), labMetric('beta', 'β at cursor'), labMetric('bmax', 'Peak β'), labMetric('sc', 'I_C slope'), labMetric('sb', 'I_B slope')],
+'Blue = collector current, red = base current, dashed = ideal n = 1 lines. The purple curve is β = I_C/I_B; its flat top is the useful bias range.',
+labPresets([['Ideal device', { ise: -16, ikf: -1, rb: 0, re: 0 }], ['Leaky E-B junction', { ise: -11.5, ne: 2 }], ['Low knee current', { ikf: -3.5 }], ['Hot device (380 K)', { T: 380 }]]))}
+<h3 class="subtopic">Procedure</h3>
+${labSteps([
+ 'Press <b>Reset controls</b>. Place the cursor at \\(V_{EB}=0.60\\) V and record a reading. Confirm the \\(I_C\\) slope is close to the ideal value printed under the plot.',
+ 'Move the cursor down to \\(V_{EB}=0.40\\) V and record. Compare the \\(I_B\\) slope with the \\(I_C\\) slope; note the ideality factor \\(n_B\\).',
+ 'Step the cursor from 0.35 V to 0.95 V in 0.05 V steps, recording each point. Download the CSV and plot \\(\\beta\\) versus \\(I_C\\) yourself.',
+ 'Choose the <b>Leaky E-B junction</b> preset. Record the new peak \\(\\beta\\) and the current at which it occurs.',
+ 'Choose <b>Low knee current</b>. Find the cursor voltage where the \\(I_C\\) slope has doubled to about 119 mV/dec.',
+ 'Return to the defaults and raise \\(T\\) to 380 K. Record the ideal slope and the collector current at \\(V_{EB}=0.60\\) V.'])}
+<h3 class="subtopic">Analysis questions</h3>
+${labQuiz('Q1. Why is the ideal slope 59.5 mV per decade at 300 K?', 'For \\(I\\propto e^{V/V_T}\\), one decade needs \\(\\Delta V=V_T\\ln 10=2.303\\times25.85\\ \\text{mV}\\approx59.5\\ \\text{mV}\\). A measured slope \\(S\\) gives the ideality factor \\(n=S/(2.303\\,V_T)\\).')}
+${labQuiz('Q2. Why does β fall at low collector current?', 'The recombination term \\(I_{SE}e^{V/n_EV_T}\\) with \\(n_E\\approx2\\) grows more slowly than the diffusion current but is larger at low bias, so it dominates \\(I_B\\). Since \\(I_C\\) keeps its ideal slope, \\(\\beta=I_C/I_B\\) rises with bias until the ideal \\(I_S/\\beta_F\\) component takes over.')}
+${labQuiz('Q3. Why does β fall at high collector current?', 'Above \\(I_{KF}\\) the injected minority-carrier density approaches the base doping (high-level injection, Webster effect). \\(I_C\\) then grows only as \\(e^{V/2V_T}\\) while the ideal \\(I_B\\) still grows as \\(e^{V/V_T}\\), so \\(\\beta\\) drops roughly as \\(1/I_C\\). Series resistance adds a further flattening of both curves.')}
+${labQuiz('Q4. How would you extract I_S from the plot?', 'Extrapolate the straight (n = 1) part of \\(\\log I_C\\) back to \\(V_{EB}=0\\); the intercept is \\(I_S\\). Only the mid-bias region should be used, away from recombination at the bottom and high injection/series resistance at the top.')}
+`;
+
+const lab2Body = String.raw`
+<div class="callout learningGoal"><b>Objective:</b> Measure the Early voltage of a p-n-p transistor from its output characteristic, compare it with the prediction from base-width modulation, and explore the gain–Early-voltage trade-off (Section 3.5).</div>
+<h3 class="subtopic">Background</h3>
+<p>As the collector–base reverse bias grows, the collector depletion region extends further into the base and the neutral base width \(W\) shrinks. Because the collector current of a thin-base transistor is inversely proportional to \(W\), \(I_C\) rises with \(V_{EC}\) even in the active region.</p>
+<div class="eqBox">\[
+I_C=\frac{qAD_pn_i^2}{N_BW}\Bigl(e^{V_{EB}/V_T}-e^{(V_{EB}-V_{EC})/V_T}\Bigr),\qquad
+W=W_{B0}-x_{EB}-x_{CB}(V_{CB}),\qquad
+x_{CB}=\sqrt{\frac{2\varepsilon_s(V_{bi}+V_{CB})}{q}\frac{N_C}{N_B(N_B+N_C)}}
+\]</div>
+<div class="eqBox">\[
+V_A=\frac{I_C}{\partial I_C/\partial V_{EC}}-V_{EC}\approx\frac{W}{\left|\partial W/\partial V_{CB}\right|},\qquad r_o=\frac{V_A+V_{EC}}{I_C}
+\]</div>
+<p>A heavily doped base or a wide base resists this modulation (large \(V_A\)) but lowers the emitter-efficiency-limited gain \(\beta\approx(D_p/D_n)(N_E/N_B)(L_n/W)\). Punch-through occurs when \(W\) reaches zero.</p>
+${labInstrument('early', 'Lab 2 instrument — Early-voltage bench', 'The orange cursors are your two measurement points on the blue curve; the dashed tangent is extrapolated to \\(I_C=0\\).',
+[labSlider('veb', 'Emitter–base bias \\(V_{EB}\\)', 0.60, 0.75, 0.005, 0.68), labSlider('v1', 'Cursor 1 \\(V_{EC}\\)', 1, 12, 0.5, 3), labSlider('v2', 'Cursor 2 \\(V_{EC}\\)', 1, 12, 0.5, 10), labSlider('nb', 'Base doping \\(\\log_{10} N_B\\)', 16, 18, 0.05, 17), labSlider('nc', 'Collector doping \\(\\log_{10} N_C\\)', 15, 17, 0.05, 15.7), labSlider('w0', 'Metallurgical base width \\(W_{B0}\\) (µm)', 0.15, 1.5, 0.01, 0.5), labSlider('ne', 'Emitter doping \\(\\log_{10} N_E\\)', 18.5, 20, 0.05, 19)],
+[labMetric('vam', 'V_A measured'), labMetric('vat', 'V_A from W(V)'), labMetric('w', 'Neutral W (mid)'), labMetric('ro', 'r_o at cursor 1'), labMetric('beta', 'β (emitter-limited)'), labMetric('prod', 'β · V_A')],
+'Grey curves are V_EB ± 20 mV. The right panels show the base cross-section and how the neutral base width shrinks with V_EC.',
+labPresets([['Thin, light base', { nb: 16.3, w0: 0.3 }], ['Heavy base', { nb: 17.8 }], ['Heavy collector', { nc: 16.8 }], ['Near punch-through', { nb: 16, w0: 0.2 }]]))}
+<h3 class="subtopic">Procedure</h3>
+${labSteps([
+ 'With the defaults, record a reading. Compare the measured \\(V_A\\) with the value predicted from \\(W(V_{CB})\\).',
+ 'Move cursor 1 to 2 V and cursor 2 to 5 V, then to 8 V and 12 V. Record each pair. Does the extracted \\(V_A\\) depend on where you measure? Explain.',
+ 'Sweep the base doping \\(N_B\\) from \\(10^{16}\\) to \\(10^{18}\\ \\text{cm}^{-3}\\) in about five steps, recording \\(V_A\\), \\(\\beta\\) and \\(\\beta V_A\\) each time.',
+ 'Repeat with \\(W_{B0}\\) from 0.2 to 1.5 µm at fixed \\(N_B\\). Which parameter improves \\(\\beta V_A\\)?',
+ 'Raise the collector doping \\(N_C\\). Record how \\(V_A\\) changes and explain it with the depletion-width formula.',
+ 'Use <b>Near punch-through</b>. Find the \\(V_{EC}\\) at which the neutral base width reaches zero.'])}
+<h3 class="subtopic">Analysis questions</h3>
+${labQuiz('Q1. Why does the measured V_A change slightly with cursor position?', 'The base-side depletion width grows as \\(\\sqrt{V_{bi}+V_{CB}}\\), so \\(dW/dV\\) decreases with bias. The output curve is therefore not a perfect straight line, and \\(V_A\\) is larger when extracted at higher \\(V_{EC}\\).')}
+${labQuiz('Q2. Why does raising N_B increase V_A but lower β?', 'A more heavily doped base takes a smaller share of the collector depletion region, so \\(W\\) changes less with bias (larger \\(V_A\\)). At the same time the emitter efficiency falls because \\(\\beta\\propto N_E/(N_BW)\\).')}
+${labQuiz('Q3. Why does a heavily doped collector reduce V_A?', 'With \\(N_C\\) comparable to \\(N_B\\), the collector depletion region spreads more evenly into the base, so the neutral base width is modulated more strongly. Power transistors use a lightly doped collector for this reason (and for breakdown voltage).')}
+${labQuiz('Q4. How is the Early voltage used in circuit design?', 'It sets the small-signal output resistance \\(r_o\\approx V_A/I_C\\), which limits the intrinsic voltage gain \\(g_mr_o=V_A/V_T\\) of a single-transistor amplifier.')}
+`;
+
+const lab3Body = String.raw`
+<div class="callout learningGoal"><b>Objective:</b> Use the Ebers–Moll coupled-diode model to map the four modes of operation, connect each mode to the minority-carrier profile in the base, and verify Kirchhoff's current law and the reciprocity relation (Sections 3.3 and 3.4).</div>
+<h3 class="subtopic">Background</h3>
+<div class="eqBox">\[
+I_E=I_{ES}\bigl(e^{V_{EB}/V_T}-1\bigr)-\alpha_RI_{CS}\bigl(e^{V_{CB}/V_T}-1\bigr),\qquad
+I_C=\alpha_FI_{ES}\bigl(e^{V_{EB}/V_T}-1\bigr)-I_{CS}\bigl(e^{V_{CB}/V_T}-1\bigr)
+\]</div>
+<p>with \(I_B=I_E-I_C\) and the reciprocity condition \(\alpha_FI_{ES}=\alpha_RI_{CS}\). The sign of each junction voltage decides the mode: forward active (E-B forward, C-B reverse), saturation (both forward), cutoff (both reverse), and inverse active (E-B reverse, C-B forward). For a thin base the hole profile is a straight line between \(p_n(0)=p_{n0}e^{V_{EB}/V_T}\) and \(p_n(W)=p_{n0}e^{V_{CB}/V_T}\); its slope sets the diffusion current.</p>
+${labInstrument('modes', 'Lab 3 instrument — Ebers–Moll mode explorer', 'Drag the bias sliders or click anywhere in the bias plane to move the operating point.',
+[labSlider('veb', 'Emitter–base bias \\(V_{EB}\\)', -0.8, 0.8, 0.01, 0.65), labSlider('vcb', 'Collector–base bias \\(V_{CB}\\)', -0.8, 0.8, 0.01, -0.5), labSlider('af', 'Forward alpha \\(\\alpha_F\\)', 0.9, 0.998, 0.001, 0.99), labSlider('ar', 'Reverse alpha \\(\\alpha_R\\)', 0.1, 0.95, 0.01, 0.5), labSlider('ies', 'Emitter saturation \\(\\log_{10} I_{ES}\\)', -16, -12, 0.1, -14)],
+[labMetric('mode', 'Mode'), labMetric('ics', 'I_CS (reciprocity)'), labMetric('ie', 'I_E'), labMetric('ic', 'I_C'), labMetric('ib', 'I_B'), labMetric('ratio', 'I_C / I_B')],
+'Forward bias is positive for both junctions (p-n-p convention used in this chapter). The profile panel is scaled to its own maximum.',
+labPresets([['Forward active', { veb: 0.65, vcb: -0.5 }], ['Saturation', { veb: 0.7, vcb: 0.6 }], ['Cutoff', { veb: -0.5, vcb: -0.5 }], ['Inverse active', { veb: -0.5, vcb: 0.65 }]]))}
+<h3 class="subtopic">Procedure</h3>
+${labSteps([
+ 'Use each of the four presets and record a reading. Sketch the base hole profile you see for each mode.',
+ 'In forward active, compare \\(I_C/I_B\\) with \\(\\beta_F=\\alpha_F/(1-\\alpha_F)\\). In inverse active, compare it with \\(\\beta_R\\).',
+ 'Start in forward active and slowly raise \\(V_{CB}\\) from −0.5 V to +0.7 V. Record \\(I_C\\) every 0.1 V and find where the transistor leaves the active region.',
+ 'In saturation, hold \\(V_{EB}=0.70\\) V and vary \\(V_{CB}\\). Explain why \\(I_C/I_B\\) falls below \\(\\beta_F\\) (the forced gain).',
+ 'Change \\(\\alpha_R\\) and confirm that \\(I_{CS}\\) changes so that \\(\\alpha_FI_{ES}=\\alpha_RI_{CS}\\) always holds.'])}
+<h3 class="subtopic">Analysis questions</h3>
+${labQuiz('Q1. Why is the transistor a good current source in forward active?', 'With the collector junction reverse biased, \\(p_n(W)\\approx0\\), so the base profile slope — and therefore \\(I_C\\) — depends only on \\(V_{EB}\\), not on the collector voltage (apart from the Early effect).')}
+${labQuiz('Q2. What happens to the base charge in saturation, and why does it matter?', 'Both ends of the profile are raised, so extra (stored) charge sits in the base without adding to the slope. This charge must be removed before the device can turn off, which causes the storage delay studied in Section 3.6.')}
+${labQuiz('Q3. Why is inverse-active gain usually small?', 'The collector is lightly doped and larger in area, so injection from collector into base is inefficient: \\(\\alpha_R\\) is small (often 0.1–0.8) and \\(\\beta_R=\\alpha_R/(1-\\alpha_R)\\) is of order 1.')}
+${labQuiz('Q4. What does reciprocity express physically?', 'The two junctions share the same base. The transfer current from emitter to collector per unit collector-junction saturation equals the reverse transfer, so \\(\\alpha_FI_{ES}=\\alpha_RI_{CS}\\): only three of the four Ebers–Moll parameters are independent.')}
+`;
+
+const lab4Body = String.raw`
+<div class="callout learningGoal"><b>Objective:</b> Quantify emitter current crowding caused by the lateral voltage drop in the base, find the current at which the effective emitter width halves, and explain why power and RF transistors use narrow interdigitated emitter stripes (Section 3.7.3).</div>
+<h3 class="subtopic">Background</h3>
+<p>Base current enters from contacts at the edges of the emitter stripe and flows laterally under the emitter through the base sheet resistance \(R_\square\). The resulting ohmic drop reduces the forward bias toward the stripe centre, so injection is concentrated at the edges. For a stripe of width \(S\) (half-width \(h=S/2\)) and length \(L_E\) contacted on both sides, the one-dimensional problem has an exact solution:</p>
+<div class="eqBox">\[
+\frac{J(x)}{J_{\text{edge}}}=\frac{\cos^2(kh)}{\cos^2\!\bigl(k(h-x)\bigr)},\qquad k\tan(kh)=\frac{I_ER_\square}{4L_E\beta V_T},\qquad
+\frac{S_{\text{eff}}}{S}=\frac{\sin 2kh}{2kh},\qquad \Delta V=-V_T\ln\cos^2(kh)
+\]</div>
+<p>Crowding is negligible while the lateral drop \(\Delta V\) is small compared with \(V_T\). The design rule is therefore to keep \(I_ER_\square S/(L_E\beta)\) small — narrow stripes, long emitters, and a low-resistance (heavily doped or extrinsic) base.</p>
+${labInstrument('crowding', 'Lab 4 instrument — emitter current-crowding analyzer', 'The top panel shows local injection under the emitter; the lower panels give the normalized profile and the effective width as a function of current.',
+[labSlider('ie', 'Emitter current \\(\\log_{10} I_E\\) (mA)', -1, 2, 0.02, 1), labSlider('s', 'Stripe width \\(S\\) (µm)', 0.5, 20, 0.5, 4), labSlider('rsq', 'Base sheet resistance \\(R_\\square\\) (kΩ/□)', 0.5, 20, 0.5, 5), labSlider('le', 'Emitter length \\(L_E\\) (µm)', 5, 100, 1, 20), labSlider('beta', 'Current gain \\(\\beta\\)', 20, 300, 5, 100)],
+[labMetric('ratio', 'J_edge / J_centre'), labMetric('seff', 'S_eff / S'), labMetric('dv', 'Lateral drop ΔV'), labMetric('half', 'I_E at S_eff = S/2')],
+'Symmetric stripe contacted on both sides; 300 K. The dot on the right panel marks the present emitter current.',
+labPresets([['Narrow RF stripe', { s: 1, le: 40 }], ['Wide power stripe', { s: 16, le: 20 }], ['Resistive base', { rsq: 18 }], ['High current', { ie: 1.8 }]]))}
+<h3 class="subtopic">Procedure</h3>
+${labSteps([
+ 'With the defaults, sweep \\(I_E\\) from 0.1 mA to 100 mA and record about six readings. Plot \\(S_{\\text{eff}}/S\\) versus \\(I_E\\) from your CSV.',
+ 'Read the current at which the effective width falls to 50 %. Double the stripe width \\(S\\) and find the new half-width current. What scaling do you observe?',
+ 'Keep the total emitter area fixed at \\(S\\cdot L_E=80\\ \\mu\\text{m}^2\\) and compare 4 µm × 20 µm with 1 µm × 80 µm stripes at \\(I_E=20\\) mA.',
+ 'Increase \\(R_\\square\\) from 2 to 18 kΩ/□ at fixed current and record the crowding ratio and the lateral drop \\(\\Delta V\\).',
+ 'Raise \\(\\beta\\). Explain why a higher-gain device crowds less at the same emitter current.'])}
+<h3 class="subtopic">Analysis questions</h3>
+${labQuiz('Q1. When can current crowding be ignored?', 'When the lateral base drop \\(\\Delta V\\) is much smaller than \\(V_T\\approx26\\ \\text{mV}\\): then \\(e^{-\\Delta V/V_T}\\approx1\\) and the injection is uniform. In the lab this corresponds to \\(kh\\ll1\\) and \\(S_{\\text{eff}}/S\\approx1\\).')}
+${labQuiz('Q2. How does the half-width current scale with stripe width?', 'The parameter that matters is \\(kh\\), with \\(k\\tan(kh)\\propto I_E/(L_E)\\). For a given \\(kh\\), \\(I_E\\propto L_E/S\\) (because \\(k\\propto1/h\\) and \\(k\\tan kh\\propto k^2h\\)), so halving the stripe width roughly doubles the current it can carry uniformly.')}
+${labQuiz('Q3. Why do power and RF BJTs use many narrow emitter fingers?', 'Narrow fingers keep the lateral base drop small so the whole emitter area conducts. This avoids local hot spots at the emitter edges (which can trigger thermal runaway or second breakdown), keeps the high-injection knee current high, and lowers the base resistance that limits \\(f_{\\max}\\).')}
+${labQuiz('Q4. Why does crowding make high-injection effects appear earlier?', 'The edge current density exceeds the average by \\(J_{\\text{edge}}/J_{\\text{avg}}=1/(S_{\\text{eff}}/S)\\), so the edges reach the high-level-injection and Kirk-effect thresholds at a lower terminal current than a uniform-injection estimate predicts.')}
+`;
+
+const labsOverviewBody = String.raw`
+<div class="callout learningGoal"><b>How the labs work:</b> each lab has an instrument (sliders, live plots and readouts), a <b>lab notebook</b> that stores your readings when you press <b>● Record reading</b>, and a <b>Download CSV</b> button for your report. Presets jump to instructive operating points; <b>Reset controls</b> restores the defaults. Answers to the analysis questions open when clicked.</div>
+<ul class="labIndex">
+<li><b>Lab 1 — Gummel Plot and Current-Gain Extraction.</b> Ideality factors, recombination and high-injection limits of \(\beta\).</li>
+<li><b>Lab 2 — Early Voltage from Base-Width Modulation.</b> Measure \(V_A\), compare with depletion theory, and explore the \(\beta V_A\) trade-off.</li>
+<li><b>Lab 3 — Ebers–Moll Four-Mode Explorer.</b> Bias plane, base hole profile, terminal currents and reciprocity.</li>
+<li><b>Lab 4 — Emitter Current Crowding.</b> Lateral base drop, effective emitter width and stripe design.</li>
+</ul>`;
+
+const virtualLabsTopic = {id:'virtual-labs',title:'3.10 Virtual Labs',sub:'Guided measurement labs with recorded data',sim:[],
+  body: labsOverviewBody + '<h3 class="subtopic">Lab 1 — Gummel Plot and Current-Gain Extraction</h3>' + lab1Body + '<h3 class="subtopic">Lab 2 — Early Voltage from Base-Width Modulation</h3>' + lab2Body + '<h3 class="subtopic">Lab 3 — Ebers–Moll Four-Mode Explorer</h3>' + lab3Body + '<h3 class="subtopic">Lab 4 — Emitter Current Crowding</h3>' + lab4Body,
+  subtopics:[
+  {id:'lab-gummel',title:'3.10.1 Lab 1: Gummel Plot and β Extraction',sub:'Ideality factors, recombination current and high-injection gain roll-off',body:labsOverviewBody.replace(/<ul class="labIndex">[\s\S]*<\/ul>/,'')+lab1Body},
+  {id:'lab-early',title:'3.10.2 Lab 2: Early Voltage Measurement',sub:'Base-width modulation, output resistance and the gain–Early-voltage trade-off',body:lab2Body},
+  {id:'lab-modes',title:'3.10.3 Lab 3: Ebers–Moll Mode Explorer',sub:'Four modes of operation, base hole profile, KCL and reciprocity',body:lab3Body},
+  {id:'lab-crowding',title:'3.10.4 Lab 4: Emitter Current Crowding',sub:'Lateral base resistance, effective emitter width and stripe design',body:lab4Body}
+]};
+
 const topics = [
 {id:'overview',title:'Chapter 3 Overview: Bipolar Junction Transistors',sub:'Roadmap for Chapter 3',body:String.raw`
 <p>A bipolar junction transistor (BJT) is a three-terminal semiconductor device built from two closely spaced p-n junctions sharing a common middle region. The three regions are the <b>emitter</b>, the <b>base</b>, and the <b>collector</b>. "Bipolar" refers to the fact that both electrons and holes participate in the internal current transport, unlike a unipolar (field-effect) device.</p>
@@ -1728,6 +1997,7 @@ ${simHbt}
 {id:'thyristor-turnoff',title:'3.9.6 Turn-Off & Ratings',sub:'Commutation, recovery time, GTO operation, ratings, and protection',body:decodeHtml64('PGRpdiBjbGFzcz0idGh5U2VjdGlvbiIgZGF0YS10aHktc2VjdGlvbj0idGh5cmlzdG9yLXR1cm5vZmYiPjxzcGFuIGNsYXNzPSJleWVicm93Ij5Ib3cgaXQgd29ya3M8L3NwYW4+Cgo8cCBjbGFzcz0ibGVhZCI+QW4gb3JkaW5hcnkgU0NSIGhhcyBubyBnYXRlIGNvbnRyb2wgb3ZlciB0dXJuLW9mZi4gT25jZSBsYXRjaGVkLCB0aGUgb25seSB3YXkgdG8gc3dpdGNoIGl0IG9mZiBpcyB0byBicmVhayB0aGUgcmVnZW5lcmF0aW9uIGJ5IDxiPnN0YXJ2aW5nIHRoZSBhbm9kZSBjdXJyZW50PC9iPi48L3A+CjxoMz5Ib3cgdG8gdHVybiBpdCBvZmY8L2gzPgo8ZGl2IGNsYXNzPSJ0d29Db2wiPgo8ZGl2IGNsYXNzPSJtaW5pIj48Yj5OYXR1cmFsIChsaW5lKSBjb21tdXRhdGlvbjwvYj48YnIvPjxzcGFuIGNsYXNzPSJtdXQiPkluIGFuIEFDIGNpcmN1aXQgdGhlIGFub2RlIGN1cnJlbnQgcGFzc2VzIHRocm91Z2ggemVybyBldmVyeSBoYWxmLWN5Y2xlOyBhcyBpdCBkcm9wcyBiZWxvdyBcKElfSFwpIHRoZSBkZXZpY2UgdHVybnMgb2ZmIG9uIGl0cyBvd24uPC9zcGFuPjwvZGl2Pgo8ZGl2IGNsYXNzPSJtaW5pIj48Yj5Gb3JjZWQgY29tbXV0YXRpb248L2I+PGJyLz48c3BhbiBjbGFzcz0ibXV0Ij5JbiBhIERDIGNpcmN1aXQgYW4gYXV4aWxpYXJ5IGNpcmN1aXQgKGEgY2hhcmdlZCBjYXBhY2l0b3IsIGFuIExDIHJpbmcpIG1vbWVudGFyaWx5IGRyaXZlcyB0aGUgYW5vZGUgY3VycmVudCBiZWxvdyBcKElfSFwpIG9yIHJldmVyc2VzIGl0Ljwvc3Bhbj48L2Rpdj4KPC9kaXY+CjxkaXYgY2xhc3M9ImZpZ3VyZSB0dXJub2ZmLWZpZ3VyZSI+CjxzdmcgYXJpYS1sYWJlbD0iQ2xlYW4gU0NSIHR1cm4tb2ZmIGRpYWdyYW1zIGZvciBuYXR1cmFsIGxpbmUgY29tbXV0YXRpb24gYW5kIGZvcmNlZCBjb21tdXRhdGlvbiIgcm9sZT0iaW1nIiB2aWV3Ym94PSIwIDAgMTAwMCA1MjAiPgo8ZGVmcz4KPGxpbmVhcmdyYWRpZW50IGlkPSJ0b1BhbmVsQ2xlYW4iIHgxPSIwIiB4Mj0iMCIgeTE9IjAiIHkyPSIxIj4KPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzE0MjgzZiI+PC9zdG9wPgo8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwYTE3MjgiPjwvc3RvcD4KPC9saW5lYXJncmFkaWVudD4KPGxpbmVhcmdyYWRpZW50IGlkPSJ0b1RxQ2xlYW4iIHgxPSIwIiB4Mj0iMSIgeTE9IjAiIHkyPSIwIj4KPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2ZmYzg1NyIgc3RvcC1vcGFjaXR5PSIwLjI2Ij48L3N0b3A+CjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2ZmYzg1NyIgc3RvcC1vcGFjaXR5PSIwLjA3Ij48L3N0b3A+CjwvbGluZWFyZ3JhZGllbnQ+CjxtYXJrZXIgaWQ9InRvQXJyb3dDbGVhbiIgbWFya2VyaGVpZ2h0PSI5IiBtYXJrZXJ3aWR0aD0iOSIgb3JpZW50PSJhdXRvIiByZWZ4PSI3IiByZWZ5PSIzIj4KPHBhdGggZD0iTTAsMCBMMCw2IEw4LDMgeiIgZmlsbD0iIzhjZTdmZiI+PC9wYXRoPgo8L21hcmtlcj4KPG1hcmtlciBpZD0idG9BcnJvd0dvbGQiIG1hcmtlcmhlaWdodD0iOSIgbWFya2Vyd2lkdGg9IjkiIG9yaWVudD0iYXV0byIgcmVmeD0iNyIgcmVmeT0iMyI+CjxwYXRoIGQ9Ik0wLDAgTDAsNiBMOCwzIHoiIGZpbGw9IiNmZmM4NTciPjwvcGF0aD4KPC9tYXJrZXI+CjwvZGVmcz4KPHRleHQgZmlsbD0iI2VhZjJmZiIgZm9udC1zaXplPSIyNCIgZm9udC13ZWlnaHQ9IjgwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNTAwIiB5PSIzMCI+SG93IGFuIFNDUiB0dXJucyBvZmY8L3RleHQ+Cjx0ZXh0IGZpbGw9IiM5ZmI1Y2YiIGZvbnQtc2l6ZT0iMTMiIHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjUwMCIgeT0iNTMiPkN1cnJlbnQgbXVzdCBmYWxsIGJlbG93IHRoZSBob2xkaW5nIGN1cnJlbnQgYW5kIHJlbWFpbiBsb3cgZm9yIGF0IGxlYXN0IHRoZSByZWNvdmVyeSB0aW1lLjwvdGV4dD4KPCEtLSBOYXR1cmFsIGNvbW11dGF0aW9uIC0tPgo8cmVjdCBmaWxsPSJ1cmwoI3RvUGFuZWxDbGVhbikiIGhlaWdodD0iMjg2IiByeD0iMTYiIHN0cm9rZT0iIzM2NTA2ZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHdpZHRoPSI0NTYiIHg9IjI0IiB5PSI3NiI+PC9yZWN0Pgo8dGV4dCBmaWxsPSIjOGNlN2ZmIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iODAwIiB4PSI0NiIgeT0iMTA2Ij4xLiBOYXR1cmFsIChsaW5lKSBjb21tdXRhdGlvbjwvdGV4dD4KPHRleHQgZmlsbD0iI2E5YjljYyIgZm9udC1zaXplPSIxMi41IiB4PSI0NiIgeT0iMTI4Ij5UaGUgQUMgY3VycmVudCBwYXNzZXMgdGhyb3VnaCB6ZXJvIGV2ZXJ5IGhhbGYtY3ljbGUuPC90ZXh0Pgo8IS0tIG5hdHVyYWwgYXhlcyAtLT4KPGxpbmUgc3Ryb2tlPSIjZGNlY2ZmIiBzdHJva2Utd2lkdGg9IjEuNSIgeDE9IjcyIiB4Mj0iNDQ4IiB5MT0iMjQ0IiB5Mj0iMjQ0Ij48L2xpbmU+CjxsaW5lIHN0cm9rZT0iI2RjZWNmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHgxPSI5NCIgeDI9Ijk0IiB5MT0iMzI3IiB5Mj0iMTUxIj48L2xpbmU+Cjx0ZXh0IGZpbGw9IiM5ZmI1Y2YiIGZvbnQtc2l6ZT0iMTEiIHg9IjQzOCIgeT0iMjY2Ij50aW1lPC90ZXh0Pgo8dGV4dCBmaWxsPSIjZGNlY2ZmIiBmb250LXNpemU9IjExIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB0cmFuc2Zvcm09InJvdGF0ZSgtOTAgNTggMjQ0KSIgeD0iNTgiIHk9IjI0NCI+YW5vZGUgY3VycmVudDwvdGV4dD4KPCEtLSBob2xkaW5nLWN1cnJlbnQgdGhyZXNob2xkIC0tPgo8bGluZSBzdHJva2U9IiNmZmM4NTciIHN0cm9rZS1kYXNoYXJyYXk9IjYgNSIgc3Ryb2tlLXdpZHRoPSIxLjQiIHgxPSI3MiIgeDI9IjQ0OCIgeTE9IjIyMiIgeTI9IjIyMiI+PC9saW5lPgo8dGV4dCBmaWxsPSIjZmZjODU3IiBmb250LXNpemU9IjExLjUiIHg9IjEwMiIgeT0iMjE2Ij5JPHRzcGFuIGJhc2VsaW5lLXNoaWZ0PSJzdWIiIGZvbnQtc2l6ZT0iOC41Ij5IPC90c3Bhbj48L3RleHQ+CjwhLS0gQUMgY3VycmVudCAtLT4KPHBhdGggZD0iTTk0IDI0NCBDMTM2IDE1OSAxODQgMTU5IDIyNiAyNDQgQzI2OCAzMjkgMzE2IDMyOSAzNTggMjQ0IEMzOTAgMTc5IDQyMiAxNjggNDQ4IDE4MSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzdkNWZmIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS13aWR0aD0iNCI+PC9wYXRoPgo8cmVjdCBmaWxsPSIjNTZlMzlmIiBoZWlnaHQ9IjcwIiBvcGFjaXR5PSIwLjEwIiB3aWR0aD0iMTMwIiB4PSI5NSIgeT0iMTUyIj48L3JlY3Q+Cjx0ZXh0IGZpbGw9IiM1NmUzOWYiIGZvbnQtc2l6ZT0iMTIiIGZvbnQtd2VpZ2h0PSI4MDAiIHg9IjExNiIgeT0iMTc0Ij5TQ1IgT048L3RleHQ+CjwhLS0gYmVsb3cgSUggbWFya2VyIC0tPgo8Y2lyY2xlIGN4PSIyMzYiIGN5PSIyMjIiIGZpbGw9IiNmZjg5OTYiIHI9IjUuNSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEuMyI+PC9jaXJjbGU+CjxsaW5lIHN0cm9rZT0iI2ZmODk5NiIgc3Ryb2tlLWRhc2hhcnJheT0iNSA1IiBzdHJva2Utd2lkdGg9IjEuNyIgeDE9IjIzNiIgeDI9IjIzNiIgeTE9IjE1MSIgeTI9IjMyNyI+PC9saW5lPgo8bGluZSBzdHJva2U9IiNmZjg5OTYiIHN0cm9rZS13aWR0aD0iMS4zIiB4MT0iMjQyIiB4Mj0iMjcwIiB5MT0iMjExIiB5Mj0iMTk0Ij48L2xpbmU+Cjx0ZXh0IGZpbGw9IiNmZmI1YzAiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjcwMCIgeD0iMjc1IiB5PSIxOTAiPknigpAgJmx0OyBJ4oKVPC90ZXh0Pgo8dGV4dCBmaWxsPSIjY2RiOGJmIiBmb250LXNpemU9IjEwLjUiIHg9IjI3NSIgeT0iMjA2Ij5yZWdlbmVyYXRpb24gc3RvcHM8L3RleHQ+CjwhLS0gdHEgaW50ZXJ2YWwgbmF0dXJhbCAtLT4KPHRleHQgZmlsbD0iI2ZmYzg1NyIgZm9udC1zaXplPSIxMS41IiBmb250LXdlaWdodD0iODAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzMDMiIHk9IjM0MCI+cmVjb3ZlcnkgdGltZSB0X3E8L3RleHQ+CjxsaW5lIG1hcmtlci1lbmQ9InVybCgjdG9BcnJvd0dvbGQpIiBzdHJva2U9IiNmZmM4NTciIHN0cm9rZS13aWR0aD0iMiIgeDE9IjI2MCIgeDI9IjM0NiIgeTE9IjM1MCIgeTI9IjM1MCI+PC9saW5lPgo8IS0tIEZvcmNlZCBjb21tdXRhdGlvbiAtLT4KPHJlY3QgZmlsbD0idXJsKCN0b1BhbmVsQ2xlYW4pIiBoZWlnaHQ9IjI4NiIgcng9IjE2IiBzdHJva2U9IiMzNjUwNmYiIHN0cm9rZS13aWR0aD0iMS41IiB3aWR0aD0iNDU2IiB4PSI1MjAiIHk9Ijc2Ij48L3JlY3Q+Cjx0ZXh0IGZpbGw9IiM4Y2U3ZmYiIGZvbnQtc2l6ZT0iMTgiIGZvbnQtd2VpZ2h0PSI4MDAiIHg9IjU0MiIgeT0iMTA2Ij4yLiBGb3JjZWQgY29tbXV0YXRpb248L3RleHQ+Cjx0ZXh0IGZpbGw9IiNhOWI5Y2MiIGZvbnQtc2l6ZT0iMTIuNSIgeD0iNTQyIiB5PSIxMjgiPkFuIGF1eGlsaWFyeSBuZXR3b3JrIGJyaWVmbHkgZHJpdmVzIHRoZSBTQ1IgY3VycmVudCB0byB6ZXJvIG9yIG5lZ2F0aXZlLjwvdGV4dD4KPCEtLSBmb3JjZWQgbGVnZW5kIC0tPgo8bGluZSBzdHJva2U9IiMzN2Q1ZmYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSI0IiB4MT0iNTUwIiB4Mj0iNTg1IiB5MT0iMTQ4IiB5Mj0iMTQ4Ij48L2xpbmU+Cjx0ZXh0IGZpbGw9IiM5ZmRmZmYiIGZvbnQtc2l6ZT0iMTEuNSIgeD0iNTk0IiB5PSIxNTIiPmxvYWQvU0NSIGN1cnJlbnQ8L3RleHQ+CjxsaW5lIHN0cm9rZT0iI2ZmODk5NiIgc3Ryb2tlLWRhc2hhcnJheT0iOCA1IiBzdHJva2Utd2lkdGg9IjMiIHgxPSI3MjMiIHgyPSI3NTgiIHkxPSIxNDgiIHkyPSIxNDgiPjwvbGluZT4KPHRleHQgZmlsbD0iI2ZmYjBiZCIgZm9udC1zaXplPSIxMS41IiB4PSI3NjciIHk9IjE1MiI+cmV2ZXJzZSBwdWxzZTwvdGV4dD4KPCEtLSBmb3JjZWQgYXhlcyAtLT4KPGxpbmUgc3Ryb2tlPSIjZGNlY2ZmIiBzdHJva2Utd2lkdGg9IjEuNSIgeDE9IjU1MiIgeDI9Ijk0NCIgeTE9IjI0NCIgeTI9IjI0NCI+PC9saW5lPgo8bGluZSBzdHJva2U9IiNkY2VjZmYiIHN0cm9rZS13aWR0aD0iMS41IiB4MT0iNTc0IiB4Mj0iNTc0IiB5MT0iMzI3IiB5Mj0iMTY4Ij48L2xpbmU+Cjx0ZXh0IGZpbGw9IiM5ZmI1Y2YiIGZvbnQtc2l6ZT0iMTEiIHg9IjkzNCIgeT0iMjY2Ij50aW1lPC90ZXh0Pgo8dGV4dCBmaWxsPSIjZGNlY2ZmIiBmb250LXNpemU9IjExIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB0cmFuc2Zvcm09InJvdGF0ZSgtOTAgNTM4IDI0NCkiIHg9IjUzOCIgeT0iMjQ0Ij5jdXJyZW50PC90ZXh0Pgo8IS0tIGhvbGRpbmcgY3VycmVudCAtLT4KPGxpbmUgc3Ryb2tlPSIjZmZjODU3IiBzdHJva2UtZGFzaGFycmF5PSI2IDUiIHN0cm9rZS13aWR0aD0iMS40IiB4MT0iNTUyIiB4Mj0iOTQ0IiB5MT0iMjIyIiB5Mj0iMjIyIj48L2xpbmU+Cjx0ZXh0IGZpbGw9IiNmZmM4NTciIGZvbnQtc2l6ZT0iMTEuNSIgeD0iNTgyIiB5PSIyMTYiPkk8dHNwYW4gYmFzZWxpbmUtc2hpZnQ9InN1YiIgZm9udC1zaXplPSI4LjUiPkg8L3RzcGFuPjwvdGV4dD4KPCEtLSBjdXJyZW50IGFuZCByZXZlcnNlIHB1bHNlIC0tPgo8cGF0aCBkPSJNNTc0IDE4NiBMNjk0IDE4NiBDNzI4IDE4NiA3NDYgMTk3IDc2MCAyMjEgQzc3MyAyNDQgNzgwIDI3OCA4MDQgMjg2IEM4MjcgMjk0IDg0NiAyNzAgODU4IDI0NCBMOTQ0IDI0NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzdkNWZmIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS13aWR0aD0iNCI+PC9wYXRoPgo8cGF0aCBkPSJNNTc0IDI0NCBMNjk2IDI0NCBDNzI3IDI0NCA3NDYgMjU4IDc2MCAyODEgQzc3OCAzMTEgODEyIDMwNyA4MzUgMjc2IEM4NDYgMjYwIDg1NSAyNDkgODY2IDI0NCBMOTQ0IDI0NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmY4OTk2IiBzdHJva2UtZGFzaGFycmF5PSI4IDUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIzIj48L3BhdGg+CjwhLS0gemVybyBtYXJrZXIgYW5kIGFubm90YXRpb24gLS0+CjxjaXJjbGUgY3g9Ijc2NSIgY3k9IjI0NCIgZmlsbD0iI2ZmODk5NiIgcj0iNS41IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMS4zIj48L2NpcmNsZT4KPGxpbmUgc3Ryb2tlPSIjZmY4OTk2IiBzdHJva2UtZGFzaGFycmF5PSI1IDUiIHN0cm9rZS13aWR0aD0iMS43IiB4MT0iNzY1IiB4Mj0iNzY1IiB5MT0iMTY4IiB5Mj0iMzI3Ij48L2xpbmU+CjxsaW5lIHN0cm9rZT0iI2ZmODk5NiIgc3Ryb2tlLXdpZHRoPSIxLjMiIHgxPSI3NzEiIHgyPSI4MDEiIHkxPSIyMzEiIHkyPSIyMTEiPjwvbGluZT4KPHRleHQgZmlsbD0iI2ZmYjVjMCIgZm9udC1zaXplPSIxMS41IiBmb250LXdlaWdodD0iNzAwIiB4PSI4MDYiIHk9IjIwNyI+bmV0IEnigpAgPSAwPC90ZXh0Pgo8dGV4dCBmaWxsPSIjY2RiOGJmIiBmb250LXNpemU9IjEwLjUiIHg9IjgwNiIgeT0iMjIzIj5yZXZlcnNlIHB1bHNlIGNsZWFycyBjaGFyZ2U8L3RleHQ+CjwhLS0gdHEgaW50ZXJ2YWwgZm9yY2VkIC0tPgo8dGV4dCBmaWxsPSIjZmZjODU3IiBmb250LXNpemU9IjExLjUiIGZvbnQtd2VpZ2h0PSI4MDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjgxMSIgeT0iMzQwIj5yZXZlcnNlIGJpYXMgZm9yIHRfcTwvdGV4dD4KPGxpbmUgbWFya2VyLWVuZD0idXJsKCN0b0Fycm93R29sZCkiIHN0cm9rZT0iI2ZmYzg1NyIgc3Ryb2tlLXdpZHRoPSIyIiB4MT0iNzY1IiB4Mj0iODU3IiB5MT0iMzUwIiB5Mj0iMzUwIj48L2xpbmU+CjwhLS0gY2xlYW4gcHJvY2VzcyBmbG93IC0tPgo8dGV4dCBmaWxsPSIjZWFmMmZmIiBmb250LXNpemU9IjE1IiBmb250LXdlaWdodD0iODAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI1MDAiIHk9IjM5MyI+VHVybi1vZmYgc2VxdWVuY2U8L3RleHQ+CjxyZWN0IGZpbGw9IiMxMjMyMjYiIGhlaWdodD0iNTgiIHJ4PSIxMiIgc3Ryb2tlPSIjNTZlMzlmIiBzdHJva2Utd2lkdGg9IjEuNCIgd2lkdGg9IjE3MCIgeD0iNjYiIHk9IjQxNCI+PC9yZWN0Pgo8dGV4dCBmaWxsPSIjNTZlMzlmIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iODAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIxNTEiIHk9IjQzOCI+U0NSIE9OPC90ZXh0Pgo8dGV4dCBmaWxsPSIjY2ZlOWRjIiBmb250LXNpemU9IjExIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIxNTEiIHk9IjQ1NyI+cmVnZW5lcmF0aW9uIHN1c3RhaW5lZDwvdGV4dD4KPGxpbmUgbWFya2VyLWVuZD0idXJsKCN0b0Fycm93Q2xlYW4pIiBzdHJva2U9IiM4Y2U3ZmYiIHN0cm9rZS13aWR0aD0iMiIgeDE9IjIzNiIgeDI9IjI5MSIgeTE9IjQ0MyIgeTI9IjQ0MyI+PC9saW5lPgo8cmVjdCBmaWxsPSIjMmMyMzM0IiBoZWlnaHQ9IjU4IiByeD0iMTIiIHN0cm9rZT0iI2ZmODk5NiIgc3Ryb2tlLXdpZHRoPSIxLjQiIHdpZHRoPSIxOTAiIHg9IjI5MSIgeT0iNDE0Ij48L3JlY3Q+Cjx0ZXh0IGZpbGw9IiNmZjljYWQiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtd2VpZ2h0PSI4MDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM4NiIgeT0iNDM4Ij5J4oKQICZsdDsgSeKClTwvdGV4dD4KPHRleHQgZmlsbD0iI2U1Y2JkMiIgZm9udC1zaXplPSIxMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMzg2IiB5PSI0NTciPm5hdHVyYWwgemVybyBvciBmb3JjZWQgcHVsc2U8L3RleHQ+CjxsaW5lIG1hcmtlci1lbmQ9InVybCgjdG9BcnJvd0NsZWFuKSIgc3Ryb2tlPSIjOGNlN2ZmIiBzdHJva2Utd2lkdGg9IjIiIHgxPSI0ODEiIHgyPSI1MzYiIHkxPSI0NDMiIHkyPSI0NDMiPjwvbGluZT4KPHJlY3QgZmlsbD0iIzMwMmIxYyIgaGVpZ2h0PSI1OCIgcng9IjEyIiBzdHJva2U9IiNmZmM4NTciIHN0cm9rZS13aWR0aD0iMS40IiB3aWR0aD0iMTgwIiB4PSI1MzYiIHk9IjQxNCI+PC9yZWN0Pgo8dGV4dCBmaWxsPSIjZmZjODU3IiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iODAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI2MjYiIHk9IjQzOCI+V2FpdCB0X3E8L3RleHQ+Cjx0ZXh0IGZpbGw9IiNlN2RkYjQiIGZvbnQtc2l6ZT0iMTEiIHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjYyNiIgeT0iNDU3Ij5zdG9yZWQgY2hhcmdlIHJlY29tYmluZXM8L3RleHQ+CjxsaW5lIG1hcmtlci1lbmQ9InVybCgjdG9BcnJvd0NsZWFuKSIgc3Ryb2tlPSIjOGNlN2ZmIiBzdHJva2Utd2lkdGg9IjIiIHgxPSI3MTYiIHgyPSI3NzEiIHkxPSI0NDMiIHkyPSI0NDMiPjwvbGluZT4KPHJlY3QgZmlsbD0iIzE0MmQ0MCIgaGVpZ2h0PSI1OCIgcng9IjEyIiBzdHJva2U9IiMzN2Q1ZmYiIHN0cm9rZS13aWR0aD0iMS40IiB3aWR0aD0iMTYwIiB4PSI3NzEiIHk9IjQxNCI+PC9yZWN0Pgo8dGV4dCBmaWxsPSIjOGNlN2ZmIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iODAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI4NTEiIHk9IjQzOCI+U0NSIE9GRjwvdGV4dD4KPHRleHQgZmlsbD0iI2NiZTZlZiIgZm9udC1zaXplPSIxMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iODUxIiB5PSI0NTciPmJsb2NraW5nIHJlc3RvcmVkPC90ZXh0Pgo8L3N2Zz4KPGRpdiBjbGFzcz0iY2FwIj48Yj48aT50PC9pPjxzdWI+cTwvc3ViPiBpcyB0aGUgU0NSIHR1cm4tb2ZmIChyZWNvdmVyeSkgdGltZS48L2I+IEl0IGlzIHRoZSBtaW5pbXVtIGludGVydmFsIGR1cmluZyB3aGljaCBzdG9yZWQgbWlub3JpdHkgY2hhcmdlIG11c3QgcmVjb21iaW5lIGJlZm9yZSBmb3J3YXJkIGJsb2NraW5nIGlzIHJlc3RvcmVkLiBOYXR1cmFsIGNvbW11dGF0aW9uIHVzZXMgdGhlIEFDIGN1cnJlbnQgemVybzsgZm9yY2VkIGNvbW11dGF0aW9uIGNyZWF0ZXMgYW4gYXJ0aWZpY2lhbCByZXZlcnNlLWN1cnJlbnQgaW50ZXJ2YWwuPC9kaXY+CjwvZGl2Pgo8ZGl2IGNsYXNzPSJ3YXJuIj4KPGI+VGhlIGdhdGUgY2Fubm90IHR1cm4gb2ZmIGEgc3RhbmRhcmQgU0NSLjwvYj4gUmVtb3Zpbmcgb3IgcmV2ZXJzaW5nIGdhdGUgY3VycmVudCBkb2VzIG5vdGhpbmcgb25jZSB0aGUgZGV2aWNlIGlzIGxhdGNoZWQg4oCUIHRoZSBpbnRlcm5hbCBmZWVkYmFjayBzdXN0YWlucyBpdHNlbGYuIEdhdGUgdHVybi1vZmYgcmVxdWlyZXMgYSBzcGVjaWFsIGdhdGUtdHVybi1vZmYgdGh5cmlzdG9yIChHVE8pLgo8L2Rpdj4KPGgzPlR1cm4tb2ZmIHRpbWUgYW5kIHJlYXBwbGllZCB2b2x0YWdlPC9oMz4KPHA+V2hlbiB0aGUgY3VycmVudCBpcyBpbnRlcnJ1cHRlZCwgc3RvcmVkIG1pbm9yaXR5IGNoYXJnZSBpbiB0aGUgYmFzZXMgbXVzdCByZWNvbWJpbmUgYmVmb3JlIHRoZSBkZXZpY2UgcmVnYWlucyBpdHMgZm9yd2FyZC1ibG9ja2luZyBhYmlsaXR5LiBUaGUgcmVxdWlyZWQgcmVjb3ZlcnkgaW50ZXJ2YWwgaXMgdGhlIDxiPmNpcmN1aXQtY29tbXV0YXRlZCB0dXJuLW9mZiB0aW1lPC9iPiwgPGk+dDwvaT48c3ViPnE8L3N1Yj4uIEl0IGluY2x1ZGVzIHJldmVyc2UgcmVjb3ZlcnkgYW5kIGNhcnJpZXIgcmVjb21iaW5hdGlvbi4gSWYgZm9yd2FyZCB2b2x0YWdlIGlzIHJlYXBwbGllZCBiZWZvcmUgPGk+dDwvaT48c3ViPnE8L3N1Yj4gZWxhcHNlcyDigJQgb3IgaWYgaXQgaXMgcmVhcHBsaWVkIHdpdGggdG9vIHN0ZWVwIGEgXChkdi9kdFwpIOKAlCB0aGUgdGh5cmlzdG9yIGNhbiA8Yj5yZS10cmlnZ2VyIHVuaW50ZW50aW9uYWxseTwvYj4uPC9wPgo8ZGl2IGNsYXNzPSJjYWxsb3V0Ij4KPGI+U251YmJlcnMuPC9iPiBBIHNlcmllcyA8Yj5S4oCTQyBzbnViYmVyPC9iPiBhY3Jvc3MgdGhlIGRldmljZSBsaW1pdHMgcmVhcHBsaWVkIFwoZHYvZHRcKSAoZ3VhcmRpbmcgYWdhaW5zdCB0aGUgZFYvZHQgdHVybi1vbiBvZiDCpzUpLCB3aGlsZSBhIHNlcmllcyBpbmR1Y3RvciBsaW1pdHMgXChkaS9kdFwpLiBUb2dldGhlciB0aGV5IGtlZXAgc3dpdGNoaW5nIHdpdGhpbiB0aGUgc2FmZSBvcGVyYXRpbmcgYXJlYS4KPC9kaXY+Cjx0YWJsZSBjbGFzcz0iY29tcGFyZVRhYmxlIj4KPHRyPjx0aD5SYXRpbmc8L3RoPjx0aD5XaGF0IGl0IGxpbWl0czwvdGg+PHRoPkRlc2lnbiByZXNwb25zZTwvdGg+PC90cj4KPHRyPjx0ZD5cKFZfe0RSTX1cKSAvIFwoVl97UlJNfVwpPC90ZD48dGQ+UGVhayByZXBldGl0aXZlIGZvcndhcmQgLyByZXZlcnNlIGJsb2NraW5nIHZvbHRhZ2U8L3RkPjx0ZD5DaG9vc2UgZGV2aWNlIG1hcmdpbjsgY2xhbXAgdHJhbnNpZW50czwvdGQ+PC90cj4KPHRyPjx0ZD5cKElfe1QoQVYpfVwpLCBcKElfe1QoUk1TKX1cKTwvdGQ+PHRkPk9uLXN0YXRlIGN1cnJlbnQgKHRoZXJtYWwpPC90ZD48dGQ+SGVhdHNpbmtpbmc8L3RkPjwvdHI+Cjx0cj48dGQ+XChkaS9kdFwpPC90ZD48dGQ+UmF0ZSBvZiBhbm9kZS1jdXJyZW50IHJpc2UgYXQgdHVybi1vbjwvdGQ+PHRkPlNlcmllcyBpbmR1Y3RvcjwvdGQ+PC90cj4KPHRyPjx0ZD5cKGR2L2R0XCk8L3RkPjx0ZD5SYXRlIG9mIHJlYXBwbGllZCBmb3J3YXJkIHZvbHRhZ2U8L3RkPjx0ZD5S4oCTQyBzbnViYmVyPC90ZD48L3RyPgo8dHI+PHRkPlwoSV4ydFwpPC90ZD48dGQ+U3VyZ2UgLyBmdXNpbmcgZW5lcmd5PC90ZD48dGQ+Q29vcmRpbmF0ZSB3aXRoIGEgZmFzdCBmdXNlPC90ZD48L3RyPgo8dHI+PHRkPjxpPnQ8L2k+PHN1Yj5xPC9zdWI+PC90ZD48dGQ+TWluaW11bSByZWNvdmVyeSB0aW1lIGJlZm9yZSBmb3J3YXJkIGJsb2NraW5nIGlzIHJlc3RvcmVkPC90ZD48dGQ+S2VlcCByZXZlcnNlL29mZiBpbnRlcnZhbCBsb25nZXIgdGhhbiA8aT50PC9pPjxzdWI+cTwvc3ViPjwvdGQ+PC90cj4KPC90YWJsZT48L2Rpdj4=')},
 {id:'thyristor-summary',title:'3.9.7 Summary & Self-Check',sub:'Key relations, engineering review, and self-check questions',body:decodeHtml64('PGRpdiBjbGFzcz0idGh5U2VjdGlvbiIgZGF0YS10aHktc2VjdGlvbj0idGh5cmlzdG9yLXN1bW1hcnkiPjxzcGFuIGNsYXNzPSJleWVicm93Ij5SZXZpZXc8L3NwYW4+Cgo8ZGl2IGNsYXNzPSJrZXlpZGVhIj4KPGI+VGhlIGVzc2VudGlhbHMuPC9iPgo8dWwgY2xhc3M9InRpZ2h0Ij4KPGxpPkZvdXIgbGF5ZXJzIHA8c3ViPjE8L3N1Yj7igJNuPHN1Yj4xPC9zdWI+4oCTcDxzdWI+Mjwvc3ViPuKAk248c3ViPjI8L3N1Yj4sIHRocmVlIGp1bmN0aW9uczsgXChKMlwpIGJsb2NrcyBpbiBmb3J3YXJkIGJpYXMuPC9saT4KPGxpPlR3byBjb3VwbGVkIHRyYW5zaXN0b3JzIGdpdmUgcmVnZW5lcmF0aW9uOiBcKEk9XGRmcmFje0lfMStJXzJ9ezEtKFxhbHBoYV8xK1xhbHBoYV8yKX1cKTsgbGF0Y2ggd2hlbiBcKFxhbHBoYV8xK1xhbHBoYV8yXHRvIDFcKS48L2xpPgo8bGk+VHJpZ2dlciBieSBnYXRlIGN1cnJlbnQgKGludGVuZGVkKSwgYnJlYWtvdmVyLCBkVi9kdCwgdGVtcGVyYXR1cmUsIG9yIGxpZ2h0LjwvbGk+CjxsaT5UdXJuIG9mZiBvbmx5IGJ5IGRyb3BwaW5nIGFub2RlIGN1cnJlbnQgYmVsb3cgXChJX0hcKSAobGluZSBvciBmb3JjZWQgY29tbXV0YXRpb24pOyBhIHN0YW5kYXJkIFNDUidzIGdhdGUgY2Fubm90IHR1cm4gaXQgb2ZmIOKAlCBhIEdUTydzIGNhbi48L2xpPgo8bGk+XChJX0wgJmd0OyBJX0hcKTsgcHJvdGVjdCB3aXRoIFwoZGkvZHRcKSBpbmR1Y3RvcnMgYW5kIFwoZHYvZHRcKSBzbnViYmVycy48L2xpPgo8L3VsPgo8L2Rpdj4KPGgzPlNlbGYtY2hlY2s8L2gzPgo8ZGl2IGNsYXNzPSJxdWl6Ij4KPGRpdiBjbGFzcz0icSI+MS4gVW5kZXIgZm9yd2FyZCBiaWFzLCB3aGljaCBqdW5jdGlvbiBibG9ja3MsIGFuZCB3aHkgZG9lcyBtb3N0IG9mIHRoZSBhcHBsaWVkIHZvbHRhZ2UgYXBwZWFyIGFjcm9zcyBpdD88L2Rpdj4KPGJ1dHRvbiBjbGFzcz0icmV2ZWFsIj5TaG93IGFuc3dlcjwvYnV0dG9uPgo8ZGl2IGNsYXNzPSJhIj5cKEoyXCkgKHRoZSBjZW50cmFsIG48c3ViPjE8L3N1Yj7igJNwPHN1Yj4yPC9zdWI+IGp1bmN0aW9uKS4gV2l0aCB0aGUgYW5vZGUgcG9zaXRpdmUsIFwoSjFcKSBhbmQgXChKM1wpIGFyZSBmb3J3YXJkLWJpYXNlZCBhbmQgZHJvcCBsaXR0bGUgdm9sdGFnZSwgbGVhdmluZyBcKEoyXCkgcmV2ZXJzZS1iaWFzZWQgYW5kIHN1cHBvcnRpbmcgdGhlIGZ1bGwgYmxvY2tpbmcgdm9sdGFnZS48L2Rpdj4KPC9kaXY+CjxkaXYgY2xhc3M9InF1aXoiPgo8ZGl2IGNsYXNzPSJxIj4yLiBVc2luZyBcKEk9KElfMStJXzIpLygxLShcYWxwaGFfMStcYWxwaGFfMikpXCksIGV4cGxhaW4gd2hhdCBwaHlzaWNhbGx5IGhhcHBlbnMgYXMgXChcYWxwaGFfMStcYWxwaGFfMlx0byAxXCkuPC9kaXY+CjxidXR0b24gY2xhc3M9InJldmVhbCI+U2hvdyBhbnN3ZXI8L2J1dHRvbj4KPGRpdiBjbGFzcz0iYSI+VGhlIGRlbm9taW5hdG9yIOKGkiAwLCBzbyB0aGUgY3VycmVudCBkaXZlcmdlcyBhbmQgaXMgbGltaXRlZCBvbmx5IGJ5IHRoZSBleHRlcm5hbCBjaXJjdWl0OiB0aGUgaW50ZXJuYWwgcG9zaXRpdmUgZmVlZGJhY2sgYmVjb21lcyBzZWxmLXN1c3RhaW5pbmcgYW5kIHRoZSBkZXZpY2UgbGF0Y2hlcyBpbnRvIGl0cyBsb3ctaW1wZWRhbmNlIG9uLXN0YXRlLjwvZGl2Pgo8L2Rpdj4KPGRpdiBjbGFzcz0icXVpeiI+CjxkaXYgY2xhc3M9InEiPjMuIEEgZGVzaWduZXIgcmVtb3ZlcyB0aGUgZ2F0ZSBkcml2ZSB0byB0cnkgdG8gdHVybiBhbiBvcmRpbmFyeSBTQ1Igb2ZmLiBXaGF0IGhhcHBlbnM/PC9kaXY+CjxidXR0b24gY2xhc3M9InJldmVhbCI+U2hvdyBhbnN3ZXI8L2J1dHRvbj4KPGRpdiBjbGFzcz0iYSI+Tm90aGluZyDigJQgdGhlIFNDUiBzdGF5cyBvbi4gT25jZSBsYXRjaGVkLCB0aGUgcmVnZW5lcmF0aW9uIGlzIHNlbGYtc3VzdGFpbmluZzsgdGhlIGdhdGUgb25seSBjb250cm9scyB0dXJuLW9uLiBUdXJuLW9mZiByZXF1aXJlcyByZWR1Y2luZyBhbm9kZSBjdXJyZW50IGJlbG93IFwoSV9IXCkgKG9yIHJldmVyc2UgYmlhcyksIG9yIHVzaW5nIGEgR1RPLjwvZGl2Pgo8L2Rpdj4KPGRpdiBjbGFzcz0icXVpeiI+CjxkaXYgY2xhc3M9InEiPjQuIFdoeSBpcyBhIFwoZHYvZHRcKSBzbnViYmVyIHVzZWQgYWNyb3NzIGEgdGh5cmlzdG9yPzwvZGl2Pgo8YnV0dG9uIGNsYXNzPSJyZXZlYWwiPlNob3cgYW5zd2VyPC9idXR0b24+CjxkaXYgY2xhc3M9ImEiPkEgZmFzdC1yaXNpbmcgZm9yd2FyZCB2b2x0YWdlIGRyaXZlcyBkaXNwbGFjZW1lbnQgY3VycmVudCBcKENfe0oyfVwsZHYvZHRcKSB0aHJvdWdoIHRoZSBcKEoyXCkgY2FwYWNpdGFuY2UsIHdoaWNoIGFjdHMgbGlrZSBnYXRlIGN1cnJlbnQgYW5kIGNhbiBmYWxzZWx5IHRyaWdnZXIgdGhlIGRldmljZS4gQW4gUuKAk0Mgc251YmJlciBsaW1pdHMgdGhlIHJlYXBwbGllZCBcKGR2L2R0XCkgdG8gYSBzYWZlIHZhbHVlLjwvZGl2Pgo8L2Rpdj48L2Rpdj4=')}
 ]},
+virtualLabsTopic,
 {id:'summary',title:'Chapter 3 Summary and Review',sub:'Key relationships and self-check questions',body:String.raw`
 <h3 class="subtopic">Chapter Summary</h3>
 <p>The bipolar transistor, first developed in 1947, remains one of the most important semiconductor devices. It is formed when two p-n junctions of the same semiconductor materials are physically close enough to interact: charge carriers injected across a forward-biased first junction produce a large current flow across a nearby reverse-biased second junction &mdash; transistor action.</p>
@@ -2453,6 +2723,8 @@ function loadTopic(id, anchorId=null){
   const afterRender = ()=>{
     initBjtSimulators($('pageBody'));
     initThyristorSections($('pageBody'));
+    if(window.initBjtLabs) window.initBjtLabs($('pageBody'));
+    if(window.injectSimLabs) window.injectSimLabs($('pageBody'));
     if(anchorId&&readingMode==='full'){
       const el = document.getElementById(anchorId);
       if(el){el.scrollIntoView({behavior:'smooth', block:'start'});}
@@ -2505,6 +2777,927 @@ function searchNav(){
   });
 }
 init();
+</script>
+
+<script id="bjtVirtualLabEngine">
+/* ===================== 3.10 Virtual Labs — lab engine =====================
+   Four guided labs built on the chapter's canvas helpers (bjtText, bjtLine, …):
+     gummel   — Gummel plot, ideality factors and β(IC) extraction
+     early    — Early voltage from base-width modulation (p-n-p physics)
+     modes    — Ebers–Moll four-mode explorer with the base minority profile
+     crowding — emitter current crowding under a resistive base
+   Each lab has sliders, live readouts, a "Record reading" data table with
+   CSV download, and is initialised from loadTopic's afterRender hook. */
+(function(){
+  'use strict';
+  const kB = 8.617333e-5;          // eV/K
+  const Q = 1.602177e-19, EPS_SI = 11.7 * 8.854e-14, NI300 = 9.65e9;
+  const LN10 = Math.log(10);
+
+  const fmtSI = (v, unit, digits = 3) => {
+    if (!Number.isFinite(v)) return '—';
+    const a = Math.abs(v);
+    const pre = [[1e-15,'f'],[1e-12,'p'],[1e-9,'n'],[1e-6,'µ'],[1e-3,'m'],[1,''],[1e3,'k'],[1e6,'M']];
+    let p = pre[0];
+    for (const x of pre) if (a >= x[0] * 0.9995) p = x;
+    if (a === 0) p = [1, ''];
+    return (v / p[0]).toPrecision(digits) + ' ' + p[1] + unit;
+  };
+  const fmtExp = (v, d = 2) => Number(v).toExponential(d).replace('e+', 'e');
+  const num = (panel, k) => bjtNum(panel, k);
+  const mobility = (N, carrier) => carrier === 'p'
+    ? 54.3 + 407 / (1 + Math.pow(N / 2.35e17, 0.88))   // holes (Caughey–Thomas, Si 300 K)
+    : 88 + 1252 / (1 + Math.pow(N / 1.26e17, 0.88));   // electrons
+  function niAt(T) { const Eg = 1.17 - 4.73e-4 * T * T / (T + 636); return NI300 * Math.pow(T / 300, 1.5) * Math.exp(-(Eg / (2 * kB * T)) + (1.12 / (2 * kB * 300))); }
+
+  // Canvas text a notch larger than the chapter default: the 1000-px canvas is shown at ~65 % scale.
+  const labText = (ctx, txt, x, y, size = 16, ...rest) => bjtText(ctx, txt, x, y, size <= 13 ? size + 2 : size === 14 ? 15 : size, ...rest);
+  /* ---------- small plotting kit on top of the chapter helpers ---------- */
+  function frame(ctx, b, opt) {
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(b.x0 - 2, b.y1 - 2, b.x1 - b.x0 + 4, b.y0 - b.y1 + 4);
+    const X = v => opt.xlog ? bjtMap(Math.log10(v), opt.xr[0], opt.xr[1], b.x0, b.x1) : bjtMap(v, opt.xr[0], opt.xr[1], b.x0, b.x1);
+    const Y = v => opt.ylog ? bjtMap(Math.log10(Math.max(v, 1e-300)), opt.yr[0], opt.yr[1], b.y0, b.y1) : bjtMap(v, opt.yr[0], opt.yr[1], b.y0, b.y1);
+    // grid + ticks
+    const xt = opt.xticks || [], yt = opt.yticks || [];
+    xt.forEach(t => { const x = opt.xlog ? bjtMap(t, opt.xr[0], opt.xr[1], b.x0, b.x1) : X(t); bjtLine(ctx, x, b.y0, x, b.y1, '#e5eaf1', 1); bjtText(ctx, opt.xfmt ? opt.xfmt(t) : String(t), x, b.y0 + 19, 15, '#475569', 'center'); });
+    yt.forEach(t => { const y = opt.ylog ? bjtMap(t, opt.yr[0], opt.yr[1], b.y0, b.y1) : Y(t); bjtLine(ctx, b.x0, y, b.x1, y, '#e5eaf1', 1); bjtText(ctx, opt.yfmt ? opt.yfmt(t) : String(t), b.x0 - 8, y, 15, '#475569', 'right'); });
+    bjtLine(ctx, b.x0, b.y0, b.x1, b.y0, '#111827', 1.6); bjtLine(ctx, b.x0, b.y0, b.x0, b.y1, '#111827', 1.6);
+    if (opt.xlab) bjtText(ctx, opt.xlab, (b.x0 + b.x1) / 2, b.y0 + 44, 16, '#1f2937', 'center', true);
+    if (opt.ylab) { ctx.save(); ctx.translate(b.x0 - (opt.ylabOff || 52), (b.y0 + b.y1) / 2); ctx.rotate(-Math.PI / 2); bjtText(ctx, opt.ylab, 0, 0, 16, '#1f2937', 'center', true); ctx.restore(); }
+    if (opt.title) bjtText(ctx, opt.title, (b.x0 + b.x1) / 2, b.y1 - 16, 18, '#111827', 'center', true);
+    return { X, Y };
+  }
+  function clipPath(ctx, b, pts, color, lw = 2.6, dash = []) {
+    ctx.save(); ctx.beginPath(); ctx.rect(b.x0, b.y1, b.x1 - b.x0, b.y0 - b.y1); ctx.clip();
+    bjtPlotPath(ctx, pts.filter(p => Number.isFinite(p[0]) && Number.isFinite(p[1])), color, lw, dash); ctx.restore();
+  }
+  function dot(ctx, x, y, color, r = 5.5) { ctx.save(); ctx.fillStyle = color; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore(); }
+  const decTicks = (a, b) => { const t = []; for (let i = Math.ceil(a); i <= Math.floor(b); i++) t.push(i); return t; };
+  const decFmt = t => '10' + String(t).replace('-', '⁻').replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);
+
+  /* ======================= Lab 1: Gummel plot ======================= */
+  function gummelModel(p) {
+    const T = p.T, VT = kB * T;
+    const Eg = 1.12;
+    const IS = Math.pow(10, p.logIs) * Math.pow(T / 300, 3) * Math.exp(Eg / kB * (1 / 300 - 1 / T));
+    const ISE = Math.pow(10, p.logIse) * Math.pow(T / 300, 1.5) * Math.exp(Eg / (p.nE * kB) * (1 / 300 - 1 / T));
+    const IKF = Math.pow(10, p.logIkf);
+    const intrinsic = vi => {
+      const iF = IS * (Math.exp(vi / VT) - 1);
+      const q2 = Math.max(0, iF) / IKF, qb = (1 + Math.sqrt(1 + 4 * q2)) / 2;   // Gummel–Poon high injection
+      const ic = iF / qb;
+      const ib = iF / p.betaF + ISE * (Math.exp(vi / (p.nE * VT)) - 1);
+      return { ic, ib };
+    };
+    const at = V => {                       // external V_EB with r_B and r_E drops
+      let lo = 0, hi = V;
+      for (let i = 0; i < 70; i++) {
+        const mid = (lo + hi) / 2, c = intrinsic(mid);
+        const f = mid + c.ib * p.rB + (c.ic + c.ib) * p.rE - V;
+        if (f > 0) hi = mid; else lo = mid;
+      }
+      const c = intrinsic((lo + hi) / 2);
+      return { ic: c.ic, ib: c.ib, vi: (lo + hi) / 2 };
+    };
+    return { at, VT, IS, ISE, IKF };
+  }
+  function drawGummel(panel) {
+    const [, ctx, w, h] = bjtCtx(panel); bjtClear(ctx, w, h);
+    const p = { T: num(panel, 'T'), logIs: num(panel, 'is'), logIse: num(panel, 'ise'), nE: num(panel, 'ne'), betaF: num(panel, 'bf'), logIkf: num(panel, 'ikf'), rB: num(panel, 'rb'), rE: num(panel, 're') };
+    const V = num(panel, 'v');
+    bjtSet(panel, 'T', p.T.toFixed(0) + ' K'); bjtSet(panel, 'is', fmtSI(Math.pow(10, p.logIs), 'A')); bjtSet(panel, 'ise', fmtSI(Math.pow(10, p.logIse), 'A'));
+    bjtSet(panel, 'ne', p.nE.toFixed(2)); bjtSet(panel, 'bf', p.betaF.toFixed(0)); bjtSet(panel, 'ikf', fmtSI(Math.pow(10, p.logIkf), 'A'));
+    bjtSet(panel, 'rb', p.rB.toFixed(0) + ' Ω'); bjtSet(panel, 're', p.rE.toFixed(1) + ' Ω'); bjtSet(panel, 'v', V.toFixed(3) + ' V');
+    const m = gummelModel(p);
+    const b1 = { x0: 100, x1: 560, y0: 440, y1: 50 }, b2 = { x0: 680, x1: 965, y0: 440, y1: 50 };
+    const f1 = frame(ctx, b1, { xr: [0.3, 1.0], yr: [-14, -1], ylog: true, xticks: [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], yticks: decTicks(-14, -1).filter(t => t % 2 === 0), xfmt: t => t.toFixed(1), yfmt: decFmt, xlab: 'Emitter–base forward bias  V_EB (V)', ylab: 'Current (A), log scale', ylabOff: 62, title: 'Gummel plot' });
+    const icPts = [], ibPts = [], betaPts = [];
+    let betaMax = 0, icAtMax = 0;
+    for (let v = 0.3; v <= 1.0001; v += 0.004) {
+      const r = m.at(v);
+      icPts.push([f1.X(v), f1.Y(r.ic)]); ibPts.push([f1.X(v), f1.Y(r.ib)]);
+      const beta = r.ic / r.ib;
+      if (r.ic > 1e-12) betaPts.push([r.ic, beta]);
+      if (beta > betaMax) { betaMax = beta; icAtMax = r.ic; }
+    }
+    clipPath(ctx, b1, icPts, '#2563eb', 3); clipPath(ctx, b1, ibPts, '#dc2626', 3);
+    // ideal (no recombination, no knee, no resistance) references
+    const ideal = [], idealB = [];
+    for (let v = 0.3; v <= 1.0001; v += 0.01) { const i = m.IS * Math.exp(v / m.VT); ideal.push([f1.X(v), f1.Y(i)]); idealB.push([f1.X(v), f1.Y(i / p.betaF)]); }
+    clipPath(ctx, b1, ideal, '#93c5fd', 1.6, [6, 5]); clipPath(ctx, b1, idealB, '#fca5a5', 1.6, [6, 5]);
+    const r = m.at(V), dv = 0.004, r2 = m.at(V + dv), r0 = m.at(V - dv);
+    const slopeC = 2 * dv / (Math.log10(r2.ic) - Math.log10(r0.ic)) * 1000; // mV/dec
+    const slopeB = 2 * dv / (Math.log10(r2.ib) - Math.log10(r0.ib)) * 1000;
+    const nC = slopeC / (LN10 * m.VT * 1000), nB = slopeB / (LN10 * m.VT * 1000);
+    bjtLine(ctx, f1.X(V), b1.y0, f1.X(V), b1.y1, '#0f766e', 1.4, [5, 4]);
+    dot(ctx, f1.X(V), f1.Y(r.ic), '#2563eb'); dot(ctx, f1.X(V), f1.Y(r.ib), '#dc2626');
+    labText(ctx, 'I_C', b1.x0 + 14, b1.y1 + 18, 17, '#2563eb', 'left', true);
+    labText(ctx, 'I_B', b1.x0 + 62, b1.y1 + 18, 17, '#dc2626', 'left', true);
+    labText(ctx, 'dashed = ideal (n = 1)', b1.x0 + 112, b1.y1 + 18, 14, '#64748b', 'left');
+    // beta vs IC
+    const f2 = frame(ctx, b2, { xr: [-12, -1], yr: [0, Math.max(50, Math.ceil(p.betaF * 1.15 / 50) * 50)], xlog: true, xticks: decTicks(-12, -1).filter(t => t % 2 === 0), yticks: Array.from({ length: 6 }, (_, i) => Math.round(i * Math.max(50, Math.ceil(p.betaF * 1.15 / 50) * 50) / 5)), xfmt: decFmt, xlab: 'Collector current  I_C (A)', ylab: 'β = I_C / I_B', ylabOff: 52, title: 'Current gain versus I_C' });
+    clipPath(ctx, b2, betaPts.map(([i, bb]) => [f2.X(i), f2.Y(bb)]), '#7c3aed', 3);
+    bjtLine(ctx, b2.x0, f2.Y(p.betaF), b2.x1, f2.Y(p.betaF), '#c4b5fd', 1.4, [6, 5]);
+    labText(ctx, 'β_F (ideal)', b2.x1 - 4, f2.Y(p.betaF) - 11, 14, '#7c3aed', 'right');
+    if (r.ic > 1e-12) dot(ctx, f2.X(r.ic), f2.Y(r.ic / r.ib), '#7c3aed');
+    const beta = r.ic / r.ib;
+    bjtMetric(panel, 'ic', fmtSI(r.ic, 'A')); bjtMetric(panel, 'ib', fmtSI(r.ib, 'A')); bjtMetric(panel, 'beta', beta.toFixed(1));
+    bjtMetric(panel, 'sc', slopeC.toFixed(1) + ' mV/dec (n≈' + nC.toFixed(2) + ')'); bjtMetric(panel, 'sb', slopeB.toFixed(1) + ' mV/dec (n≈' + nB.toFixed(2) + ')');
+    bjtMetric(panel, 'bmax', betaMax.toFixed(1) + ' at ' + fmtSI(icAtMax, 'A'));
+    labText(ctx, `Ideal slope at ${p.T.toFixed(0)} K: 2.303·kT/q = ${(LN10 * m.VT * 1000).toFixed(1)} mV/decade`, 500, 522, 15, '#0f766e', 'center', true);
+    panel._reading = { 'T (K)': p.T.toFixed(0), 'V_EB (V)': V.toFixed(3), 'I_C (A)': fmtExp(r.ic, 3), 'I_B (A)': fmtExp(r.ib, 3), 'β': beta.toFixed(1), 'I_C slope (mV/dec)': slopeC.toFixed(1), 'n_C': nC.toFixed(2), 'I_B slope (mV/dec)': slopeB.toFixed(1), 'n_B': nB.toFixed(2) };
+  }
+
+  /* ======================= Lab 2: Early voltage ======================= */
+  function earlyModel(p) {
+    const T = 300, VT = kB * T, ni = NI300;
+    const vbi = (Na, Nd) => VT * Math.log(Na * Nd / (ni * ni));
+    const VbiEB = vbi(p.NE, p.NB), VbiCB = vbi(p.NC, p.NB);
+    const xEB = Math.sqrt(Math.max(0.02, VbiEB - p.VEB) * 2 * EPS_SI / Q * p.NE / (p.NB * (p.NE + p.NB))) * 1e4; // µm, base side
+    const xCB = vr => Math.sqrt(Math.max(0.02, VbiCB + vr) * 2 * EPS_SI / Q * p.NC / (p.NB * (p.NB + p.NC))) * 1e4;
+    const Dp = VT * mobility(p.NB, 'p'), Dn = VT * mobility(p.NE, 'n');
+    const A = 1e-6; // 10 µm × 10 µm emitter, cm²
+    const W = vec => p.W0 - xEB - xCB(vec - p.VEB);
+    const ic = (vec, veb = p.VEB) => {
+      const Wn = p.W0 - xEB - xCB(vec - veb);
+      if (Wn <= 0.005) return NaN; // punch-through
+      return Q * A * Dp * ni * ni / (p.NB * Wn * 1e-4) * (Math.exp(veb / VT) - Math.exp((veb - vec) / VT));
+    };
+    const LnE = 0.3e-4; // emitter minority diffusion length (heavily doped), cm
+    const betaAt = vec => (Dp / Dn) * (p.NE / p.NB) * (LnE / (Math.max(1e-3, W(vec)) * 1e-4));
+    return { ic, W, xEB, xCB, VbiCB, betaAt, VT };
+  }
+  function drawEarly(panel) {
+    const [, ctx, w, h] = bjtCtx(panel); bjtClear(ctx, w, h);
+    const p = { NB: Math.pow(10, num(panel, 'nb')), NC: Math.pow(10, num(panel, 'nc')), NE: Math.pow(10, num(panel, 'ne')), W0: num(panel, 'w0'), VEB: num(panel, 'veb') };
+    let v1 = num(panel, 'v1'), v2 = num(panel, 'v2'); if (v2 < v1) [v1, v2] = [v2, v1];
+    bjtSet(panel, 'nb', fmtExp(p.NB, 1) + ' cm⁻³'); bjtSet(panel, 'nc', fmtExp(p.NC, 1) + ' cm⁻³'); bjtSet(panel, 'ne', fmtExp(p.NE, 1) + ' cm⁻³');
+    bjtSet(panel, 'w0', p.W0.toFixed(2) + ' µm'); bjtSet(panel, 'veb', p.VEB.toFixed(3) + ' V'); bjtSet(panel, 'v1', num(panel, 'v1').toFixed(1) + ' V'); bjtSet(panel, 'v2', num(panel, 'v2').toFixed(1) + ' V');
+    const m = earlyModel(p);
+    const b = { x0: 95, x1: 610, y0: 460, y1: 60 };
+    let imax = 0; for (let v = 0; v <= 12; v += 0.1) { const i = m.ic(v, p.VEB + 0.02); if (Number.isFinite(i)) imax = Math.max(imax, i); }
+    imax = imax > 0 ? imax * 1.12 : 1e-3;
+    const scale = imax >= 1e-3 ? [1e-3, 'mA'] : [1e-6, 'µA'];
+    const top = imax / scale[0];
+    const step = top > 5 ? Math.ceil(top / 5) : top > 1 ? 0.5 : 0.1;
+    const f = frame(ctx, b, { xr: [0, 12], yr: [0, top], xticks: [0, 2, 4, 6, 8, 10, 12], yticks: Array.from({ length: Math.floor(top / step) + 1 }, (_, i) => +(i * step).toFixed(2)), xlab: 'Emitter–collector voltage  V_EC (V)', ylab: `Collector current I_C (${scale[1]})`, title: 'Output curves with base-width modulation' });
+    const Yi = i => f.Y(i / scale[0]);
+    [[p.VEB - 0.02, '#94a3b8'], [p.VEB, '#2563eb'], [p.VEB + 0.02, '#94a3b8']].forEach(([veb, col]) => {
+      const pts = []; let pt = false;
+      for (let v = 0; v <= 12.0001; v += 0.04) { const i = m.ic(v, veb); if (!Number.isFinite(i)) { pt = true; break; } pts.push([f.X(v), Yi(i)]); }
+      clipPath(ctx, b, pts, col, col === '#2563eb' ? 3.2 : 2);
+      if (pt && col === '#2563eb') labText(ctx, 'punch-through', f.X(pts.length * 0.04) + 6, Yi(0) - 40, 13, '#b91c1c', 'left', true);
+    });
+    const i1 = m.ic(v1), i2 = m.ic(v2);
+    let VAm = NaN, VAt = NaN;
+    if (Number.isFinite(i1) && Number.isFinite(i2) && i2 > i1) {
+      const s = (i2 - i1) / (v2 - v1); VAm = i1 / s - v1;
+      // tangent extrapolated back to I_C = 0 (off-scale intercept at −V_A)
+      const xa = Math.max(0, v1 - i1 / s);
+      clipPath(ctx, b, [[f.X(xa), Yi(i1 - s * (v1 - xa))], [f.X(12), Yi(i1 + s * (12 - v1))]], '#f59e0b', 1.8, [7, 5]);
+      dot(ctx, f.X(v1), Yi(i1), '#f59e0b'); dot(ctx, f.X(v2), Yi(i2), '#f59e0b');
+      bjtArrow(ctx, b.x0 + 70, Yi(i1 - s * v1) - 18, b.x0 + 8, Yi(i1 - s * v1) - 18, '#b45309', 2);
+      labText(ctx, `extrapolates to −V_A = −${VAm.toFixed(1)} V`, b.x0 + 76, Yi(i1 - s * v1) - 18, 13, '#b45309', 'left', true);
+    }
+    const vm = (v1 + v2) / 2, Wm = m.W(vm);
+    if (Wm > 0) { const dW = (m.W(vm + 0.05) - m.W(vm - 0.05)) / 0.1; VAt = Wm / Math.abs(dW) - vm; }
+    // base cross-section at V_EC = v2
+    const cx0 = 650, cx1 = 960, cy = 110, ch = 90;
+    labText(ctx, `Base cross-section at V_EC = ${v2.toFixed(1)} V`, (cx0 + cx1) / 2, cy - 20, 14, '#111827', 'center', true);
+    const xEB = m.xEB, xCB = m.xCB(v2 - p.VEB), Wv = p.W0 - xEB - xCB, total = p.W0 + 0.35;
+    const sx = v => (cx1 - cx0) * v / total;
+    let x = cx0;
+    const seg = (width, fill, label, stroke = '#475569') => { ctx.fillStyle = fill; ctx.fillRect(x, cy, width, ch); ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.strokeRect(x, cy, width, ch); if (label && width > 26) labText(ctx, label, x + width / 2, cy + ch / 2, 12, '#1f2937', 'center', true); x += width; };
+    seg(sx(0.12), '#fde68a', 'p⁺ E'); seg(sx(Math.min(xEB, p.W0)), '#e2e8f0', ''); seg(sx(Math.max(0, Wv)), '#bfdbfe', 'n base'); seg(sx(Math.min(xCB, p.W0)), '#e2e8f0', 'x_CB'); seg(Math.max(0, cx1 - x), '#fecaca', 'p C');
+    labText(ctx, `neutral W = ${Math.max(0, Wv).toFixed(3)} µm  (metallurgical ${p.W0.toFixed(2)} µm)`, (cx0 + cx1) / 2, cy + ch + 20, 12, '#334155', 'center');
+    // W vs V_EC mini-plot
+    const bw = { x0: 725, x1: 960, y0: 460, y1: 275 };
+    const fw = frame(ctx, bw, { xr: [0, 12], yr: [0, p.W0], xticks: [0, 4, 8, 12], yticks: [0, +(p.W0 / 2).toFixed(2), +p.W0.toFixed(2)], xlab: 'V_EC (V)', ylab: 'W (µm)', ylabOff: 58, title: 'Neutral base width' });
+    const wp = []; for (let v = 0; v <= 12; v += 0.1) { const wv = m.W(v); if (wv <= 0) break; wp.push([fw.X(v), fw.Y(wv)]); }
+    clipPath(ctx, bw, wp, '#0f766e', 2.6);
+    const beta = m.betaAt(vm);
+    bjtMetric(panel, 'vam', Number.isFinite(VAm) ? VAm.toFixed(1) + ' V' : 'punch-through');
+    bjtMetric(panel, 'vat', Number.isFinite(VAt) && Wm > 0 ? VAt.toFixed(1) + ' V' : '—');
+    bjtMetric(panel, 'w', Wm > 0 ? Wm.toFixed(3) + ' µm' : '0 (punch-through)');
+    bjtMetric(panel, 'beta', Wm > 0 ? beta.toFixed(0) : '—');
+    bjtMetric(panel, 'prod', Number.isFinite(VAm) && Wm > 0 ? fmtExp(beta * VAm, 2) + ' V' : '—');
+    bjtMetric(panel, 'ro', Number.isFinite(VAm) && Number.isFinite(i1) ? fmtSI((VAm + v1) / i1, 'Ω') : '—');
+    panel._reading = { 'N_B (cm⁻³)': fmtExp(p.NB, 2), 'N_C (cm⁻³)': fmtExp(p.NC, 2), 'W_B0 (µm)': p.W0.toFixed(2), 'V_EB (V)': p.VEB.toFixed(3), 'V_EC1 (V)': v1.toFixed(1), 'V_EC2 (V)': v2.toFixed(1), 'I_C1 (A)': fmtExp(i1, 3), 'I_C2 (A)': fmtExp(i2, 3), 'V_A meas (V)': Number.isFinite(VAm) ? VAm.toFixed(1) : 'PT', 'V_A theory (V)': Number.isFinite(VAt) ? VAt.toFixed(1) : '—', 'β': Wm > 0 ? beta.toFixed(0) : '—', 'β·V_A (V)': Number.isFinite(VAm) && Wm > 0 ? fmtExp(beta * VAm, 2) : '—' };
+  }
+
+  /* ======================= Lab 3: Ebers–Moll modes ======================= */
+  function drawModes(panel) {
+    const [, ctx, w, h] = bjtCtx(panel); bjtClear(ctx, w, h);
+    const aF = num(panel, 'af'), aR = num(panel, 'ar'), IES = Math.pow(10, num(panel, 'ies'));
+    const VEB = num(panel, 'veb'), VCB = num(panel, 'vcb');
+    const VT = kB * 300, ICS = aF * IES / aR;
+    bjtSet(panel, 'af', aF.toFixed(3)); bjtSet(panel, 'ar', aR.toFixed(2)); bjtSet(panel, 'ies', fmtSI(IES, 'A'));
+    bjtSet(panel, 'veb', VEB.toFixed(2) + ' V'); bjtSet(panel, 'vcb', VCB.toFixed(2) + ' V');
+    const eF = Math.exp(VEB / VT) - 1, eR = Math.exp(VCB / VT) - 1;
+    const IE = IES * eF - aR * ICS * eR, IC = aF * IES * eF - ICS * eR, IB = IE - IC;
+    const fwdE = VEB > 0, fwdC = VCB > 0;  // textbook definition: sign of each junction bias
+    const mode = fwdE && !fwdC ? 'Forward active' : fwdE && fwdC ? 'Saturation' : !fwdE && fwdC ? 'Inverse active' : 'Cutoff';
+    // mode map
+    const mb = { x0: 70, x1: 350, y0: 380, y1: 100 };
+    labText(ctx, 'Bias plane — click to move the operating point', (mb.x0 + mb.x1) / 2, 62, 14, '#111827', 'center', true);
+    const MX = v => bjtMap(v, -0.8, 0.8, mb.x0, mb.x1), MY = v => bjtMap(v, -0.8, 0.8, mb.y0, mb.y1);
+    const quad = (x0, y0, x1, y1, fill, label, on, top) => { ctx.fillStyle = fill; ctx.fillRect(MX(x0), MY(y1), MX(x1) - MX(x0), MY(y0) - MY(y1)); if (on) { ctx.strokeStyle = '#111827'; ctx.lineWidth = 2.5; ctx.strokeRect(MX(x0) + 1.5, MY(y1) + 1.5, MX(x1) - MX(x0) - 3, MY(y0) - MY(y1) - 3); } label.split('\n').forEach((line, i, all) => labText(ctx, line, (MX(x0) + MX(x1)) / 2, top ? MY(y1) + 16 + i * 17 : MY(y0) - 14 - (all.length - 1 - i) * 17, 13, '#1f2937', 'center', true)); };
+    quad(0, -0.8, 0.8, 0, '#dbeafe', 'Forward active', mode === 'Forward active', false);
+    quad(0, 0, 0.8, 0.8, '#fee2e2', 'Saturation', mode === 'Saturation', true);
+    quad(-0.8, 0, 0, 0.8, '#fef3c7', 'Inverse active', mode === 'Inverse active', true);
+    quad(-0.8, -0.8, 0, 0, '#e2e8f0', 'Cutoff', mode === 'Cutoff', false);
+    bjtLine(ctx, MX(0), mb.y0, MX(0), mb.y1, '#64748b', 1, [4, 4]); bjtLine(ctx, mb.x0, MY(0), mb.x1, MY(0), '#64748b', 1, [4, 4]);
+    [-0.8, -0.4, 0, 0.4, 0.8].forEach(t => { labText(ctx, t.toFixed(1), MX(t), mb.y0 + 15, 11, '#64748b', 'center'); labText(ctx, t.toFixed(1), mb.x0 - 6, MY(t), 11, '#64748b', 'right'); });
+    labText(ctx, 'V_EB (V)  → E-B forward', (mb.x0 + mb.x1) / 2, mb.y0 + 36, 12, '#334155', 'center', true);
+    ctx.save(); ctx.translate(mb.x0 - 40, (mb.y0 + mb.y1) / 2); ctx.rotate(-Math.PI / 2); labText(ctx, 'V_CB (V)  → C-B forward', 0, 0, 12, '#334155', 'center', true); ctx.restore();
+    dot(ctx, MX(Math.max(-0.8, Math.min(0.8, VEB))), MY(Math.max(-0.8, Math.min(0.8, VCB))), '#111827', 7);
+    panel._modeMap = { mb, inv: (px, py) => [bjtMap(px, mb.x0, mb.x1, -0.8, 0.8), bjtMap(py, mb.y0, mb.y1, -0.8, 0.8)] };
+    // base minority-carrier profile
+    const pb = { x0: 430, x1: 690, y0: 380, y1: 100 };
+    labText(ctx, 'Base hole profile  p_n(x)', (pb.x0 + pb.x1) / 2, 62, 14, '#111827', 'center', true);
+    const p0 = Math.exp(VEB / VT), pW = Math.exp(VCB / VT), pmax = Math.max(p0, pW, 1);
+    ctx.fillStyle = '#f8fafc'; ctx.fillRect(pb.x0, pb.y1, pb.x1 - pb.x0, pb.y0 - pb.y1);
+    bjtLine(ctx, pb.x0, pb.y0, pb.x1, pb.y0, '#111827', 1.6); bjtLine(ctx, pb.x0, pb.y0, pb.x0, pb.y1, '#111827', 1.6); bjtLine(ctx, pb.x1, pb.y0, pb.x1, pb.y1, '#111827', 1.2, [5, 4]);
+    const PY = v => bjtMap(v / pmax, 0, 1, pb.y0, pb.y1 + 20);
+    ctx.fillStyle = 'rgba(37,99,235,.18)'; ctx.beginPath(); ctx.moveTo(pb.x0, pb.y0); ctx.lineTo(pb.x0, PY(p0)); ctx.lineTo(pb.x1, PY(pW)); ctx.lineTo(pb.x1, pb.y0); ctx.closePath(); ctx.fill();
+    bjtPlotPath(ctx, [[pb.x0, PY(p0)], [pb.x1, PY(pW)]], '#2563eb', 3);
+    bjtLine(ctx, pb.x0, PY(1), pb.x1, PY(1), '#94a3b8', 1, [3, 4]);
+    labText(ctx, 'x = 0 (E side)', pb.x0, pb.y0 + 15, 11, '#475569', 'center'); labText(ctx, 'x = W (C side)', pb.x1, pb.y0 + 15, 11, '#475569', 'center');
+    labText(ctx, `p(0)/p_n0 = ${fmtExp(p0, 2)}`, pb.x0 + 6, pb.y1 + 8, 12, '#1d4ed8', 'left', true);
+    labText(ctx, `p(W)/p_n0 = ${fmtExp(pW, 2)}`, pb.x1 - 6, pb.y1 + 26, 12, '#1d4ed8', 'right', true);
+    labText(ctx, 'slope ∝ diffusion current across the base', (pb.x0 + pb.x1) / 2, pb.y0 + 36, 12, '#475569', 'center');
+    // terminal currents
+    const tx = 740;
+    labText(ctx, 'Terminal currents (p-n-p)', 850, 62, 14, '#111827', 'center', true);
+    const bar = (label, v, y, col) => {
+      const mag = Math.log10(Math.abs(v) / 1e-15 + 1), L = Math.min(150, mag * 11);
+      ctx.fillStyle = col; ctx.fillRect(tx + 40, y - 11, Math.max(2, L), 22);
+      labText(ctx, label, tx + 32, y, 14, '#111827', 'right', true);
+      labText(ctx, (v < 0 ? '−' : '+') + fmtSI(Math.abs(v), 'A'), tx + 40, y + 24, 13, '#334155', 'left', true);
+    };
+    bar('I_E', IE, 110, '#fb923c'); bar('I_C', IC, 165, '#60a5fa'); bar('I_B', IB, 220, '#f87171');
+    labText(ctx, 'bar ∝ log|I|;  + = into E, out of C and B', 860, 272, 11, '#64748b', 'center');
+    labText(ctx, `KCL check: I_E − I_C − I_B = ${fmtSI(IE - IC - IB, 'A')}`, 850, 292, 12, '#0f766e', 'center', true);
+    labText(ctx, `Mode: ${mode}`, 850, 330, 18, mode === 'Forward active' ? '#1d4ed8' : mode === 'Saturation' ? '#b91c1c' : mode === 'Cutoff' ? '#475569' : '#b45309', 'center', true);
+    labText(ctx, `Reciprocity: α_F I_ES = α_R I_CS = ${fmtSI(aF * IES, 'A')}`, 500, 470, 13, '#334155', 'center');
+    labText(ctx, `β_F = α_F/(1−α_F) = ${(aF / (1 - aF)).toFixed(1)}      β_R = α_R/(1−α_R) = ${(aR / (1 - aR)).toFixed(2)}`, 500, 498, 13, '#334155', 'center');
+    bjtMetric(panel, 'mode', mode); bjtMetric(panel, 'ics', fmtSI(ICS, 'A'));
+    bjtMetric(panel, 'ie', fmtSI(IE, 'A')); bjtMetric(panel, 'ic', fmtSI(IC, 'A')); bjtMetric(panel, 'ib', fmtSI(IB, 'A'));
+    bjtMetric(panel, 'ratio', Math.abs(IB) > 0 ? (IC / IB).toFixed(2) : '—');
+    panel._reading = { 'V_EB (V)': VEB.toFixed(2), 'V_CB (V)': VCB.toFixed(2), 'Mode': mode, 'I_E (A)': fmtExp(IE, 3), 'I_C (A)': fmtExp(IC, 3), 'I_B (A)': fmtExp(IB, 3), 'I_C/I_B': Math.abs(IB) > 0 ? (IC / IB).toFixed(2) : '—' };
+  }
+
+  /* ======================= Lab 4: current crowding ======================= */
+  // Exact 1-D solution for a stripe contacted on both sides (half-width h):
+  //   J(x)/J_edge = cos²(kh) / cos²(k(h−x)),  k·tan(kh) = I_E R_□ / (4 L_E β V_T)
+  function crowdingSolve(IE, S, Rsq, LE, beta, VT) {
+    const h = S / 2, C = IE * Rsq / (4 * LE * beta * VT); // 1/µm
+    let lo = 0, hi = Math.PI / (2 * h) * (1 - 1e-9);
+    for (let i = 0; i < 100; i++) { const k = (lo + hi) / 2; if (k * Math.tan(k * h) > C) hi = k; else lo = k; }
+    const k = (lo + hi) / 2, kh = k * h, c2 = Math.cos(kh) ** 2;
+    return { k, h, kh, ratio: 1 / c2, seff: kh > 1e-9 ? Math.sin(2 * kh) / (2 * kh) : 1, dV: -VT * Math.log(c2), prof: x => c2 / Math.cos(k * (h - x)) ** 2 };
+  }
+  function drawCrowding(panel) {
+    const [, ctx, w, h] = bjtCtx(panel); bjtClear(ctx, w, h);
+    const IE = Math.pow(10, num(panel, 'ie')) * 1e-3, S = num(panel, 's'), Rsq = num(panel, 'rsq') * 1e3, LE = num(panel, 'le'), beta = num(panel, 'beta');
+    const VT = kB * 300;
+    bjtSet(panel, 'ie', fmtSI(IE, 'A')); bjtSet(panel, 's', S.toFixed(1) + ' µm'); bjtSet(panel, 'rsq', (Rsq / 1e3).toFixed(1) + ' kΩ/□'); bjtSet(panel, 'le', LE.toFixed(0) + ' µm'); bjtSet(panel, 'beta', beta.toFixed(0));
+    const sol = crowdingSolve(IE, S, Rsq, LE, beta, VT);
+    // cross-section
+    const X0 = 140, X1 = 860, yTop = 70;
+    labText(ctx, 'Emitter stripe cross-section — base contacts on both sides', 500, 38, 15, '#111827', 'center', true);
+    ctx.fillStyle = '#bfdbfe'; ctx.fillRect(60, yTop + 30, 880, 100); ctx.strokeStyle = '#1e3a8a'; ctx.strokeRect(60, yTop + 30, 880, 100);
+    ctx.fillStyle = '#fde68a'; ctx.fillRect(X0, yTop, X1 - X0, 30); ctx.strokeStyle = '#92400e'; ctx.strokeRect(X0, yTop, X1 - X0, 30);
+    labText(ctx, `emitter (width S = ${S.toFixed(1)} µm)`, 500, yTop + 15, 13, '#78350f', 'center', true);
+    ['#475569', '#475569'].forEach((c, i) => { const x = i ? X1 + 25 : 75; ctx.fillStyle = '#94a3b8'; ctx.fillRect(x, yTop + 8, 40, 22); labText(ctx, 'B', x + 20, yTop + 19, 12, '#ffffff', 'center', true); });
+    labText(ctx, 'base layer (sheet resistance R_□)  —  red arrows: lateral base current from the contacts', 500, yTop + 146, 12, '#1e3a8a', 'center', true);
+    bjtArrow(ctx, 95, yTop + 118, 205, yTop + 118, '#dc2626', 2.6); bjtArrow(ctx, X1 + 45, yTop + 118, X1 - 65, yTop + 118, '#dc2626', 2.6);
+        const nArr = 29;
+    for (let i = 0; i < nArr; i++) {
+      const u = (i + 0.5) / nArr, x = u * S, j = x <= sol.h ? sol.prof(x) : sol.prof(S - x);
+      const px = X0 + u * (X1 - X0), L = 12 + 60 * j;
+      bjtArrow(ctx, px, yTop + 32, px, yTop + 32 + L, `rgba(37,99,235,${0.35 + 0.65 * j})`, 1 + 2.2 * j);
+    }
+    labText(ctx, 'blue arrow length ∝ local emitter injection J(x)', 500, yTop + 166, 12, '#475569', 'center');
+    // J(x) profile
+    const b1 = { x0: 95, x1: 500, y0: 480, y1: 290 };
+    const f1 = frame(ctx, b1, { xr: [0, 1], yr: [0, 1.05], xticks: [0, 0.25, 0.5, 0.75, 1], yticks: [0, 0.25, 0.5, 0.75, 1], xfmt: t => t.toFixed(2), yfmt: t => t.toFixed(2), xlab: 'Position across stripe  x / S', ylab: 'J(x) / J_edge', ylabOff: 60, title: 'Emitter current density profile' });
+    const pts = []; for (let i = 0; i <= 200; i++) { const u = i / 200, x = u * S; pts.push([f1.X(u), f1.Y(x <= sol.h ? sol.prof(x) : sol.prof(S - x))]); }
+    ctx.save(); ctx.fillStyle = 'rgba(37,99,235,.12)'; ctx.beginPath(); ctx.moveTo(f1.X(0), f1.Y(0)); pts.forEach(p => ctx.lineTo(p[0], p[1])); ctx.lineTo(f1.X(1), f1.Y(0)); ctx.closePath(); ctx.fill(); ctx.restore();
+    clipPath(ctx, b1, pts, '#2563eb', 3);
+    const se = sol.seff;
+    ctx.fillStyle = 'rgba(245,158,11,.18)'; ctx.fillRect(f1.X(0), f1.Y(1), (f1.X(se / 2) - f1.X(0)), f1.Y(0) - f1.Y(1)); ctx.fillRect(f1.X(1 - se / 2), f1.Y(1), (f1.X(1) - f1.X(1 - se / 2)), f1.Y(0) - f1.Y(1));
+    labText(ctx, 'shaded = effective width', f1.X(0.5), f1.Y(1) + 14, 11, '#b45309', 'center', true);
+    // S_eff/S versus I_E
+    const b2 = { x0: 610, x1: 955, y0: 480, y1: 290 };
+    const f2 = frame(ctx, b2, { xr: [-1, 2], yr: [0, 1.05], xlog: true, xticks: [-1, 0, 1, 2], yticks: [0, 0.25, 0.5, 0.75, 1], xfmt: t => ['0.1', '1', '10', '100'][t + 1], yfmt: t => t.toFixed(2), xlab: 'Emitter current  I_E (mA)', ylab: 'S_eff / S', ylabOff: 58, title: 'Effective emitter width' });
+    const cpts = []; let half = NaN;
+    for (let e = -1; e <= 2.0001; e += 0.02) { const s2 = crowdingSolve(Math.pow(10, e) * 1e-3, S, Rsq, LE, beta, VT).seff; cpts.push([f2.X(Math.pow(10, e) * 1e-3 * 1e3), f2.Y(s2)]); if (!Number.isFinite(half) && s2 < 0.5) half = Math.pow(10, e); }
+    clipPath(ctx, b2, cpts, '#0f766e', 3);
+    bjtLine(ctx, b2.x0, f2.Y(0.5), b2.x1, f2.Y(0.5), '#94a3b8', 1.2, [5, 4]);
+    dot(ctx, bjtMap(Math.log10(IE * 1e3), -1, 2, b2.x0, b2.x1), f2.Y(se), '#0f766e');
+    bjtMetric(panel, 'ratio', sol.ratio.toFixed(2) + '×'); bjtMetric(panel, 'seff', (se * 100).toFixed(1) + ' %  (' + (se * S).toFixed(2) + ' µm)');
+    bjtMetric(panel, 'dv', (sol.dV * 1000).toFixed(1) + ' mV'); bjtMetric(panel, 'half', Number.isFinite(half) ? '≈ ' + (half >= 10 ? half.toFixed(0) : half.toFixed(2)) + ' mA' : '> 100 mA');
+    panel._reading = { 'I_E (mA)': (IE * 1e3).toFixed(3), 'S (µm)': S.toFixed(1), 'R_□ (kΩ/□)': (Rsq / 1e3).toFixed(1), 'L_E (µm)': LE.toFixed(0), 'β': beta.toFixed(0), 'J_edge/J_center': sol.ratio.toFixed(3), 'S_eff/S': se.toFixed(3), 'ΔV_lateral (mV)': (sol.dV * 1000).toFixed(1) };
+  }
+
+  /* ======================= shared lab shell ======================= */
+  const DRAW = { gummel: drawGummel, early: drawEarly, modes: drawModes, crowding: drawCrowding };
+  function renderTable(panel) {
+    const rows = panel._rows || [], table = panel.querySelector('.labTable');
+    if (!table) return;
+    const cols = rows.length ? Object.keys(rows[0]) : Object.keys(panel._reading || {});
+    table.querySelector('thead').innerHTML = '<tr><th>#</th>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>';
+    table.querySelector('tbody').innerHTML = rows.length
+      ? rows.map((r, i) => `<tr><td>${i + 1}</td>${cols.map(c => `<td>${r[c] ?? ''}</td>`).join('')}</tr>`).join('')
+      : `<tr class="labEmpty"><td colspan="${cols.length + 1}">No readings yet — set the controls and press “Record reading”.</td></tr>`;
+    const count = panel.querySelector('[data-lab-count]'); if (count) count.textContent = rows.length + (rows.length === 1 ? ' reading' : ' readings');
+  }
+  function downloadCsv(panel) {
+    const rows = panel._rows || [];
+    if (!rows.length) return;
+    const cols = Object.keys(rows[0]);
+    const esc = v => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
+    const csv = [cols.map(esc).join(','), ...rows.map(r => cols.map(c => esc(r[c] ?? '')).join(','))].join('\n');
+    const url = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = `bjt_${panel.dataset.lab}_lab_data.csv`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+  function initBjtLabs(scope = document) {
+    scope.querySelectorAll('.bjt-lab').forEach(panel => {
+      if (panel.dataset.ready === '1') return; panel.dataset.ready = '1';
+      const draw = DRAW[panel.dataset.lab]; if (!draw) return;
+      const defaults = [...panel.querySelectorAll('input[type="range"]')].map(i => [i, i.value]);
+      const redraw = () => { try { draw(panel); } catch (err) { console.warn('BJT lab', err); } };
+      panel._rows = [];
+      panel.querySelectorAll('input[type="range"]').forEach(inp => inp.addEventListener('input', redraw));
+      panel.addEventListener('click', ev => {
+        const btn = ev.target.closest('[data-lab-act]'); if (!btn) return;
+        const act = btn.dataset.labAct;
+        if (act === 'record' && panel._reading) { panel._rows.push({ ...panel._reading }); renderTable(panel); btn.classList.add('labFlash'); setTimeout(() => btn.classList.remove('labFlash'), 350); }
+        else if (act === 'clear') { panel._rows = []; renderTable(panel); }
+        else if (act === 'undo') { panel._rows.pop(); renderTable(panel); }
+        else if (act === 'csv') downloadCsv(panel);
+        else if (act === 'reset') { defaults.forEach(([i, v]) => { i.value = v; }); redraw(); }
+        else if (act === 'preset') {
+          const sets = JSON.parse(btn.dataset.values || '{}');
+          Object.entries(sets).forEach(([k, v]) => { const i = panel.querySelector(`[data-param="${k}"]`); if (i) i.value = v; });
+          redraw();
+        }
+      });
+      if (panel.dataset.lab === 'modes') {
+        const canvas = panel.querySelector('canvas');
+        canvas.style.cursor = 'crosshair';
+        canvas.addEventListener('click', ev => {
+          const map = panel._modeMap; if (!map) return;
+          const r = canvas.getBoundingClientRect();
+          const px = (ev.clientX - r.left) * canvas.width / r.width, py = (ev.clientY - r.top) * canvas.height / r.height;
+          if (px < map.mb.x0 || px > map.mb.x1 || py < map.mb.y1 || py > map.mb.y0) return;
+          const [veb, vcb] = map.inv(px, py);
+          const a = panel.querySelector('[data-param="veb"]'), b = panel.querySelector('[data-param="vcb"]');
+          a.value = veb.toFixed(2); b.value = vcb.toFixed(2); redraw();
+        });
+      }
+      redraw(); renderTable(panel);
+    });
+  }
+  window.initBjtLabs = initBjtLabs;
+})();
+</script>
+
+<script id="bjtSimLabContent">
+/* ===================== Guided-lab content (3–4 labs per simulator) ===================== */
+(function(){
+  const R = String.raw;
+  const byTitle = t => el => String(el.getAttribute('srcdoc') || '').includes(t);
+  window.SIM_LAB_SETS = [
+
+  /* ---------- 3.1.2 thermal-equilibrium simulator (embedded) ---------- */
+  { key: 'equilibrium', name: 'BJT at thermal equilibrium — charge, field and bands', selector: 'iframe.equilibriumFrame', anchor: el => el.closest('.equilibriumEmbedBox'),
+    labs: [
+    { id: 'eq-vbi', title: 'Built-in potentials', objective: R`Measure the built-in potential of each junction and compare it with \(V_{bi}=\frac{kT}{q}\ln\frac{N_AN_D}{n_i^2}\).`,
+      steps: [R`Choose the <b>p⁺–n–p</b> preset (\(N_E=10^{19}\), \(N_B=10^{17}\), \(N_C=10^{16}\ \text{cm}^{-3}\), 300 K).`, R`Drag the probe across panel (d) and read the band bending across the E–B and B–C junctions.`, R`Record \(V_{bi,EB}\) and \(V_{bi,CB}\) in the notebook, then repeat with \(N_B=10^{16}\) and \(10^{18}\ \text{cm}^{-3}\).`, 'Compare every reading with the formula.'],
+      look: R`The heavily doped E–B junction has the larger built-in potential. Each factor of 10 in one doping changes \(V_{bi}\) by \(\frac{kT}{q}\ln 10\approx 60\ \text{mV}\) at 300 K.`,
+      cols: [['nb', R`\(N_B\) (cm⁻³)`], ['vbieb', R`\(V_{bi,EB}\) (V)`], ['vbicb', R`\(V_{bi,CB}\) (V)`], ['calc', 'Formula value (V)']],
+      questions: [
+        { q: R`Compute \(V_{bi,EB}\) for \(N_E=10^{19}\) and \(N_B=10^{17}\ \text{cm}^{-3}\) at 300 K (\(n_i=9.65\times10^{9}\ \text{cm}^{-3}\)).`, a: R`\(V_{bi}=0.02585\ln\frac{10^{36}}{9.31\times10^{19}}=0.02585\times36.9\approx0.954\ \text{V}\).`, check: { value: 0.954, tol: 0.03, unit: 'V' } },
+        { q: 'Why is the collector–base built-in potential smaller?', a: R`The collector is more lightly doped, so the product \(N_BN_C\) is smaller and the logarithm is smaller: \(V_{bi,CB}\approx0.775\ \text{V}\) for \(N_C=10^{16}\ \text{cm}^{-3}\).` } ] },
+    { id: 'eq-depletion', title: 'Depletion sharing', objective: R`Show that each depletion region extends mostly into the more lightly doped side, \(x_nN_D=x_pN_A\).`,
+      steps: ['Start from the p⁺–n–p preset and read the depletion edges of the E–B junction in panel (b).', 'Record the part of the E–B depletion width on the emitter side and on the base side.', R`Lower \(N_E\) toward \(N_B\) in three steps and record again.`, 'Repeat for the B–C junction while changing the collector doping.'],
+      look: R`With \(N_E=100N_B\), about 99 % of the E–B depletion region lies in the base. The areas of the positive and negative charge blocks in panel (b) are always equal.`,
+      cols: [['ne', R`\(N_E\) (cm⁻³)`], ['xe', 'Emitter-side width (µm)'], ['xb', 'Base-side width (µm)'], ['ratio', 'Ratio x_B/x_E']],
+      questions: [
+        { q: R`For \(N_E=10^{19}\) and \(N_B=10^{17}\ \text{cm}^{-3}\), what fraction (in %) of the E–B depletion width lies in the base?`, a: R`\(x_B/(x_B+x_E)=N_E/(N_E+N_B)=0.990\), i.e. about 99 %.`, check: { value: 99, tol: 0.6, unit: '%' } },
+        { q: 'Why does the peak field sit at the metallurgical junction?', a: R`Integrating the charge from either depletion edge gives a field that grows linearly and peaks where the charge changes sign — the metallurgical junction. Its magnitude is \(\mathcal{E}_m=qN_Dx_n/\varepsilon_s\).` } ] },
+    { id: 'eq-punch', title: 'Punch-through margin', objective: 'Find the minimum base width that keeps the two base-side depletion regions apart at zero bias.',
+      steps: [R`Use the p⁺–n–p preset and read the base-side depletion widths \(x_{B,EB}\) and \(x_{B,CB}\).`, R`Reduce the base width \(W_B\) until the status line reports punch-through; record that width.`, R`Repeat for \(N_B=3\times10^{16}\) and \(3\times10^{17}\ \text{cm}^{-3}\).`, 'Compare with the punch-through preset.'],
+      look: R`Punch-through occurs when \(W_B\le x_{B,EB}+x_{B,CB}\). A lighter base doping widens both depletion regions, so the minimum base width grows.`,
+      cols: [['nb', R`\(N_B\) (cm⁻³)`], ['xeb', R`\(x_{B,EB}\) (µm)`], ['xcb', R`\(x_{B,CB}\) (µm)`], ['wpt', R`\(W_B\) at punch-through (µm)`]],
+      questions: [
+        { q: R`Estimate the minimum base width (µm) for \(N_E=10^{19}\), \(N_B=10^{17}\), \(N_C=10^{16}\ \text{cm}^{-3}\) at zero bias.`, a: R`\(x_{B,EB}=\sqrt{\frac{2\varepsilon_sV_{bi}}{q}\frac{N_E}{N_B(N_E+N_B)}}\approx0.11\ \mu\text{m}\) and \(x_{B,CB}\approx0.030\ \mu\text{m}\), so \(W_B\gtrsim0.14\ \mu\text{m}\). Under collector reverse bias the margin shrinks further.`, check: { value: 0.14, tol: 0.03, unit: 'µm' } },
+        { q: 'Why is punch-through more likely under collector reverse bias than at equilibrium?', a: R`The collector depletion width grows as \(\sqrt{V_{bi}+V_R}\), eating into the neutral base until it meets the emitter depletion edge.` } ] },
+    { id: 'eq-temp', title: 'Temperature dependence', objective: R`Measure how the built-in potential and the depletion widths change between 200 K and 500 K.`,
+      steps: ['Keep the p⁺–n–p preset and set T = 200 K.', R`Record \(V_{bi,EB}\) and the total E–B depletion width.`, 'Repeat at 300, 400 and 500 K.', R`Plot \(V_{bi}\) against T from the CSV.`],
+      look: R`\(n_i\) rises steeply with temperature, so \(V_{bi}\) falls almost linearly (about −1.5 to −2 mV/K) and the depletion region narrows slightly.`,
+      cols: [['t', 'T (K)'], ['vbi', R`\(V_{bi,EB}\) (V)`], ['w', 'E–B depletion width (µm)']],
+      questions: [
+        { q: R`Why does \(V_{bi}\) decrease with temperature even though \(kT/q\) increases?`, a: R`\(V_{bi}=\frac{kT}{q}\ln\frac{N_AN_D}{n_i^2}\) and \(n_i^2\propto T^3e^{-E_g/kT}\) grows much faster than \(T\), so the logarithm shrinks faster than \(kT\) grows.` },
+        { q: 'What does a smaller built-in potential mean for the forward voltage needed to turn the transistor on?', a: R`At fixed collector current, \(V_{EB}\) falls by roughly 2 mV/K — the familiar negative temperature coefficient used in band-gap references and thermal sensors.` } ] }
+  ] },
+
+  /* ---------- 3.1.3 carrier-landscape metaphor simulator (embedded) ---------- */
+  { key: 'metaphor', name: 'Carrier-landscape metaphor simulator — modes and load line', selector: 'iframe.metaphorFrame', anchor: el => el.closest('.metaphorEmbedBox'),
+    labs: [
+    { id: 'meta-modes', title: 'Four operating regions', objective: 'Identify cutoff, active, near-knee and saturation from the readouts and relate them to the junction biases.',
+      steps: ['Click the Cutoff, Active, Near knee and Saturation presets in turn.', R`For each, record the mode, \(I_B\), \(V_{CE}\), \(I_C\) and \(\beta_{\text{eff}}\).`, 'Switch the metaphor view to the junction bias map and note which junctions are forward biased.'],
+      look: R`\(\beta_{\text{eff}}=I_C/I_B\) equals the nominal \(\beta\) only in the active region; in saturation it drops because \(I_C\) is limited by the external circuit.`,
+      cols: [['mode', 'Mode'], ['ib', R`\(I_B\) (µA)`], ['vce', R`\(V_{CE}\) (V)`], ['ic', R`\(I_C\) (mA)`], ['beff', R`\(\beta_{\text{eff}}\)`]],
+      questions: [
+        { q: 'Which junction changes from reverse to forward bias when the transistor enters saturation?', a: 'The base–collector junction. In saturation both junctions are forward biased; in the active mode only the base–emitter junction is.' },
+        { q: R`Why does \(\beta_{\text{eff}}\) fall in saturation?`, a: R`The collector current can no longer rise with \(I_B\): the load line fixes \(I_C\approx(V_{CC}-V_{CE,sat})/R_C\), so extra base current only adds stored charge.` } ] },
+    { id: 'meta-load', title: 'Load line and edge of saturation', objective: R`Find the base current that just drives the transistor into saturation for a given \(V_{CC}\) and \(R_C\).`,
+      steps: [R`Set \(V_{CC}=8\ \text{V}\), \(R_C=2\ \text{k}\Omega\), \(\beta=100\).`, R`Increase \(I_B\) in 5 µA steps; record \(I_C\), \(V_{CE}\) and the load-line \(I_C\).`, 'Note the base current at which the mode changes to saturation.', R`Repeat with \(R_C=4\ \text{k}\Omega\).`],
+      look: R`The operating point moves up the load line \(I_C=(V_{CC}-V_{CE})/R_C\) until \(V_{CE}\) reaches about 0.2 V; beyond that \(I_C\) stops growing.`,
+      cols: [['rc', R`\(R_C\) (kΩ)`], ['ib', R`\(I_B\) (µA)`], ['ic', R`\(I_C\) (mA)`], ['vce', R`\(V_{CE}\) (V)`], ['mode', 'Mode']],
+      questions: [
+        { q: R`With \(V_{CC}=8\ \text{V}\), \(R_C=2\ \text{k}\Omega\), \(\beta=100\) and \(V_{CE,sat}\approx0.2\ \text{V}\), estimate the base current (µA) at the edge of saturation.`, a: R`\(I_{C,sat}=(8-0.2)/2\ \text{k}\Omega=3.9\ \text{mA}\), so \(I_B=I_{C,sat}/\beta\approx39\ \mu\text{A}\).`, check: { value: 39, tol: 3, unit: 'µA' } },
+        { q: R`What happens to this base current if \(R_C\) is doubled?`, a: R`\(I_{C,sat}\) halves, so the transistor saturates at about half the base current (≈ 20 µA).` } ] },
+    { id: 'meta-width', title: 'Base width and gain', objective: 'Explore how a narrower base raises the current gain in the metaphor model.',
+      steps: [R`Set the Active preset and record \(I_C\) and \(\beta_{\text{eff}}\) at relative base width 1.00×.`, 'Change the base width to 0.6×, 0.8×, 1.5× and 2.0×, recording each time.', 'Watch how many carriers are lost in the base in the animation.'],
+      look: 'A thinner base means fewer injected carriers recombine before reaching the collector, so the collector current rises for the same base current.',
+      cols: [['wb', 'Relative W_B'], ['ic', R`\(I_C\) (mA)`], ['beff', R`\(\beta_{\text{eff}}\)`]],
+      questions: [
+        { q: R`In the thin-base limit, how does the base-transport-limited gain scale with base width?`, a: R`\(\alpha_T\approx1-W^2/2L_p^2\), so \(\beta_T=\alpha_T/(1-\alpha_T)\approx2L_p^2/W^2\): halving \(W\) roughly quadruples the transport-limited gain.` },
+        { q: 'What prevents designers from making the base arbitrarily thin?', a: 'Punch-through, a larger Early effect (lower V_A), and a higher base resistance, which slows switching and limits f_max.' } ] }
+  ] },
+
+  /* ---------- 3.1.3 active-mode base profile (in page) ---------- */
+  { key: 'active-profile', name: 'Active-mode base profile and transport factor', selector: '.bjt-sim[data-sim="active-profile"]',
+    labs: [
+    { id: 'ap-alphat', title: 'Transport factor vs. W/Lp', objective: R`Measure the base transport factor \(\alpha_T\) as a function of base width and diffusion length.`,
+      steps: [R`Set \(L_p=5\ \mu\text{m}\).`, R`Capture \(\alpha_T\) for \(W=0.2, 0.4, 0.6, 1.0\) and \(1.4\ \mu\text{m}\).`, R`Repeat for \(L_p=2\ \mu\text{m}\).`, R`Plot \(1-\alpha_T\) against \((W/L_p)^2\).`],
+      look: R`\(1-\alpha_T\) is proportional to \((W/L_p)^2\): the model uses \(\alpha_T=e^{-W^2/2L_p^2}\approx1-W^2/2L_p^2\).`,
+      cols: [['w', 'W', 'param:w'], ['lp', 'L_p', 'param:lp'], ['at', R`\(\alpha_T\)`, 'metric:alphaT'], ['col', 'Collection', 'metric:collect']],
+      questions: [
+        { q: R`Predict \(\alpha_T\) for \(W=1.0\ \mu\text{m}\) and \(L_p=5\ \mu\text{m}\).`, a: R`\(\alpha_T=\exp[-(1/5)^2/2]=e^{-0.02}=0.980\).`, check: { value: 0.980, tol: 0.002 } },
+        { q: 'Which change improves the transport factor more: halving W or doubling L_p?', a: R`Both reduce \((W/L_p)^2\) by a factor of 4, so they are equivalent; in practice W is the parameter the designer controls.` } ] },
+    { id: 'ap-beta', title: 'Transport-limited gain', objective: R`Convert \(\alpha_T\) into the transport-limited gain \(\beta_T=\alpha_T/(1-\alpha_T)\).`,
+      steps: [R`With the defaults (\(W=0.6\), \(L_p=5\ \mu\text{m}\)), capture \(\alpha_T\).`, R`Compute \(\beta_T\) in the notebook (type it into the last column).`, R`Repeat for three other base widths and compare with \(2L_p^2/W^2\).`],
+      look: R`Because \(\beta_T\) involves \(1-\alpha_T\), a tiny change in \(\alpha_T\) (0.993 → 0.998) changes \(\beta_T\) several-fold.`,
+      cols: [['w', 'W', 'param:w'], ['lp', 'L_p', 'param:lp'], ['at', R`\(\alpha_T\)`, 'metric:alphaT'], ['bt', R`\(\beta_T\) (your calc.)`]],
+      questions: [
+        { q: R`Compute \(\beta_T\) for \(W=0.6\ \mu\text{m}\), \(L_p=5\ \mu\text{m}\).`, a: R`\(\alpha_T=e^{-0.0072}=0.99283\), \(\beta_T=0.99283/0.00717\approx138\) (the approximation \(2L_p^2/W^2=139\)).`, check: { value: 138.5, tol: 3 } },
+        { q: 'Is the measured β of a real transistor normally equal to β_T?', a: R`No. \(\beta=\gamma\alpha_T/(1-\gamma\alpha_T)\); the emitter efficiency \(\gamma\) usually limits the gain more than transport does, which is why the emitter is heavily doped.` } ] },
+    { id: 'ap-bias', title: 'Bias and the base profile', objective: 'Show that the shape of the minority-carrier profile, not its height, sets the transport factor.',
+      steps: [R`Change \(V_{EB}\) from 0.55 V to 0.80 V and watch the injected concentration at x = 0.`, R`Change \(|V_{CB}|\) from 0 to 12 V.`, R`Capture \(\alpha_T\) at several bias points.`],
+      look: R`\(p_n(0)\) rises by a decade every ≈ 60 mV of \(V_{EB}\), but \(\alpha_T\) does not change: the fraction lost to recombination depends on \(W/L_p\) only. (This simplified view omits the Early effect.)`,
+      cols: [['veb', R`\(V_{EB}\)`, 'param:veb'], ['vcb', R`\(|V_{CB}|\)`, 'param:vcb'], ['at', R`\(\alpha_T\)`, 'metric:alphaT']],
+      questions: [
+        { q: R`By what factor does \(p_n(0)\) increase when \(V_{EB}\) rises by 60 mV at 300 K?`, a: R`\(e^{0.060/0.02585}=10.2\approx10\).`, check: { value: 10.2, tol: 0.4 } },
+        { q: 'Which physical effect would make α_T depend on V_CB in a real device?', a: 'Base-width modulation (the Early effect): a larger collector reverse bias shrinks the neutral base width, which slightly raises α_T and the collector current.' } ] }
+  ] },
+
+  /* ---------- 3.2.1 carrier distribution (in page) ---------- */
+  { key: 'carrier-dist', name: 'Minority-carrier distribution and current components', selector: '.bjt-sim[data-sim="carrier-dist"]',
+    labs: [
+    { id: 'cd-injection', title: 'Injection vs. forward bias', objective: R`Verify that the injected hole current grows by one decade per ≈ 60 mV of \(V_{EB}\).`,
+      steps: ['Use the defaults and choose the log concentration scale.', R`Capture readings at \(V_{EB}=0.50, 0.55, 0.60, 0.65\) and 0.70 V.`, R`Plot \(\log I_{Ep}\) against \(V_{EB}\) from the CSV and measure the slope.`],
+      look: R`\(I_{Ep}\propto e^{qV_{EB}/kT}\): all current components scale together, so \(\gamma\), \(\alpha_T\) and \(\beta\) stay fixed with bias in this ideal model.`,
+      cols: [['veb', R`\(V_{EB}\)`, 'param:veb'], ['iep', R`\(I_{Ep}\)`, 'val:iep'], ['ien', R`\(I_{En}\)`, 'val:ien'], ['beta', 'β', 'metric:beta']],
+      questions: [
+        { q: R`What is \(I_{Ep}(0.66\ \text{V})/I_{Ep}(0.60\ \text{V})\) at \(kT/q=25.9\ \text{mV}\)?`, a: R`\(e^{0.06/0.0259}=10.1\).`, check: { value: 10.1, tol: 0.4 } },
+        { q: 'Why does β not change with V_EB in this model?', a: R`Every component is proportional to \(e^{qV_{EB}/kT}\); their ratios are bias-independent. Real devices lose gain at low current (recombination) and high current (high injection).` } ] },
+    { id: 'cd-gamma', title: 'Emitter efficiency and doping', objective: R`Measure the emitter efficiency \(\gamma=I_{Ep}/(I_{Ep}+I_{En})\) as the emitter-to-base doping ratio changes.`,
+      steps: ['Reset to the defaults (N_E = 10¹⁹, N_B = 10¹⁷).', R`Capture \(\gamma\) and β for \(N_E=10^{17}, 10^{18}, 10^{19}\) and \(10^{20}\ \text{cm}^{-3}\).`, R`Repeat for \(N_B=10^{16}\ \text{cm}^{-3}\).`],
+      look: R`\(1-\gamma\approx\frac{D_EN_BW}{D_pN_EL_E}\): the emitter efficiency — and hence β — improves in proportion to \(N_E/N_B\).`,
+      cols: [['ne', R`\(N_E\)`, 'param:ne'], ['nb', R`\(N_B\)`, 'param:nb'], ['g', 'γ', 'metric:gamma'], ['beta', 'β', 'metric:beta']],
+      questions: [
+        { q: R`Using \(1-\gamma\approx\frac{D_EN_BW}{D_pN_EL_E}\) with \(D_E=1\), \(D_p=10\ \text{cm}^2/\text{s}\), \(L_E=1\ \mu\text{m}\), \(W=0.5\ \mu\text{m}\), estimate γ for \(N_E=10^{18}\), \(N_B=10^{17}\ \text{cm}^{-3}\).`, a: R`\(1-\gamma=\frac{1\times10^{17}\times0.5}{10\times10^{18}\times1}=0.005\), so \(\gamma\approx0.995\).`, check: { value: 0.995, tol: 0.0015 } },
+        { q: 'Why can the emitter not simply be doped ever more heavily?', a: R`Above about \(10^{19}\ \text{cm}^{-3}\) bandgap narrowing raises \(n_{ie}^2\) in the emitter and Auger recombination shortens \(L_E\), so γ stops improving (Section 3.7.1).` } ] },
+    { id: 'cd-width', title: 'Base width, charge and transit time', objective: R`Relate the stored base charge \(Q_B\) and transit time \(\tau_B\) to the base width.`,
+      steps: [R`At \(V_{EB}=0.60\ \text{V}\), capture \(Q_B\), \(\tau_B\), \(I_{Cp}\) and \(\alpha_T\) for \(W=0.25, 0.5, 1.0\) and \(2.0\ \mu\text{m}\).`, R`Check that \(\tau_B\approx Q_B/I_{Cp}\).`, R`Plot \(\tau_B\) against \(W^2\).`],
+      look: R`For a thin base \(\tau_B=W^2/2D_p\): doubling W quadruples the transit time, while \(I_{Cp}\propto1/W\).`,
+      cols: [['w', 'W', 'param:w'], ['qb', R`\(Q_B\)`, 'val:qb'], ['tau', R`\(\tau_B\)`, 'val:taub'], ['icp', R`\(I_{Cp}\)`, 'val:icp'], ['at', R`\(\alpha_T\)`, 'metric:aT']],
+      questions: [
+        { q: R`Compute \(\tau_B=W^2/2D_p\) (in ps) for \(W=1.0\ \mu\text{m}\) and \(D_p=10\ \text{cm}^2/\text{s}\).`, a: R`\((10^{-4})^2/20=5\times10^{-10}\ \text{s}=500\ \text{ps}\).`, check: { value: 500, tol: 15, unit: 'ps' } },
+        { q: R`How does \(\tau_B\) limit high-frequency operation?`, a: R`The transition frequency obeys \(f_T\le1/(2\pi\tau_B)\) when base transit dominates; thin bases (and graded bases, Section 3.7.2) are essential for RF transistors.` } ] },
+    { id: 'cd-profile', title: 'Exact vs. linear profile', objective: 'Find when the linear (thin-base) approximation of the hole profile breaks down.',
+      steps: [R`Set \(L_p=1.5\ \mu\text{m}\). In <b>exact sinh</b> mode capture readings for \(W=0.075, 0.45, 1.5\) and \(3.0\ \mu\text{m}\) (\(W/L_p=0.05, 0.3, 1, 2\)).`, 'Switch to <b>linear</b> and capture the same points.', 'Compute the percentage difference in I_Cp.'],
+      look: R`For \(W/L_p\ll1\) the exact profile is a straight line and both modes agree; as \(W/L_p\) approaches 1 the exact profile sags because of recombination and the linear model overestimates the collector current.`,
+      cols: [['w', 'W', 'param:w'], ['lp', 'L_p', 'param:lp'], ['wl', 'W/L_p', 'val:wl'], ['icp', R`\(I_{Cp}\)`, 'val:icp'], ['mode', 'Profile mode (type)']],
+      questions: [
+        { q: R`What is the exact transport factor \(\alpha_T=1/\cosh(W/L_p)\) for \(W/L_p=1\)?`, a: R`\(1/\cosh 1=0.648\) — far from the thin-base value near 1, so such a device would be a poor transistor.`, check: { value: 0.648, tol: 0.01 } },
+        { q: 'Why do practical BJTs operate with W/L_p below about 0.1?', a: R`So that \(\alpha_T\approx1-(W/L_p)^2/2>0.995\) and base transport does not limit β.` } ] }
+  ] },
+
+  /* ---------- 3.2.2 current-gain decomposition (in page) ---------- */
+  { key: 'current-gain', name: 'Current-gain decomposition', selector: '.bjt-sim[data-sim="current-gain"]',
+    labs: [
+    { id: 'cg-product', title: 'α₀ = γ·α_T', objective: R`Confirm that the common-base gain is the product of emitter efficiency and base transport factor, and derive \(\beta_0\).`,
+      steps: [R`Set \(\gamma=0.995\) and \(\alpha_T=0.998\); capture the readings.`, 'Try four other combinations and capture each.', R`For each row check \(\alpha_0=\gamma\alpha_T\) and \(\beta_0=\alpha_0/(1-\alpha_0)\).`],
+      look: 'The weaker of the two factors dominates the losses; β₀ is extremely sensitive to α₀ near 1.',
+      cols: [['g', 'γ', 'param:gamma'], ['at', R`\(\alpha_T\)`, 'param:alphaT'], ['a0', R`\(\alpha_0\)`, 'metric:alpha0'], ['b0', R`\(\beta_0\)`, 'metric:beta0']],
+      questions: [
+        { q: R`Compute \(\beta_0\) for \(\gamma=0.995\) and \(\alpha_T=0.998\).`, a: R`\(\alpha_0=0.99301\), \(\beta_0=0.99301/0.00699\approx142\).`, check: { value: 142, tol: 2 } },
+        { q: R`Which improvement raises \(\beta_0\) more: \(\gamma\) 0.995 → 0.999 or \(\alpha_T\) 0.998 → 0.999?`, a: R`The γ improvement: \(\alpha_0\) goes to 0.997 (β₀ ≈ 332) versus 0.994 (β₀ ≈ 165).` } ] },
+    { id: 'cg-sensitivity', title: 'Gain sensitivity', objective: R`Quantify how a small change in \(\alpha_0\) produces a large change in \(\beta_0\).`,
+      steps: [R`Fix \(\alpha_T=0.999\).`, R`Capture readings for \(\gamma=0.95, 0.98, 0.99, 0.995\) and 0.999.`, R`Plot \(\beta_0\) against \(1-\alpha_0\) on log axes.`],
+      look: R`\(\beta_0\approx1/(1-\alpha_0)\): the log-log plot has slope −1, and \(d\beta_0/\beta_0=\frac{1}{1-\alpha_0}\,d\alpha_0/\alpha_0\).`,
+      cols: [['g', 'γ', 'param:gamma'], ['a0', R`\(\alpha_0\)`, 'metric:alpha0'], ['b0', R`\(\beta_0\)`, 'metric:beta0']],
+      questions: [
+        { q: R`If \(\alpha_0=0.99\) changes by +0.1 %, by roughly what percentage does \(\beta_0\) change?`, a: R`\(\frac{d\beta_0}{\beta_0}=\frac{1}{1-\alpha_0}\frac{d\alpha_0}{\alpha_0}=100\times0.1\%=10\%\).`, check: { value: 10, tol: 1, unit: '%' } },
+        { q: 'Why do circuit designers avoid depending on an exact value of β?', a: 'Because β varies widely between devices and with temperature and current; negative feedback makes circuit gain depend on resistor ratios instead.' } ] },
+    { id: 'cg-currents', title: 'Terminal current bookkeeping', objective: R`Use \(\alpha_0\) to split the emitter current into \(I_C\) and \(I_B\).`,
+      steps: [R`Set \(\gamma=0.99\), \(\alpha_T=0.999\).`, R`Capture \(I_C\) and \(I_B\) for \(I_E=0.5, 1, 2\) and 5 mA.`, R`Check \(I_E=I_C+I_B\) and \(I_B=(1-\alpha_0)I_E\) for every row.`],
+      look: R`\(I_C\) and \(I_B\) scale linearly with \(I_E\); the flow diagram shows the two loss paths (\(I_{En}\) from γ and recombination from \(\alpha_T\)) that make up \(I_B\).`,
+      cols: [['ie', R`\(I_E\)`, 'param:ie'], ['ic', R`\(I_C\)`, 'metric:ic'], ['ib', R`\(I_B\)`, 'metric:ib'], ['a0', R`\(\alpha_0\)`, 'metric:alpha0']],
+      questions: [
+        { q: R`For \(I_E=2\ \text{mA}\) and \(\alpha_0=0.99\), what is \(I_B\) (µA)?`, a: R`\(I_B=(1-0.99)\times2\ \text{mA}=20\ \mu\text{A}\).`, check: { value: 20, tol: 0.5, unit: 'µA' } },
+        { q: R`Which physical currents make up \(I_B\) in a p-n-p transistor?`, a: R`Electrons injected from base into emitter (\(I_{En}\), set by γ), electrons supplied to recombine with holes in the base (set by \(\alpha_T\)), minus the small collector leakage \(I_{Cn}\).` } ] }
+  ] },
+
+  /* ---------- 3.5 CE output characteristics (in page) ---------- */
+  { key: 'output-ce', name: 'Common-emitter output characteristics', selector: '.bjt-sim[data-sim="output-ce"]',
+    labs: [
+    { id: 'ce-beta', title: 'Reading β from the family', objective: R`Extract the current gain from the spacing of the output curves, \(\beta=\Delta I_C/\Delta I_B\).`,
+      steps: [R`Set \(V_A=200\ \text{V}\) so the curves are nearly flat.`, R`Read \(I_C\) at \(V_{CE}=5\ \text{V}\) on two adjacent curves and divide by \(\Delta I_B\).`, 'Capture the settings and record your extracted β for three different β₀ values.'],
+      look: R`Equal steps in \(I_B\) give equally spaced curves; the spacing is \(\beta_0\Delta I_B(1+V_{CE}/V_A)\).`,
+      cols: [['beta', 'β₀ setting', 'param:beta'], ['step', R`\(\Delta I_B\)`, 'param:ibstep'], ['va', R`\(V_A\)`, 'param:va'], ['meas', 'β extracted (yours)']],
+      questions: [
+        { q: R`With \(\beta_0=120\), \(\Delta I_B=10\ \mu\text{A}\) and \(V_A=200\ \text{V}\), what is the curve spacing (mA) at \(V_{CE}=5\ \text{V}\)?`, a: R`\(120\times10\ \mu\text{A}\times(1+5/200)=1.23\ \text{mA}\).`, check: { value: 1.23, tol: 0.03, unit: 'mA' } },
+        { q: 'Why is the β read at high V_CE slightly larger than β₀?', a: R`Base-width modulation increases \(I_C\) by the factor \(1+V_{CE}/V_A\).` } ] },
+    { id: 'ce-early', title: 'Early voltage and r_o', objective: R`Relate the output resistance \(r_o\) to the Early voltage and the collector current.`,
+      steps: [R`Capture \(r_o\) (top curve) for \(V_A=25, 50, 100\) and 200 V.`, R`Then fix \(V_A=80\ \text{V}\) and capture \(r_o\) for \(\Delta I_B=5, 10\) and 20 µA.`, R`Verify \(r_o=V_A/I_C\).`],
+      look: R`\(r_o\) is proportional to \(V_A\) and inversely proportional to the collector current: a transistor biased at higher current has a lower output resistance.`,
+      cols: [['va', R`\(V_A\)`, 'param:va'], ['step', R`\(\Delta I_B\)`, 'param:ibstep'], ['beta', 'β₀', 'param:beta'], ['ro', R`\(r_o\) (top curve)`, 'metric:ro']],
+      questions: [
+        { q: R`Predict \(r_o\) (kΩ) for \(V_A=150\ \text{V}\) and \(I_C=5\ \text{mA}\).`, a: R`\(r_o=150/5\ \text{mA}=30\ \text{k}\Omega\).`, check: { value: 30, tol: 0.5, unit: 'kΩ' } },
+        { q: 'Where do all the extrapolated output curves meet?', a: R`At \(V_{CE}=-V_A\) on the voltage axis — the Early-voltage intercept.` } ] },
+    { id: 'ce-gain', title: 'Intrinsic voltage gain', objective: R`Compute the largest voltage gain a single transistor can deliver, \(g_mr_o=V_A/V_T\).`,
+      steps: [R`Capture a reading at \(V_A=80\ \text{V}\).`, R`Compute \(g_m=I_C/V_T\) and \(r_o=V_A/I_C\) for the top curve and type \(g_mr_o\) into the notebook.`, R`Repeat for \(V_A=40\) and 160 V.`],
+      look: R`\(g_mr_o=V_A/V_T\) does not depend on the bias current: it is a device property set by the Early voltage.`,
+      cols: [['va', R`\(V_A\)`, 'param:va'], ['imax', R`\(I_{C,\max}\)`, 'metric:imax'], ['ro', R`\(r_o\)`, 'metric:ro'], ['gain', R`\(g_mr_o\) (yours)`]],
+      questions: [
+        { q: R`What is \(g_mr_o\) for \(V_A=80\ \text{V}\) at 300 K (\(V_T=25.85\ \text{mV}\))?`, a: R`\(80/0.02585\approx3095\) (about 70 dB).`, check: { value: 3095, tol: 60 } },
+        { q: 'How does the saturation region limit the useful output swing?', a: R`Below about \(V_{CE,sat}\approx0.2\)–0.3 V the collector junction becomes forward biased and the curves collapse; the output must stay above the knee (set by the knee-softness control here) to keep the gain.` } ] }
+  ] },
+
+  /* ---------- 3.6 switching transients (in page) ---------- */
+  { key: 'switching', name: 'Switching transients and stored charge', selector: '.bjt-sim[data-sim="switching"]',
+    labs: [
+    { id: 'sw-overdrive', title: 'Overdrive and storage time', objective: R`Measure how the storage time \(t_s\) grows with base overdrive.`,
+      steps: ['Keep the reverse drive at 0.6× and τ = 80 ns.', R`Capture \(t_s\), \(t_f\) and the peak charge for overdrive 1.2×, 2×, 3×, 4× and 5×.`, R`Plot \(t_s\) against \(\ln(\text{overdrive})\).`],
+      look: R`The excess charge above \(Q_S\) grows with overdrive; the time to remove it grows logarithmically, \(t_s\propto\tau\ln(Q_{\text{peak}}/Q_S)\).`,
+      cols: [['od', 'Overdrive', 'param:overdrive'], ['ts', R`\(t_s\)`, 'metric:ts'], ['tf', R`\(t_f\)`, 'metric:tf'], ['q', 'Peak charge', 'metric:qpk']],
+      questions: [
+        { q: R`According to the logarithmic law, what is \(t_s(4\times)/t_s(2\times)\) at fixed reverse drive?`, a: R`\(\ln4/\ln2=2.0\).`, check: { value: 2.0, tol: 0.1 } },
+        { q: 'Why does a larger overdrive speed up turn-on but slow down turn-off?', a: 'A larger base current charges the base faster (shorter rise time) but drives the transistor deeper into saturation, storing excess charge that must be removed before the collector current can fall.' } ] },
+    { id: 'sw-reverse', title: 'Reverse base drive', objective: 'Measure how pulling current out of the base shortens storage and fall times.',
+      steps: ['Set overdrive = 3×, τ = 80 ns.', R`Capture \(t_s\) and \(t_f\) for reverse drive 0, 0.5, 1.0, 1.5 and 2.0×.`, R`Compute the total turn-off time \(t_s+t_f\) for each row.`],
+      look: 'A larger reverse base current removes stored charge faster, so both t_s and t_f fall — this is why drive circuits use speed-up capacitors or active pull-down.',
+      cols: [['rev', 'Reverse drive', 'param:reverse'], ['ts', R`\(t_s\)`, 'metric:ts'], ['tf', R`\(t_f\)`, 'metric:tf'], ['toff', R`\(t_s+t_f\) (yours)`]],
+      questions: [
+        { q: 'Name two circuit techniques that avoid storage delay altogether.', a: 'A Schottky clamp between base and collector (keeps the device out of saturation) and emitter-coupled (ECL) or current-mode logic that never saturates.' },
+        { q: 'Why can the reverse drive not be made arbitrarily large?', a: 'The base–emitter junction would be driven into reverse breakdown, and the driver must supply the large transient current.' } ] },
+    { id: 'sw-lifetime', title: 'Minority-carrier lifetime', objective: R`Show that switching times scale with the lifetime \(\tau\) of the stored charge.`,
+      steps: ['Set overdrive 2× and reverse drive 0.6×.', R`Capture \(t_s\) and \(t_f\) for τ = 40, 80, 160 and 200 ns.`, 'Compute t_s/τ for each row.'],
+      look: R`\(t_s/\tau\) is constant: shortening the lifetime (for example by gold doping) speeds up switching, at the cost of a lower current gain.`,
+      cols: [['tau', 'τ', 'param:tau'], ['ts', R`\(t_s\)`, 'metric:ts'], ['tf', R`\(t_f\)`, 'metric:tf'], ['ratio', R`\(t_s/\tau\) (yours)`]],
+      questions: [
+        { q: R`If \(\tau\) is doubled with all drives fixed, by what factor does \(t_s\) change?`, a: 'It doubles — t_s is proportional to τ.', check: { value: 2, tol: 0.05 } },
+        { q: 'Why does gold doping reduce the current gain?', a: R`Gold creates mid-gap recombination centres that shorten the lifetime and the diffusion length \(L_p\), lowering \(\alpha_T\).` } ] }
+  ] },
+
+  /* ---------- 3.7.1 bandgap narrowing (in page) ---------- */
+  { key: 'bgn', name: 'Emitter bandgap narrowing', selector: '.bjt-sim[data-sim="bgn"]',
+    labs: [
+    { id: 'bgn-enh', title: 'n_ie² enhancement', objective: R`Verify that bandgap narrowing multiplies the emitter's \(n_{ie}^2\) by \(e^{\Delta E_g/kT}\).`,
+      steps: ['Keep BGN on and 300 K.', R`Capture \(\Delta E_g\) and the enhancement for \(N_E=10^{18}, 10^{19}, 3\times10^{19}\) and \(10^{20}\ \text{cm}^{-3}\).`, R`Compute \(e^{\Delta E_g/kT}\) yourself for each row.`],
+      look: R`\(\Delta E_g\) rises steeply above \(10^{18}\ \text{cm}^{-3}\), and the enhancement grows exponentially with it.`,
+      cols: [['ne', R`\(N_E\)`, 'param:ne'], ['deg', R`\(\Delta E_g\)`, 'metric:deg'], ['enh', 'Enhancement', 'metric:enh'], ['calc', R`\(e^{\Delta E_g/kT}\) (yours)`]],
+      questions: [
+        { q: R`Compute \(e^{\Delta E_g/kT}\) for \(\Delta E_g=83\ \text{meV}\) at 300 K.`, a: R`\(e^{0.083/0.02585}=e^{3.21}\approx24.8\).`, check: { value: 24.8, tol: 1.2 } },
+        { q: 'Why does a larger n_ie² hurt the emitter efficiency?', a: R`The back-injected current \(I_{En}\propto n_{ie}^2/N_E=n_i^2e^{\Delta E_g/kT}/N_E\); the emitter behaves as if it were doped only \(N_E e^{-\Delta E_g/kT}\).` } ] },
+    { id: 'bgn-rollover', title: 'Gain roll-over', objective: 'Find the emitter doping that maximizes β when bandgap narrowing is included.',
+      steps: [R`With BGN <b>off</b>, capture β for \(N_E=10^{18}\) to \(10^{21}\ \text{cm}^{-3}\) in half-decade steps.`, 'Switch BGN <b>on</b> and repeat.', 'Identify the doping at which β peaks.'],
+      look: R`Without BGN, γ keeps improving with \(N_E\); with BGN the effective emitter doping saturates and then falls, so β peaks and rolls over near \(10^{19}\) cm⁻³.`,
+      cols: [['ne', R`\(N_E\)`, 'param:ne'], ['onoff', 'BGN on/off (type)'], ['g', 'γ', 'metric:gb'], ['b', 'β', 'metric:bb']],
+      questions: [
+        { q: 'Why do modern high-gain transistors use polysilicon or heterojunction emitters instead of heavier doping?', a: 'They suppress the back-injected base current without increasing N_E, avoiding bandgap narrowing and Auger recombination in the emitter.' },
+        { q: 'Does bandgap narrowing in the base help or hurt β?', a: R`It helps: a larger \(n_{iB}^2\) increases the collector current, which is the principle behind SiGe base engineering.` } ] },
+    { id: 'bgn-temp', title: 'Temperature dependence', objective: 'Measure how the BGN penalty on β changes between 77 K and 500 K.',
+      steps: [R`Set \(N_E=10^{20}\ \text{cm}^{-3}\), BGN on.`, R`Capture the enhancement and β at T = 77, 150, 250, 300, 400 and 500 K.`, 'Repeat at 300 K with BGN off for reference.'],
+      look: R`The penalty \(e^{\Delta E_g/kT}\) grows as T falls, so heavily doped homojunction BJTs lose gain at cryogenic temperatures.`,
+      cols: [['t', 'T', 'param:t'], ['enh', 'Enhancement', 'metric:enh'], ['b', 'β', 'metric:bb']],
+      questions: [
+        { q: R`By what factor does \(e^{\Delta E_g/kT}\) grow between 300 K and 150 K for a fixed \(\Delta E_g\) of 83 meV?`, a: R`At 150 K it is \(e^{6.42}=615\) versus 24.8 at 300 K — about 25× larger (the square of the 300 K value).`, check: { value: 24.8, tol: 1.5 } },
+        { q: 'Why are SiGe HBTs attractive for cryogenic electronics?', a: 'Their emitter–base bandgap difference favours electron injection more strongly as T falls, so their gain rises instead of collapsing.' } ] }
+  ] },
+
+  /* ---------- 3.7.2 graded base (embedded) ---------- */
+  { key: 'graded-base', name: 'Graded-base built-in field', selector: 'iframe.gradedBaseFrame', anchor: el => el.closest('.gradedBaseEmbedBox'),
+    labs: [
+    { id: 'gb-field', title: 'Grading and the aiding field', objective: R`Relate the base doping gradient to the built-in (aiding) field \(\mathcal{E}\approx\frac{kT}{q}\frac{\ln[N(0)/N(W)]}{W_B}\).`,
+      steps: ['Press “Reset · Fig. 18”.', 'Record the base width W_B, the grading N(0)/N(W), the built-in ΔV_B and the aiding field.', 'Change the base diffusion depth in three steps and record again.', 'Check the field against the formula.'],
+      look: 'In equilibrium E_F is flat, so a doping gradient forces the bands to tilt across the base; the tilt is a real electric field pointing to push minority holes toward the collector.',
+      cols: [['wb', 'W_B (µm)'], ['grad', 'N(0)/N(W)'], ['dv', 'ΔV_B (mV)'], ['field', 'Aiding field (kV/cm)'], ['calc', 'Formula (kV/cm)']],
+      questions: [
+        { q: R`Estimate the field (kV/cm) for a grading ratio of 10 across \(W_B=0.1\ \mu\text{m}\) at 300 K.`, a: R`\(\mathcal{E}=0.02585\times\ln10/(10^{-5}\ \text{cm})=5.95\ \text{kV/cm}\).`, check: { value: 5.95, tol: 0.3, unit: 'kV/cm' } },
+        { q: 'Does the built-in field produce a current in equilibrium?', a: 'No. The drift current of majority electrons in the base is exactly balanced by their diffusion current down the doping gradient; only injected minority holes are accelerated when the transistor is biased.' } ] },
+    { id: 'gb-transit', title: 'Transit-time reduction', objective: 'Measure how grading reduces the base transit time relative to a uniform base.',
+      steps: ['From the reset state, record the transit-time factor τ_grade/τ_uniform.', 'Press “Flatten base” and record again.', 'Vary the base peak doping to change the grading ratio; record five points.'],
+      look: R`For a built-in potential drop \(\eta=\ln[N(0)/N(W)]\), the transit time falls roughly as \(\tau_{grade}/\tau_{uniform}\approx\frac{2}{\eta}\bigl[1-\frac{1-e^{-\eta}}{\eta}\bigr]\).`,
+      cols: [['grad', 'N(0)/N(W)'], ['eta', 'η = ln ratio'], ['tau', 'τ_grade/τ_uniform'], ['calc', 'Formula value']],
+      questions: [
+        { q: R`Evaluate \(\frac{2}{\eta}\bigl[1-\frac{1-e^{-\eta}}{\eta}\bigr]\) for a grading ratio of 20 (\(\eta=\ln20\)).`, a: R`\(\eta=3.0\): \(\frac{2}{3}[1-0.95/3]=0.456\), so the transit time is roughly halved.`, check: { value: 0.456, tol: 0.02 } },
+        { q: 'Why does a graded base raise f_T?', a: R`Holes cross the base by drift plus diffusion, so \(\tau_B\) shrinks and \(f_T\approx1/(2\pi\tau_{\text{total}})\) rises.` } ] },
+    { id: 'gb-temp', title: 'Temperature and grading', objective: 'Examine how temperature changes the built-in potential across the base and the aiding field.',
+      steps: ['Reset, then record ΔV_B and the aiding field at T = 200, 300, 400 and 450 K.', 'Compare ΔV_B/T for each row.'],
+      look: R`\(\Delta V_B=\frac{kT}{q}\ln\frac{N(0)}{N(W)}\) is proportional to T for a fixed profile, so the aiding field grows with temperature — partly offsetting the lower mobility.`,
+      cols: [['t', 'T (K)'], ['dv', 'ΔV_B (mV)'], ['field', 'Aiding field (kV/cm)'], ['ratio', 'ΔV_B/T (mV/K)']],
+      questions: [
+        { q: R`If \(\Delta V_B=78\ \text{mV}\) at 300 K, what does the \(kT/q\) scaling predict at 450 K (mV)?`, a: R`\(78\times450/300=117\ \text{mV}\) (ignoring changes in the depletion edges).`, check: { value: 117, tol: 3, unit: 'mV' } },
+        { q: 'Which minority-carrier transport term does the field add to?', a: R`It adds a drift term \(\mu_p\mathcal{E}p\) to the diffusion current \(-qD_p\,dp/dx\) in the base.` } ] }
+  ] },
+
+  /* ---------- 3.8.1 BJT vs HBT band comparison (embedded) ---------- */
+  { key: 'hbt', name: 'BJT versus Si/SiGe HBT band comparison', selector: 'iframe.hbtComparisonFrame', anchor: el => el.closest('.hbtComparisonEmbedBox'),
+    labs: [
+    { id: 'hbt-gain', title: 'Gain advantage exp(ΔE_g/kT)', objective: R`Quantify how the base band-gap reduction \(\Delta E_g\) raises the current gain of an HBT relative to a homojunction BJT.`,
+      steps: [R`Set \(V_{BE}=0.76\ \text{V}\) and \(T=300\ \text{K}\).`, R`Record the barrier seen by electrons and by holes in both diagrams for \(\Delta E_g=0, 0.05, 0.10, 0.15\) and 0.20 eV.`, R`Compute \(e^{\Delta E_g/kT}\) for each.`],
+      look: R`\(\Delta E_g\) appears mostly in the valence band: electron injection is unchanged or improved, while hole back-injection is blocked by the extra barrier, so \(\beta_{HBT}/\beta_{BJT}\approx e^{\Delta E_g/kT}\).`,
+      cols: [['deg', 'ΔE_g (eV)'], ['bar_e', 'Electron barrier (eV)'], ['bar_h', 'Hole barrier (eV)'], ['gain', 'exp(ΔE_g/kT)']],
+      questions: [
+        { q: R`Compute \(e^{\Delta E_g/kT}\) for \(\Delta E_g=0.055\ \text{eV}\) at 300 K.`, a: R`\(e^{0.055/0.02585}=e^{2.13}\approx8.4\).`, check: { value: 8.4, tol: 0.4 } },
+        { q: 'How do designers spend this gain advantage?', a: 'They dope the base much more heavily (lower base resistance, less Early effect and punch-through) and make it thinner, trading some of the extra gain for speed.' } ] },
+    { id: 'hbt-grade', title: 'Ge grading and drift field', objective: 'Relate the conduction-band slope created by Ge grading to a built-in drift field in the base.',
+      steps: [R`Set \(W_B=70\ \text{nm}\) and grading 0 %, then 35 %, 70 % and 100 %.`, 'For each, record the drop of E_C across the base in the HBT diagram.', R`Compute the field \(\mathcal{E}=\Delta E_C/(qW_B)\).`],
+      look: 'Grading tilts E_C downhill toward the collector, adding drift to diffusion and shortening the base transit time.',
+      cols: [['grade', 'Grading (%)'], ['wb', 'W_B (nm)'], ['dec', 'ΔE_C across base (eV)'], ['field', 'Field (kV/cm)']],
+      questions: [
+        { q: R`What field (kV/cm) results from a 0.10 eV conduction-band drop across a 70 nm base?`, a: R`\(0.10\ \text{V}/(70\times10^{-7}\ \text{cm})=1.43\times10^{4}\ \text{V/cm}=14.3\ \text{kV/cm}\).`, check: { value: 14.3, tol: 0.4, unit: 'kV/cm' } },
+        { q: 'Why is this drift field more effective than one from doping grading?', a: 'The Ge profile sets the band slope directly and independently of the doping, so a large field can coexist with a heavily and uniformly doped, low-resistance base.' } ] },
+    { id: 'hbt-bias', title: 'Bias and temperature', objective: R`Watch how \(V_{BE}\) and temperature change the injection barriers in both devices.`,
+      steps: ['Press “Animate V_BE” and observe the emitter–base barrier.', R`Set \(V_{BE}=0.60, 0.70, 0.80\ \text{V}\) and record the electron barrier in both devices.`, 'Change the temperature from 220 K to 420 K at fixed ΔE_g and record exp(ΔE_g/kT).'],
+      look: R`Forward bias lowers the E–B barrier by \(qV_{BE}\) in both devices; the HBT advantage \(e^{\Delta E_g/kT}\) is largest at low temperature.`,
+      cols: [['vbe', 'V_BE (V)'], ['t', 'T (K)'], ['bar_bjt', 'BJT barrier (eV)'], ['bar_hbt', 'HBT barrier (eV)'], ['gain', 'exp(ΔE_g/kT)']],
+      questions: [
+        { q: R`For \(\Delta E_g=0.10\ \text{eV}\), what is the ratio of the HBT advantage at 220 K to that at 420 K?`, a: R`\(e^{0.10/0.01896}/e^{0.10/0.03619}=e^{5.27-2.76}=e^{2.51}\approx12\).`, check: { value: 12.3, tol: 0.7 } },
+        { q: 'Why is the electron barrier, not the hole barrier, reduced by V_BE in an npn HBT?', a: 'Forward bias lowers the whole emitter–base potential step; for the injected electrons that is the conduction-band barrier. The valence-band offset ΔE_V remains as an extra fixed barrier against holes.' } ] }
+  ] },
+
+  /* ---------- 3.9.2 thyristor structure (embedded) ---------- */
+  { key: 'thy-structure', name: 'Four-layer thyristor structure and bands', selector: 'iframe.sim', filter: byTitle('PNPN Thyristor Structure'), anchor: el => el.closest('.simfig') || el,
+    labs: [
+    { id: 'thy-junctions', title: 'Junction biasing', objective: R`Identify which of J1, J2 and J3 blocks the voltage in reverse and forward blocking.`,
+      steps: ['Press “Equilibrium”. Open the Structure & bias view.', R`Set \(V_{AK}=-5\ \text{V}\) and record the bias state of each junction.`, R`Set \(V_{AK}=+5\ \text{V}\) with \(I_G=0\) and record again.`, 'Open the Energy bands view and note which barrier grows.'],
+      look: 'In reverse blocking J1 and J3 are reverse biased; in forward blocking only the centre junction J2 is reverse biased and carries almost all the voltage.',
+      cols: [['vak', 'V_AK (V)'], ['j1', 'J1 state'], ['j2', 'J2 state'], ['j3', 'J3 state'], ['i', 'Device current']],
+      questions: [
+        { q: 'Why does J3 contribute little reverse-blocking capability?', a: 'Both sides of J3 (p2 and n2) are heavily doped, so its breakdown voltage is low; J1, with the lightly doped n1 region, blocks most of the reverse voltage.' },
+        { q: 'Which junction must be removed from reverse bias for the device to turn on?', a: 'J2. Triggering floods the n1 and p2 bases with carriers so J2 becomes forward biased and the whole stack conducts like a single forward-biased diode.' } ] },
+    { id: 'thy-doping', title: 'Doping and blocking voltage', objective: 'Explore how the n1 doping controls the blocking capability.',
+      steps: ['Open the Doping view.', 'Record the breakover voltage for n1 doping 10¹³, 10¹⁴, 10¹⁵ and 10¹⁶ cm⁻³ (advanced controls).', 'Note the width of the J2 depletion region in the Structure view each time.'],
+      look: R`A lightly doped, wide n1 region supports a wide depletion region and therefore a high breakdown voltage (\(V_{BR}\propto N^{-3/4}\) for avalanche).`,
+      cols: [['n1', 'n1 doping (cm⁻³)'], ['vbo', 'Breakover (V)'], ['dep', 'J2 depletion (qual.)']],
+      questions: [
+        { q: R`If \(V_{BR}\propto N^{-3/4}\), by what factor does the breakdown voltage rise when the n1 doping is reduced tenfold?`, a: R`\(10^{3/4}=5.6\).`, check: { value: 5.62, tol: 0.2 } },
+        { q: 'What is the cost of a very lightly doped, wide n1 region?', a: 'A larger on-state voltage drop and slower switching, because more stored charge is needed to conductivity-modulate the wide region.' } ] },
+    { id: 'thy-trigger', title: 'Gate triggering', objective: 'Measure how the gate current lowers the forward breakover voltage.',
+      steps: ['Open the I–V response view.', R`Record the breakover voltage for \(I_G=0, 10, 20, 30\) and 50 mA.`, 'Press “Gate pulse” at a forward bias below breakover and observe latching; then press “Reset latch”.'],
+      look: 'Gate current adds base drive to the n-p-n section, raising α₁ + α₂ toward 1 at a lower anode voltage.',
+      cols: [['ig', 'I_G (mA)'], ['vbo', 'Breakover (V)'], ['latched', 'Latched? (yes/no)']],
+      questions: [
+        { q: 'Why does the device stay on after the gate pulse ends?', a: 'Once the anode current exceeds the latching current, α₁ + α₂ ≥ 1 is sustained by the anode current itself — regenerative feedback no longer needs the gate.' },
+        { q: 'How does temperature affect the breakover voltage?', a: 'Higher temperature increases leakage and the α values, so the device reaches α₁ + α₂ = 1 at a lower voltage — breakover falls.' } ] }
+  ] },
+
+  /* ---------- 3.9.3 two-transistor model (embedded) ---------- */
+  { key: 'thy-two', name: 'Two-transistor model of the thyristor', selector: 'iframe.sim', filter: byTitle('Two-Transistor'), anchor: el => el.closest('.simfig') || el,
+    labs: [
+    { id: 'tt-regen', title: 'Regenerative equation', objective: R`Verify \(I_A=\dfrac{I_1+I_2+\alpha_2I_G}{1-(\alpha_1+\alpha_2)}\) against the simulator.`,
+      steps: ['Press “Load textbook example”.', R`Record \(I_A\) and the loop gain \(\alpha_1+\alpha_2\).`, R`Increase \(\alpha_1\) and \(\alpha_2\) together in steps of 0.05 and record \(I_A\) until the load-line limit is reached.`],
+      look: R`\(I_A\) grows without bound as \(\alpha_1+\alpha_2\to1\); the external circuit then limits the current and the device latches on.`,
+      cols: [['a1', 'α₁'], ['a2', 'α₂'], ['loop', 'α₁+α₂'], ['ia', 'I_A (mA)'], ['state', 'State']],
+      questions: [
+        { q: R`With \(\alpha_1=\alpha_2=0.45\), \(I_1=0.4\) mA, \(I_2=0.6\) mA and \(I_G=0\), compute \(I_A\) (mA).`, a: R`\(I_A=1.0/(1-0.90)=10\ \text{mA}\).`, check: { value: 10, tol: 0.2, unit: 'mA' } },
+        { q: 'Why do the α values rise with current in a real thyristor?', a: 'At low current recombination in the depletion regions dominates the base currents; as the current grows the transistors’ emitter efficiencies improve, so α₁ + α₂ increases — the mechanism behind switching.' } ] },
+    { id: 'tt-gate', title: 'Gate sensitivity', objective: 'Measure how the gate current raises the anode current in the blocking state.',
+      steps: [R`Load the textbook example (\(\alpha_1=0.35\), \(\alpha_2=0.40\)).`, R`Record \(I_A\) for \(I_G=0, 1, 2, 5\) and 10 mA.`, R`Compare with \(\Delta I_A=\alpha_2\Delta I_G/[1-(\alpha_1+\alpha_2)]\).`],
+      look: 'Each milliampere of gate current is multiplied by α₂/(1 − α₁ − α₂) before it reaches the anode — the gate is an amplified trigger input.',
+      cols: [['ig', 'I_G (mA)'], ['ia', 'I_A (mA)'], ['calc', 'Formula (mA)']],
+      questions: [
+        { q: R`For the textbook example with \(I_G=2\ \text{mA}\), compute \(I_A\) (mA).`, a: R`\(I_A=(0.4+0.6+0.40\times2)/(1-0.75)=1.8/0.25=7.2\ \text{mA}\).`, check: { value: 7.2, tol: 0.15, unit: 'mA' } },
+        { q: 'Why is the gate connected to the p2 layer?', a: 'p2 is the base of the n-p-n transistor; injecting holes there turns on the n-p-n section, whose collector current then drives the p-n-p base — starting the regenerative loop.' } ] },
+    { id: 'tt-hold', title: 'Latching and holding', objective: 'Explore when the device stays on after the gate drive is removed.',
+      steps: ['Apply a gate pulse so the device turns on; record I_A.', R`Press “Remove gate drive” and record whether it stays on.`, R`Lower \(V_S\) (or raise \(R\)) so the load-line current falls until the device turns off; record the current just before turn-off and compare with \(I_H\).`, 'Press “Commutate / reset SCR”.'],
+      look: 'The device stays latched only while the anode current exceeds the holding current I_H.',
+      cols: [['r', 'R (Ω)'], ['ia', 'I_A (mA)'], ['ih', 'I_H (mA)'], ['state', 'State']],
+      questions: [
+        { q: R`With \(V_S=40\ \text{V}\), \(V_{on}=1.2\ \text{V}\) and \(I_H=20\ \text{mA}\), what is the largest load resistance (Ω) that keeps the SCR on?`, a: R`\(R_{\max}=(40-1.2)/0.020=1940\ \Omega\).`, check: { value: 1940, tol: 20, unit: 'Ω' } },
+        { q: 'What is the difference between latching and holding current?', a: 'The latching current is the minimum anode current needed immediately after triggering for the device to stay on; the holding current is the lower current below which an already-on device turns off.' } ] },
+    { id: 'tt-loadline', title: 'Load-line limit', objective: 'Relate the on-state current to the external circuit.',
+      steps: ['Turn the device on.', R`Record \(I_A\) for \(V_S=20, 40, 60\) and 100 V at fixed \(R\).`, R`Compare with \((V_S-V_{on})/R\).`],
+      look: 'Once latched the thyristor behaves like a forward-biased diode; the current is set almost entirely by the external load.',
+      cols: [['vs', 'V_S (V)'], ['r', 'R (Ω)'], ['ia', 'I_A (mA)'], ['calc', '(V_S−V_on)/R (mA)']],
+      questions: [
+        { q: R`For \(V_S=100\ \text{V}\), \(R=100\ \Omega\) and \(V_{on}=1.2\ \text{V}\), what is the on-state current (mA)?`, a: R`\((100-1.2)/100=0.988\ \text{A}=988\ \text{mA}\).`, check: { value: 988, tol: 5, unit: 'mA' } },
+        { q: 'Why is the singular formula replaced by the load line in the on state?', a: R`When \(\alpha_1+\alpha_2\ge1\) the regenerative equation has no finite solution; physically the device is saturated and the external circuit limits the current.` } ] }
+  ] },
+
+  /* ---------- 3.9.5 turn-on simulation (embedded) ---------- */
+  { key: 'thy-turnon', name: 'Thyristor turn-on and operating states', selector: 'iframe.sim', filter: byTitle('PNPN Thyristor Interactive Simulation'), anchor: el => el.closest('.simfig') || el,
+    labs: [
+    { id: 'to-states', title: 'Four operating states', objective: 'Characterize equilibrium, forward blocking, forward conduction and reverse blocking.',
+      steps: ['Click the four state buttons (a)–(d) in turn.', 'For each, record V_AK, the three junction voltages and the anode current.', 'Note which depletion region is widest.'],
+      look: 'Forward blocking: J2 reverse, wide depletion. Forward conduction: all three junctions forward and a large current at low voltage. Reverse blocking: J1 and J3 reverse.',
+      cols: [['state', 'State'], ['vak', 'V_AK (V)'], ['j1', 'J1 (V)'], ['j2', 'J2 (V)'], ['j3', 'J3 (V)'], ['ia', 'I_A (mA)']],
+      questions: [
+        { q: 'In forward conduction, what is the approximate total voltage across the device?', a: 'About one diode drop (~1 V): J1 and J3 forward, J2 forward-biased by the stored charge, so their voltages largely cancel to leave a single junction drop plus ohmic losses.' },
+        { q: 'Why is the reverse leakage current in state (d) small?', a: 'Two junctions in series are reverse biased and only thermally generated carriers cross them, so only a small leakage current flows until reverse breakdown.' } ] },
+    { id: 'to-breakover', title: 'Breakover triggering', objective: 'Trigger the device by exceeding the breakover voltage.',
+      steps: ['Set V_BO = 18 V and raise V_AK slowly from 0 V.', 'Record the current just before and just after breakover.', 'Repeat for V_BO = 10 V and 25 V.'],
+      look: 'Below V_BO only leakage flows; at V_BO the J2 depletion collapses, the voltage snaps back and the current jumps to the load-limited value.',
+      cols: [['vbo', 'V_BO (V)'], ['vak', 'V_AK at switch (V)'], ['ibefore', 'I before (mA)'], ['iafter', 'I after (mA)']],
+      questions: [
+        { q: 'Why is breakover triggering avoided in practice?', a: 'It relies on avalanche multiplication at J2 and can cause local heating; gate triggering switches the device at a controlled, lower voltage.' },
+        { q: 'What shows on the I–V curve between breakover and conduction?', a: 'A negative-resistance (snapback) region, where the voltage falls while the current rises.' } ] },
+    { id: 'to-holding', title: 'Holding current and turn-off', objective: 'Find the point at which a conducting thyristor turns off.',
+      steps: ['Trigger the device into conduction.', 'Reduce V_AK step by step and record the anode current.', 'Record the current at which the latch status returns to OFF; compare with I_H.', 'Repeat with I_H = 20 mA and 100 mA.'],
+      look: 'The thyristor stays on for any current above I_H regardless of the gate; it turns off only when the anode current falls below I_H (or reverses).',
+      cols: [['ih', 'I_H setting (mA)'], ['ioff', 'Current at turn-off (mA)'], ['vak', 'V_AK at turn-off (V)']],
+      questions: [
+        { q: 'How are thyristors turned off in AC circuits?', a: 'Natural commutation: the line current passes through zero every half cycle, dropping below I_H so the device turns off automatically.' },
+        { q: 'Why must a reverse voltage be held for a minimum time after turn-off?', a: 'The stored charge in n1 and p2 must recombine (turn-off time t_q); reapplying forward voltage too soon re-triggers the device.' } ] }
+  ] }
+  ];
+})();
+</script>
+
+<script id="bjtSimLabEngine">
+/* ===================== Per-simulator guided labs =====================
+   Every simulator in the chapter gets a "Guided labs" card directly below it
+   with 3-4 labs: objective, procedure, a lab notebook (auto-capture from
+   in-page simulators, typed entries for embedded ones), CSV export, and
+   analysis questions with answer checking. Content lives in SIM_LAB_SETS. */
+(function(){
+  'use strict';
+  const STORE = 'bjtSimLabNotebook_v1';
+  const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const load = () => { try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (_) { return {}; } };
+  const save = data => { try { localStorage.setItem(STORE, JSON.stringify(data)); } catch (_) {} };
+
+  function readSource(simEl, spec) {
+    if (!simEl || !spec) return '';
+    const [kind, key] = spec.split(':');
+    const sel = kind === 'param' ? `[data-out="${key}"]` : kind === 'metric' ? `[data-metric="${key}"]` : `[data-val="${key}"]`;
+    const el = simEl.querySelector(sel);
+    return el ? el.textContent.replace(/\s+/g, ' ').trim() : '';
+  }
+  // Plain-text symbols such as V_AK or I_H are shown with real subscripts;
+  // MathJax segments \( … \) and HTML tags are left untouched.
+  function fmt(html) {
+    return String(html ?? '').split(/(\\\([\s\S]*?\\\)|<[^>]+>)/).map((part, i) => i % 2 ? part
+      : part.replace(/(^|[^A-Za-z0-9\\])([A-Za-zαβγτΔηε]{1,3})_([A-Za-z0-9]{1,10})(?![A-Za-z0-9_])/g, (m, pre, a, b) => `${pre}<i>${a}</i><sub>${b}</sub>`)).join('');
+  }
+  function parseNumber(text) {
+    const m = String(text).replace(/,/g, '').replace(/[−–]/g, '-').match(/-?\d*\.?\d+(?:e[-+]?\d+)?/i);
+    return m ? parseFloat(m[0]) : NaN;
+  }
+
+  function labHtml(set, lab, idx) {
+    const hasAuto = lab.cols.some(c => c[2]);
+    const questions = (lab.questions || []).map((q, qi) => `
+      <div class="slQ" data-q="${qi}">
+        <div class="slQText"><b>Q${qi + 1}.</b> ${fmt(q.q)}</div>
+        ${q.check ? `<div class="slCheck"><input type="text" inputmode="decimal" placeholder="your answer${q.check.unit ? ' (' + esc(q.check.unit) + ')' : ''}" aria-label="Answer to question ${qi + 1}"><button type="button" data-sl-act="check">Check</button><span class="slFeedback" aria-live="polite"></span></div>` : ''}
+        <details class="slAnswer"><summary>Show solution</summary><div>${fmt(q.a)}</div></details>
+      </div>`).join('');
+    return `
+    <div class="slLab" data-lab-id="${esc(lab.id)}" ${idx ? 'hidden' : ''}>
+      <div class="slObjective"><b>Objective.</b> ${fmt(lab.objective)}</div>
+      <div class="slCols2">
+        <div><h5>Procedure</h5><ol class="slSteps">${lab.steps.map(s => `<li>${fmt(s)}</li>`).join('')}</ol></div>
+        <div><h5>What to look for</h5><p class="slLook">${fmt(lab.look)}</p></div>
+      </div>
+      <h5>Lab notebook</h5>
+      <div class="slNotebook">
+        <div class="slBar">
+          ${hasAuto ? '<button type="button" class="slPrimary" data-sl-act="capture">● Capture current values</button>' : ''}
+          <button type="button" data-sl-act="add">+ Add ${hasAuto ? 'blank ' : ''}row</button>
+          <button type="button" data-sl-act="undo">Delete last row</button>
+          <button type="button" data-sl-act="clear">Clear</button>
+          <button type="button" data-sl-act="csv">Download CSV</button>
+          <span class="slHint">${hasAuto ? 'Grey cells are captured from the simulator; white cells are for your own entries.' : 'Type the values you read from the simulator above; entries are kept in this browser.'}</span>
+        </div>
+        <div class="slTableWrap"><table class="slTable"><thead><tr><th>#</th>${lab.cols.map(c => `<th>${fmt(c[1])}</th>`).join('')}</tr></thead><tbody></tbody></table></div>
+      </div>
+      <h5>Analysis questions</h5>
+      ${questions}
+    </div>`;
+  }
+  function cardHtml(set) {
+    return `
+    <section class="simLabs" data-sim-labs="${esc(set.key)}" aria-label="Guided labs for ${esc(set.name)}">
+      <div class="slHead">
+        <div><span class="slEyebrow">Guided labs · ${set.labs.length} activities</span><h4>${fmt(set.name)}</h4></div>
+        <div class="slTabs" role="tablist">${set.labs.map((l, i) => `<button type="button" role="tab" class="slTab${i ? '' : ' on'}" aria-selected="${i ? 'false' : 'true'}" data-sl-tab="${i}"><span class="slTabNum">Lab ${i + 1}</span><span class="slTabTitle">${fmt(l.title)}</span></button>`).join('')}</div>
+      </div>
+      ${set.labs.map((l, i) => labHtml(set, l, i)).join('')}
+    </section>`;
+  }
+
+  function renderRows(card, lab, labEl) {
+    const data = load(), rows = data[lab.id] || [];
+    const tbody = labEl.querySelector('tbody');
+    if (!rows.length) { tbody.innerHTML = `<tr class="slEmpty"><td colspan="${lab.cols.length + 1}">No entries yet.</td></tr>`; return; }
+    tbody.innerHTML = rows.map((r, ri) => `<tr><td>${ri + 1}</td>${lab.cols.map(c => {
+      const v = r[c[0]] ?? '';
+      return (c[2] && r.__auto) ? `<td class="slAuto">${esc(v)}</td>` : `<td><input type="text" value="${esc(v)}" data-row="${ri}" data-col="${esc(c[0])}" aria-label="${esc(c[1].replace(/<[^>]+>/g, ''))}, row ${ri + 1}"></td>`;
+    }).join('')}</tr>`).join('');
+  }
+  function csv(lab) {
+    const rows = load()[lab.id] || [];
+    if (!rows.length) return;
+    const greek = { alpha: 'α', beta: 'β', gamma: 'γ', tau: 'τ', Delta: 'Δ', eta: 'η', mu: 'µ', max: 'max', mathcal: '', text: '' };
+    const clean = h => String(h).replace(/<[^>]+>/g, '').replace(/\\\(|\\\)/g, '').replace(/\\text\{([^}]*)\}/g, '$1').replace(/\\([A-Za-z]+)/g, (m, w) => greek[w] ?? w).replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
+    const q = v => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
+    const text = [lab.cols.map(c => q(clean(c[1]))).join(','), ...rows.map(r => lab.cols.map(c => q(r[c[0]] ?? '')).join(','))].join('\n');
+    const url = URL.createObjectURL(new Blob(['\ufeff' + text], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = `bjt_${lab.id}.csv`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+
+  function wire(card, set, simEl) {
+    const labs = set.labs;
+    card.querySelectorAll('.slLab').forEach((labEl, i) => renderRows(card, labs[i], labEl));
+    card.addEventListener('click', ev => {
+      const tab = ev.target.closest('[data-sl-tab]');
+      if (tab) {
+        const i = +tab.dataset.slTab;
+        card.querySelectorAll('[data-sl-tab]').forEach((t, k) => { t.classList.toggle('on', k === i); t.setAttribute('aria-selected', String(k === i)); });
+        card.querySelectorAll('.slLab').forEach((l, k) => { l.hidden = k !== i; });
+        return;
+      }
+      const btn = ev.target.closest('[data-sl-act]');
+      if (!btn) return;
+      const labEl = btn.closest('.slLab'), lab = labs.find(l => l.id === labEl.dataset.labId);
+      const data = load(); data[lab.id] = data[lab.id] || [];
+      const act = btn.dataset.slAct;
+      if (act === 'capture') {
+        const row = { __auto: true };
+        lab.cols.forEach(c => { row[c[0]] = c[2] ? readSource(simEl, c[2]) : ''; });
+        data[lab.id].push(row); save(data); renderRows(card, lab, labEl);
+        btn.classList.add('slFlash'); setTimeout(() => btn.classList.remove('slFlash'), 350);
+      } else if (act === 'add') { data[lab.id].push({}); save(data); renderRows(card, lab, labEl); labEl.querySelector('tbody tr:last-child input')?.focus(); }
+      else if (act === 'undo') { data[lab.id].pop(); save(data); renderRows(card, lab, labEl); }
+      else if (act === 'clear') { if (!data[lab.id].length || confirm('Clear all entries for this lab?')) { data[lab.id] = []; save(data); renderRows(card, lab, labEl); } }
+      else if (act === 'csv') csv(lab);
+      else if (act === 'check') {
+        const qEl = btn.closest('.slQ'), q = lab.questions[+qEl.dataset.q], input = qEl.querySelector('input'), fb = qEl.querySelector('.slFeedback');
+        const v = parseNumber(input.value);
+        if (!Number.isFinite(v)) { fb.textContent = 'Enter a number.'; fb.className = 'slFeedback'; return; }
+        const ok = Math.abs(v - q.check.value) <= q.check.tol;
+        fb.textContent = ok ? '✓ Correct' : (v > q.check.value ? '✗ Too high — try again' : '✗ Too low — try again');
+        fb.className = 'slFeedback ' + (ok ? 'ok' : 'bad');
+      }
+    });
+    card.addEventListener('input', ev => {
+      const inp = ev.target.closest('input[data-row]'); if (!inp) return;
+      const labEl = inp.closest('.slLab'), lab = labs.find(l => l.id === labEl.dataset.labId);
+      const data = load(); const row = (data[lab.id] || [])[+inp.dataset.row]; if (!row) return;
+      row[inp.dataset.col] = inp.value; save(data);
+    });
+    card.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.matches('.slCheck input')) ev.target.nextElementSibling?.click(); });
+  }
+
+  function findTargets(scope) {
+    const out = [];
+    (window.SIM_LAB_SETS || []).forEach(set => {
+      scope.querySelectorAll(set.selector).forEach(el => {
+        if (set.filter && !set.filter(el)) return;
+        const anchor = set.anchor ? (set.anchor(el) || el) : el;
+        out.push({ set, el, anchor });
+      });
+    });
+    return out;
+  }
+  function injectSimLabs(scope = document) {
+    const added = [];
+    findTargets(scope).forEach(({ set, el, anchor }) => {
+      if (anchor.dataset.simLabsDone === set.key) return;
+      anchor.dataset.simLabsDone = set.key;
+      const wrap = document.createElement('div');
+      wrap.innerHTML = cardHtml(set).trim();
+      const card = wrap.firstElementChild;
+      anchor.insertAdjacentElement('afterend', card);
+      wire(card, set, el.matches('.bjt-sim') ? el : null);
+      added.push(card);
+    });
+    if (added.length && window.MathJax && typeof MathJax.typesetPromise === 'function') MathJax.typesetPromise(added).catch(() => {});
+  }
+  window.injectSimLabs = injectSimLabs;
+})();
 </script>
 
 <script>
