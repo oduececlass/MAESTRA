@@ -2126,7 +2126,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#405366!important}
 .te-menu button{height:28px;padding:0 6px;border:1px solid var(--line,#cbd5e1);border-radius:6px;background:var(--surface-2,#f1f5f9);color:var(--text,#0f172a);font:14px/1 "Cambria Math",Georgia,serif;cursor:pointer;white-space:nowrap}
 .te-menu button:hover{border-color:#63aa9c;background:rgba(0,126,114,.14)}
 .quiz-mathbar [data-te-launch].te-armed,#equationBtn.te-armed{background:#007e72!important;border-color:#007e72!important;color:#fff!important;box-shadow:0 0 0 2px rgba(0,126,114,.28)!important}
-.te-placing canvas,.te-placing{cursor:crosshair!important}
+.te-placing{cursor:default}
 </style>
 <style>
 #quizMathToolbar{flex-wrap:wrap;gap:6px;height:auto;min-height:40px;padding:6px 8px}
@@ -2430,7 +2430,7 @@ root.EEProjectFile={FORMAT,VERSION,clone,normalize,canvases,update,assessmentOf,
 <canvas aria-label="Engineering drawing canvas" height="650" id="canvas" tabindex="0" width="1000"></canvas>
 </div>
 </div>
-<div aria-live="polite" class="statusbar" id="status" role="status">Select objects. Text boxes now resize their frame directly with the side or corner handles; hold Shift while dragging a text box if you want proportional text scaling.</div>
+<div aria-live="polite" class="statusbar" id="status" role="status">Select objects. Text and equations scale proportionally from any side or corner handle. Use A+ / A− or Size to change their size without stretching.</div>
 <div class="journal-badge" id="journalBadge" title="Open journal setup">Journal mode off</div>
 <div class="zoom-box">
 <button id="zoomOut">−</button><span id="zoomValue">100%</span><button id="zoomIn">＋</button>
@@ -5306,6 +5306,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     if (teArmedKind) document.querySelectorAll('.tool-btn[data-tool="select"]').forEach(b => b.classList.remove("active"));
     else document.querySelectorAll('.tool-btn[data-tool="select"]').forEach(b => b.classList.toggle("active", state.tool === "select"));
     teEl("canvasShell")?.classList.toggle("te-placing", !!teArmedKind);
+    updateCursor(state.tool);
   }
   function teArm(kind) {
     if (teSession) teCommit();
@@ -8768,9 +8769,10 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
         const anchorY = handle.includes("n") ? oldBottom : oldB.y;
         const sx = Math.abs(p.x - anchorX) / (oldB.w || 1);
         const sy = Math.abs(p.y - anchorY) / (oldB.h || 1);
-        scale = Math.max(minSize / Math.max(oldB.w, oldB.h), sx, sy);
+        scale = Math.max(minSize / Math.min(oldB.w || 1, oldB.h || 1), sx, sy);
       }
 
+      scale = Math.max(scale, minSize / (oldB.w || 1), minSize / (oldB.h || 1));
       const w = Math.max(minSize, oldB.w * scale);
       const h = Math.max(minSize, oldB.h * scale);
       let x = oldB.x, y = oldB.y;
@@ -11429,7 +11431,29 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
   }
 
   function scaleObjectToBounds(o, start, oldB, newB) {
-    const sx = newB.w / (oldB.w || 1), sy = newB.h / (oldB.h || 1);
+    let sx = newB.w / (oldB.w || 1), sy = newB.h / (oldB.h || 1);
+    if (start.type === "text" || start.type === "equation") {
+      const baseSize = Number(start.type === "text" ? start.fontSize : start.equationFontSize) || 24;
+      const desired = Math.abs(sy-1)<1e-8 ? sx : Math.abs(sx-1)<1e-8 ? sy : Math.min(sx,sy);
+      const factor = clamp(desired, 6/baseSize, 240/baseSize);
+      const center = {x:newB.x+(start.x+(start.w||1)/2-oldB.x)*sx,y:newB.y+(start.y+(start.h||1)/2-oldB.y)*sy};
+      o.w=(start.w||1)*factor; o.h=(start.h||1)*factor;
+      o.x=center.x-o.w/2; o.y=center.y-o.h/2;
+      if(start.type === "text") {
+        o.fontSize=baseSize*factor;
+        if(Array.isArray(start.richRuns)) {
+          o.richRuns=start.richRuns.map(run=>({...run,x:run.x*factor,y:run.y*factor,w:run.w*factor,h:run.h*factor,fs:run.fs*factor}));
+          o.richNatW=(start.richNatW||start.w)*factor; o.richNatH=(start.richNatH||start.h)*factor;
+          o.richSig=teRichSignature(o);
+        } else {
+          if(Number.isFinite(start.textPaddingX))o.textPaddingX=start.textPaddingX*factor;
+          if(Number.isFinite(start.textPaddingY))o.textPaddingY=start.textPaddingY*factor;
+        }
+      } else o.equationFontSize=baseSize*factor;
+      if(Number.isFinite(start.strokeWidth))o.strokeWidth=start.strokeWidth*factor;
+      if(start.shadow)o.shadow={...start.shadow,blur:(start.shadow.blur||0)*factor,x:(start.shadow.x||0)*factor,y:(start.shadow.y||0)*factor};
+      return;
+    }
     const visualScale = Math.sqrt(Math.abs(sx * sy));
     const map = p => ({
       ...p,
@@ -11492,6 +11516,12 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
 
   function resizeSingle(o, start, handle, p, keepRatio) {
     const oldB = baseBounds(start), c = boundsCenter(oldB), q = inversePoint(p, start.rotation || 0, c);
+    if(start.type === "text" || start.type === "equation") {
+      const resized=resizedBoundsFromHandle(oldB,handle,q,true);
+      const center=rotatePoint(boundsCenter(resized),start.rotation||0,c);
+      scaleObjectToBounds(o,start,oldB,{x:center.x-resized.w/2,y:center.y-resized.h/2,w:resized.w,h:resized.h});
+      return;
+    }
     let l = oldB.x, t = oldB.y, r = oldB.x + oldB.w, bt = oldB.y + oldB.h;
     
     if (handle.includes("w")) l = q.x; if (handle.includes("e")) r = q.x;
@@ -11524,7 +11554,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     if (!oldB) return;
     // Groups and engineering templates preserve their proportions by default.
     // Hold Shift while dragging a handle only when a deliberate free stretch is desired.
-    const newB = resizedBoundsFromHandle(oldB, handle, p, !freeStretch);
+    const newB = resizedBoundsFromHandle(oldB, handle, p, !freeStretch || starts.some(o=>o.type==="text"||o.type==="equation"));
     starts.forEach(start => {
       const o = state.objects.find(x => x.id === start.id);
       if (o) scaleObjectToBounds(o, start, oldB, newB);
@@ -13728,9 +13758,56 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
   window.addEventListener("blur", closeCanvasContextMenu);
   stage.addEventListener("scroll", closeCanvasContextMenu, { passive: true });
 
-  function updateCursor(tool) {
-    const cursors = { select: "default", hand: "grab", draw: "crosshair", line: "crosshair", bezier: "crosshair", arrow: "crosshair", rect: "crosshair", ellipse: "crosshair", triangle: "crosshair", star: "crosshair", text: "text", eraser: "cell" };
-    canvas.style.cursor = cursors[tool] || "default";
+  function cursorIcon(path, x, y, fallback) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="${path}" fill="white" stroke="#172033" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${x} ${y}, ${fallback}`;
+  }
+  const toolCursors = {
+    draw: cursorIcon('M4 27 7 18 23 2 29 8 13 24Z M7 18 13 24 M20 5 26 11 M4 27 10 25',4,27,'crosshair'),
+    eraser: cursorIcon('M3 20 18 5 29 16 18 27H10Z M10 13 22 23 M18 27H29',3,20,'cell'),
+    rotate: cursorIcon('M8 10A10 10 0 1 1 6 20 M3 5 8 10 14 5',8,10,'grab')
+  };
+  function resizeCursor(handle, rotation = 0) {
+    if (handle === "rotate") return toolCursors.rotate;
+    const angles = {e:0,w:0,se:45,nw:45,n:90,s:90,ne:135,sw:135};
+    const angle = (((angles[handle] ?? 0) + rotation) % 180 + 180) % 180;
+    return ["ew-resize","nwse-resize","ns-resize","nesw-resize"][Math.round(angle/45)%4];
+  }
+  function updateCursor(tool = state.tool) {
+    const drag = dsUI.drag;
+    let cursor;
+    if (drag) cursor = drag.kind === 'guide' ? (drag.guide.axis === 'x' ? 'ew-resize' : 'ns-resize') : drag.kind === 'node' ? 'move' : toolCursors.draw;
+    else if (pointer.down) {
+      const mode=pointer.mode;
+      if(mode==='pan') cursor='grabbing';
+      else if(['pending-move','move','range-move','edit-point'].includes(mode)) cursor='move';
+      else if(['rotate','range-rotate'].includes(mode)) cursor=toolCursors.rotate;
+      else if(['resize','resize-group'].includes(mode)) cursor=resizeCursor(pointer.handle,mode==='resize'?(pointer.objectStarts?.[0]?.rotation||0):0);
+      else if(mode==='range-scale') cursor=resizeCursor(rangeTransformDrag?.part || 'se',rangeTransformDrag?.angle||0);
+      else if(['marquee','direct-curve-range'].includes(mode)) cursor='crosshair';
+    }
+    if(!cursor && tool==='select') {
+      if(pendingEndpointConnection || directCurveRangeSelection.selecting) cursor='crosshair';
+      else if(pointer.hasCanvasPosition) {
+        const x=pointer.lastCanvasX,y=pointer.lastCanvasY;
+        if(dsUI.mode==='nodes') {
+          const hit=hitTest(x,y);cursor=hit?.locked?'not-allowed':hit?'pointer':'default';
+        } else {
+          const gizmo=directCurveSelectedRange() && hitDirectRangeGizmo(x,y);
+          const single=selectedObject();
+          const edit=single&&!single.locked&&hitEditPointHandle(single,x,y);
+          const handle=single ? (!single.locked&&hitHandle(single,x,y)) : hitMultiHandle(x,y);
+          const hit=hitSelectedArea(x,y)||hitTest(x,y);
+          if(gizmo) cursor=gizmo.part==='move'?'move':resizeCursor(gizmo.part,gizmo.cx.angle||0);
+          else if(edit) cursor='move';
+          else if(handle) cursor=resizeCursor(handle,single?.rotation||0);
+          else if(hit) cursor=hit.locked?'not-allowed':'move';
+        }
+      }
+      if(!cursor && teArmedKind) cursor=['text','heading','equation','boxed'].includes(teArmedKind)?'text':'crosshair';
+    }
+    if(!cursor) cursor=toolCursors[tool] || ({select:'default',hand:'grab',text:'text',bezier:'crosshair',line:'crosshair',arrow:'crosshair',rect:'crosshair',ellipse:'crosshair',triangle:'crosshair',star:'crosshair'}[tool] || 'default');
+    if(canvas.style.cursor!==cursor) canvas.style.cursor=cursor;
   }
 
   function setTool(tool) {
@@ -19941,7 +20018,7 @@ function dsSetNodeMode(o,index,mode){
       setTool('select');dsUI.mode='nodes';const o=selectedObject();if(o&&!o.locked&&dsConvert(o)){dsBake(o);saveHistory();}
       dsUI.nodeIndex=0;setStatus('Node edit: drag anchors or tangent handles. Alt moves a tangent independently; Shift constrains its angle.');
     }else setTool(mode);
-    dsRefresh();render();
+    dsRefresh();render();updateCursor();
   }
   function dsEditing(){const o=selectedObject();return dsUI.mode==='nodes'&&o&&!o.locked&&o.visible!==false&&dsIsCurve(o)?o:null;}
   function dsConvert(o){
@@ -19997,9 +20074,9 @@ function dsSetNodeMode(o,index,mode){
   function dsPointerDown(e){
     if(e.button!==0||teSession)return;
     const part=e.target.closest?.('[data-ds-part]'),g=e.target.closest?.('[data-ds-guide]');
-    if(g&&!state.studioDesign.locked){dsConsume(e);const guide=state.studioDesign.guides.find(x=>x.id===g.dataset.dsGuide);dsUI.drag={kind:'guide',id:e.pointerId,guide,before:guide.value};canvas.setPointerCapture(e.pointerId);dsUI.drag.target=canvas;return;}
+    if(g&&!state.studioDesign.locked){dsConsume(e);const guide=state.studioDesign.guides.find(x=>x.id===g.dataset.dsGuide);dsUI.drag={kind:'guide',id:e.pointerId,guide,before:guide.value};canvas.setPointerCapture(e.pointerId);dsUI.drag.target=canvas;updateCursor();return;}
     if(part){
-      const o=dsEditing();if(!o)return;dsConsume(e);dsUI.nodeIndex=Number(part.dataset.dsNode);dsUI.drag={kind:'node',id:e.pointerId,objectId:o.id,index:dsUI.nodeIndex,part:part.dataset.dsPart,before:deepClone(o),target:canvas};canvas.setPointerCapture(e.pointerId);dsRefresh();dsOverlay();return;
+      const o=dsEditing();if(!o)return;dsConsume(e);dsUI.nodeIndex=Number(part.dataset.dsNode);dsUI.drag={kind:'node',id:e.pointerId,objectId:o.id,index:dsUI.nodeIndex,part:part.dataset.dsPart,before:deepClone(o),target:canvas};canvas.setPointerCapture(e.pointerId);dsRefresh();dsOverlay();updateCursor();return;
     }
     if(e.target!==canvas)return;
     if(state.tool==='bezier'&&$('curveDrawMode').value==='pen'){
@@ -20007,7 +20084,7 @@ function dsSetNodeMode(o,index,mode){
       if(d.nodes.length>=3&&dsDistance(raw,d.nodes[0])<9/state.zoom){dsFinish(true);return;}
       if(d.nodes.length&&dsDistance(raw,d.nodes.at(-1))<2/state.zoom)return;
       if(d.nodes.length)p=dsConstrain(p,d.nodes.at(-1),e);
-      d.nodes.push(dsNode(p));d.cursor=null;dsUI.drag={kind:'anchor',id:e.pointerId,index:d.nodes.length-1,target:canvas};canvas.setPointerCapture(e.pointerId);dsOverlay();dsRefresh();return;
+      d.nodes.push(dsNode(p));d.cursor=null;dsUI.drag={kind:'anchor',id:e.pointerId,index:d.nodes.length-1,target:canvas};canvas.setPointerCapture(e.pointerId);dsOverlay();dsRefresh();updateCursor();return;
     }
     if(dsUI.mode==='nodes'){
       dsConsume(e);const p=pointFromEvent(e),o=hitTest(p.x,p.y);
@@ -20019,7 +20096,7 @@ function dsSetNodeMode(o,index,mode){
   function dsPointerMove(e){
     const d=dsUI.drag;if(d&&e.pointerId!==d.id)return;
     if(!d){if(dsUI.draft&&e.target===canvas){dsConsume(e);dsUI.draft.cursor=dsSnap(pointFromEvent(e),e);dsOverlay();}return;}
-    dsConsume(e);const raw=pointFromEvent(e);
+    dsConsume(e);updateCursor();const raw=pointFromEvent(e);
     if(d.kind==='guide'){d.guide.value=clamp(raw[d.guide.axis],0,d.guide.axis==='x'?canvas.width:canvas.height);dsOverlay();return;}
     if(d.kind==='anchor'){
       const n=dsUI.draft?.nodes[d.index];if(!n)return;const p=dsConstrain(raw,n,e);
@@ -20036,7 +20113,7 @@ function dsSetNodeMode(o,index,mode){
     const d=dsUI.drag;if(!d||d.id!==e.pointerId)return;dsConsume(e);
     if(cancel){if(d.kind==='node'){const o=state.objects.find(o=>o.id===d.objectId);if(o)Object.assign(o,d.before);}if(d.kind==='anchor')dsUI.draft?.nodes.splice(d.index,1);if(d.kind==='guide'){if(d.isNew)state.studioDesign.guides=state.studioDesign.guides.filter(g=>g!==d.guide);else d.guide.value=d.before;}}
     else if(d.kind!=='anchor')saveHistory();
-    dsUI.drag=null;try{d.target?.releasePointerCapture(e.pointerId);}catch(_){}render();dsGuideList();dsRefresh();
+    dsUI.drag=null;try{d.target?.releasePointerCapture(e.pointerId);}catch(_){}render();dsGuideList();dsRefresh();updateCursor();
   }
 
   // ===== 2. Movable tool palette, precision controls and reusable styles ====
@@ -20205,6 +20282,11 @@ function dsSetNodeMode(o,index,mode){
   }
   
   syncTopTextControls();
+  ["pointerdown","pointermove","pointerup","pointercancel","lostpointercapture","pointerenter"].forEach(type=>canvas.addEventListener(type,event=>{
+    if(type!=="lostpointercapture") {const p=pointFromEvent(event);pointer.lastCanvasX=p.x;pointer.lastCanvasY=p.y;pointer.hasCanvasPosition=true;}
+    updateCursor();
+  }));
+  canvas.addEventListener("pointerleave",()=>{if(!pointer.down){pointer.hasCanvasPosition=false;updateCursor();}});
   applyZoom(); updateJournalBadge(); updateTextButtons(); updateCursor(state.tool);
   state.history = []; state.historyIndex = -1; saveHistory(); render(); renderLayers(); syncControls();
 })();
