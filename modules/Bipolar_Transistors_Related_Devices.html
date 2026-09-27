@@ -666,7 +666,7 @@ function region(vE, vC){ const e = vE > 0.45, c = vC > 0.45; return e && !c ? 'a
 /* ---------------- per-topic presets ---------------- */
 const PRESETS = {
   structure: {
-    type:'pnp', vE:0.70, vC:-4, p:{ ratio:100 },
+    type:'pnp', vE:0.70, vC:-2, p:{ ratio:100 }, ranges:{ vC:[-2, 0.8] },
     title:'Carrier-flow view of the three-region structure',
     lead:'The same p<sup>+</sup>–n–p stack, now biased. Compare normal and inverted connection, then lower the emitter doping to see why the ordering \\(N_E \\gg N_B > N_C\\) matters.',
     controls:['type','swap','vE','vC','ratio'], metrics:['IC','IB','beta','gamma'],
@@ -1074,6 +1074,8 @@ class Flow {
     this.syncLabels(); this.readout(0, true);
   }
   setBias(e, c){
+    const r = this.cfg.ranges || {}, rE = r.vE || [-3, 0.8], rC = r.vC || [-6, 0.8];
+    e = Math.min(rE[1], Math.max(rE[0], e)); c = Math.min(rC[1], Math.max(rC[0], c));
     this.S.vE = e; this.S.vC = c;
     const iE = this.host.querySelector('[data-bfi="vE"]'), iC = this.host.querySelector('[data-bfi="vC"]');
     if (iE) iE.value = e; if (iC) iC.value = c;
@@ -1210,7 +1212,10 @@ class Flow {
     for (const x of [D.e1, D.b1, D.b2, D.c2]){ g.beginPath(); g.moveTo(X(x), T - 4); g.lineTo(X(x), B + 4); g.stroke(); }
     g.setLineDash([]);
     this.arrow(g, 14, B, 14, T + 4, 1.2, C.muted);
-    g.save(); g.translate(26, (T + B)/2); g.rotate(-Math.PI/2); g.fillStyle = C.muted; g.font = `400 12px ${FONT}`; g.textAlign = 'center'; g.fillText('Electron energy', 0, 0); g.restore();
+    g.save(); g.translate(26, T + (B - T)*0.32); g.rotate(-Math.PI/2); g.fillStyle = C.muted; g.font = `400 12px ${FONT}`; g.textAlign = 'center'; g.fillText('Electron energy', 0, 0); g.restore();
+    { const ppe = (B - T)/(this.Rng.hi - this.Rng.lo), step = ppe*1 > (B - T)*0.55 ? 0.5 : ppe < 14 ? 2 : 1, len = step*ppe, xb = L - 14, yb = B - 2;
+      g.strokeStyle = C.ink; g.lineWidth = 2; g.beginPath(); g.moveTo(xb, yb); g.lineTo(xb, yb - len); g.moveTo(xb - 4, yb); g.lineTo(xb + 4, yb); g.moveTo(xb - 4, yb - len); g.lineTo(xb + 4, yb - len); g.stroke();
+      g.fillStyle = C.ink; g.font = `700 10px ${FONT}`; g.textAlign = 'center'; g.fillText(step + ' eV', xb, yb - len - 5); }
     g.beginPath();
     for (let i = 0; i <= N; i++){ const px = X(i/N), py = Y(ec[i]); i ? g.lineTo(px, py) : g.moveTo(px, py); }
     for (let i = N; i >= 0; i--) g.lineTo(X(i/N), Y(ev[i]));
