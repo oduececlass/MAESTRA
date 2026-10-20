@@ -117,6 +117,182 @@ button,input,select,textarea{font:inherit}
 <style id="hubMainMenuStyle">
 .hubMainMenuButton{position:fixed;right:18px;top:72px;z-index:999999;display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border-radius:999px;border:1px solid rgba(56,215,255,.7);background:linear-gradient(135deg,#38d7ff,#7f7cff);color:#06131d!important;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:14px;font-weight:950;text-decoration:none!important;box-shadow:0 12px 30px rgba(0,0,0,.30);transition:transform .15s ease,filter .15s ease}.hubMainMenuButton:hover{transform:translateY(-1px);filter:brightness(1.07)}@media(max-width:760px){.hubMainMenuButton{top:auto;right:14px;bottom:14px;font-size:13px;padding:10px 13px}}@media print{.hubMainMenuButton{display:none!important}}
 </style>
+<style id="mosSimStyles">
+/* ===== Shared simulator card (scoped copy of the BJT chapter panel styles) ===== */
+.bfUI.simPanel{
+  border:1px solid #cfe1ee;
+  background:linear-gradient(180deg,#ffffff 0%,#f7fbff 100%);
+  border-radius:18px;
+  padding:16px;
+  margin:22px 0;
+  box-shadow:0 10px 30px rgba(15,23,42,.08);
+}
+.bfUI.simPanel h4{margin:0 0 6px;color:#0f3d62;font-size:21px;line-height:1.25}
+.bfUI.simPanel p{font-size:16px;line-height:1.55;margin:6px 0 12px;color:#334155}
+.bfUI .simLayout{display:grid;grid-template-columns:minmax(230px,280px) minmax(0,1fr);gap:16px;align-items:start}
+.bfUI .simControls{display:grid;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px}
+.bfUI .simControls label{font-size:13px;font-weight:800;color:#334155;display:grid;gap:4px}
+.bfUI .simControls output{float:right;color:#0f62a5;font-variant-numeric:tabular-nums;font-weight:900}
+.bfUI .simControls input[type="range"]{width:100%;accent-color:#0ea5e9}
+.bfUI .simMetrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.bfUI .simMetric{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:8px 9px;min-height:54px}
+.bfUI .simMetric b{display:block;color:#64748b;font-size:11px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:3px}
+.bfUI .simMetric span{font-size:15px;font-weight:900;color:#0f172a;font-variant-numeric:tabular-nums}
+.bfUI .simCanvasWrap{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:10px;overflow:hidden}
+.bfUI .bjtSimCanvas{display:block;width:100%;height:auto;aspect-ratio:1000/540;background:#fff;border-radius:10px}
+.bfUI .simNote{font-size:13px!important;color:#64748b!important;margin-top:8px!important}
+.bfUI .simEqBlock{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.bfUI .simEqCard{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;text-align:center;font-size:16px}
+.bfUI .simEqCard.wide{grid-column:1/-1}
+.bfUI .simEqCard mjx-container{margin:0!important}
+@media(max-width:900px){.bfUI .simEqBlock{grid-template-columns:1fr}}
+@media(max-width:900px){.bfUI .simLayout{grid-template-columns:1fr}
+.bfUI .simMetrics{grid-template-columns:1fr 1fr}}
+html[data-theme="dark"] .bfUI.simPanel{background:linear-gradient(180deg,#111827 0%,#0f2230 100%);border-color:#263f52;color:#e5e7eb;box-shadow:0 12px 35px rgba(0,0,0,.28)}
+html[data-theme="dark"] .bfUI.simPanel h4{color:#93c5fd}
+html[data-theme="dark"] .bfUI.simPanel p{color:#cbd5e1}
+html[data-theme="dark"] .bfUI .simControls,html[data-theme="dark"] .bfUI .simCanvasWrap{background:#0f172a;border-color:#334155}
+html[data-theme="dark"] .bfUI .simControls label{color:#cbd5e1}
+html[data-theme="dark"] .bfUI .simControls output{color:#7dd3fc}
+html[data-theme="dark"] .bfUI .simMetric{background:#111827;border-color:#334155}
+html[data-theme="dark"] .bfUI .simMetric b{color:#94a3b8}
+html[data-theme="dark"] .bfUI .simMetric span{color:#f8fafc}
+html[data-theme="dark"] .bfUI .simEqCard{background:#111827;border-color:#334155;color:#e5e7eb}
+/* ===== Shared simulator UI (carrier-flow + analytic labs): .bfUI ===== */
+.bfUI{--bf-ink:#1d2733;--bf-muted:#5b6775;--bf-rule:#cbd3dc;--bf-panel:#ffffff;--bf-e:#2563eb;--bf-h:#dc2626;--bf-fermi:#7c3aed;--bf-cur:#059669;--bf-flash:#f59e0b;
+  --bf-n:#dbeafe;--bf-nplus:#bfdbfe;--bf-p:#fee2e2;--bf-pplus:#fecaca;--bf-dep:#ffffff;--bf-metal:#94a3b8;--bf-gap:rgba(15,23,42,.05);--bf-hist:#93c5fd}
+html[data-theme="dark"] .bfUI{--bf-ink:#e5e7eb;--bf-muted:#94a3b8;--bf-rule:#334155;--bf-panel:#0f172a;--bf-e:#60a5fa;--bf-h:#f87171;--bf-fermi:#a78bfa;--bf-cur:#34d399;--bf-flash:#fbbf24;
+  --bf-n:#1e3a5f;--bf-nplus:#23427a;--bf-p:#4c1d24;--bf-pplus:#6b2130;--bf-dep:#111827;--bf-metal:#64748b;--bf-gap:rgba(255,255,255,.06);--bf-hist:#1d4ed8}
+.bfUI .simLayout{grid-template-columns:minmax(230px,270px) minmax(0,1fr)}
+@media(max-width:900px){.bfUI .simLayout{grid-template-columns:1fr}}
+.bfUI canvas.bf-cv{display:block;width:100%}
+.bfUI .bf-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--bf-muted);margin:0 2px 6px}
+.bfUI .bf-legend span{display:inline-flex;align-items:center;gap:5px}
+.bfUI .bf-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.bfUI .bf-dot.e{background:var(--bf-e)}
+.bfUI .bf-dot.h{border:2px solid var(--bf-h)}
+.bfUI .bf-dot.maj{background:var(--bf-e);opacity:.3}
+.bfUI .bf-dot.fl{border:2px solid var(--bf-flash)}
+.bfUI .bf-bar{width:16px;height:3px;border-radius:2px;background:var(--bf-cur);display:inline-block}
+.bfUI p.bf-cap{font-size:12.5px!important;color:var(--bf-muted)!important;margin:4px 2px 10px!important;line-height:1.45!important}
+.bfUI .bf-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--bf-rule);border-radius:10px;overflow:hidden}
+.bfUI .bf-seg button{font:inherit;font-size:14px;font-weight:700;padding:7px 6px;border:0;background:transparent;color:var(--bf-ink);cursor:pointer}
+.bfUI .bf-seg button+button{border-left:1px solid var(--bf-rule)}
+.bfUI .bf-seg button[aria-pressed="true"]{background:#0f62a5;color:#fff}
+.bfUI .bf-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.bfUI .bf-btns.bf-sw{grid-template-columns:1fr}
+.bfUI .bf-btns button,.bfUI .bf-row button,.bfUI .bf-reset{font:inherit;font-size:13px;font-weight:700;padding:7px 6px;border:1px solid var(--bf-rule);border-radius:9px;background:var(--bf-panel);color:var(--bf-ink);cursor:pointer}
+.bfUI .bf-btns button.here{border-color:var(--bf-cur);box-shadow:inset 0 0 0 1px var(--bf-cur)}
+.bfUI .bf-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.bfUI .bf-row .bf-play{background:#0f62a5;border-color:#0f62a5;color:#fff}
+.bfUI .bf-disp summary{font-size:13px;font-weight:800;color:var(--bf-muted);cursor:pointer;padding:2px 0}
+.bfUI .bf-disp[open] summary{margin-bottom:6px}
+.bfUI .simControls label.bf-tg{display:flex;align-items:center;gap:7px;font-weight:700;margin:3px 0}
+.bfUI .bf-tg input{accent-color:#0f62a5;width:15px;height:15px}
+.bfUI .simMetric span small{font-size:11px;color:var(--bf-muted);font-weight:700;margin-left:3px}
+.bfUI .simMetric b{text-transform:none;letter-spacing:0}
+.bfUI .simMetric b em{font-style:normal;font-size:inherit;font-weight:inherit;color:inherit}
+.bfUI .bf-tally{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:6px 0 4px;align-items:start}
+.bfUI .bf-tally div{border:1px solid var(--bf-rule);border-radius:10px;padding:7px 9px;background:var(--bf-panel)}
+.bfUI .bf-tally b{display:block;font-size:20px;color:var(--bf-ink);font-variant-numeric:tabular-nums}
+.bfUI .bf-tally span{font-size:12px;color:var(--bf-muted)}
+.bfUI .bf-tally p{grid-column:1/-1;margin:2px 0!important;font-size:13px!important;color:var(--bf-muted)!important}
+.bfUI .bf-tally .bf-reset{grid-column:1/-1;justify-self:start;padding:6px 14px}
+@media(max-width:620px){.bfUI .bf-tally{grid-template-columns:1fr 1fr}}
+.bfUI .bf-explain{margin-top:12px;border-left:4px solid var(--bf-cur);padding:4px 0 2px 14px}
+.bfUI .bf-explain h5{margin:0 0 4px;font-size:17px;color:var(--bf-ink)}
+.bfUI .bf-explain p{margin:0 0 6px}
+.bfUI .bf-comp-wrap{overflow-x:auto;margin-top:12px}
+.bfUI table.bf-comp{border-collapse:collapse;width:100%;font-size:14px;color:var(--bf-ink)}
+.bfUI table.bf-comp th{text-align:left;font-size:12px;color:var(--bf-muted);border-bottom:1px solid var(--bf-rule);padding:5px 10px 5px 0}
+.bfUI table.bf-comp td{border-bottom:1px solid var(--bf-rule);padding:5px 10px 5px 0;vertical-align:top}
+.bfUI table.bf-comp .v{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bfUI table.bf-comp .bf-sym{white-space:nowrap;font-weight:700}
+.bfUI .bf-try{margin-top:12px;border:1px dashed var(--bf-rule);border-radius:12px;padding:10px 14px;font-size:15px;color:var(--bf-ink)}
+.bfUI .bf-try ol{margin:6px 0 0;padding-left:22px}
+.bfUI .bf-try li{margin:4px 0;line-height:1.5}
+.bfUI button:focus-visible,.bfUI input:focus-visible,.bfUI summary:focus-visible{outline:2px solid var(--bf-e);outline-offset:2px}
+
+.bfUI .bf-hint{font-size:12.5px;color:var(--bf-muted);margin:0}
+.bfUI .bf-chk{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--bf-ink)}
+.bfUI .simControls label.bf-chk{display:flex}
+.bfUI .bf-seglabel{font-size:13px;font-weight:800;color:#334155;margin:0 0 4px}
+html[data-theme="dark"] .bfUI .bf-seglabel{color:#cbd5e1}
+.bfUI .bf-status{font-size:13px;font-weight:700;border-radius:9px;padding:7px 10px;border:1px solid var(--bf-rule);color:var(--bf-ink)}
+.bfUI .bf-status.warn{border-color:#f59e0b;background:rgba(245,158,11,.10)}
+.bfUI .bf-status.ok{border-color:var(--bf-cur);background:rgba(5,150,105,.08)}
+.bfUI [hidden]{display:none!important}
+
+.bfUI .bf-dot.gn{border:2px solid var(--bf-cur)}
+.bfUI canvas.bf-cv{border:0!important;border-radius:0!important;background:transparent!important}
+
+
+/* ===== Per-simulator guided labs ===== */
+.simLabs{margin:18px 0 30px;border:1px solid #cfe3ee;border-radius:18px;background:linear-gradient(180deg,#f4fbfd 0%,#ffffff 60%);box-shadow:0 8px 24px rgba(15,23,42,.06);overflow:hidden}
+.simLabs .slHead{padding:14px 18px 0;border-bottom:1px solid #dbeaf1;background:#eef8fb}
+.simLabs .slEyebrow{display:block;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#0f766e}
+.simLabs h4{margin:3px 0 10px!important;font-size:19px;color:#0f172a}
+.simLabs .slTabs{display:flex;flex-wrap:wrap;gap:6px}
+.simLabs .slTab{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:1px solid #cbd5e1;border-bottom:none;border-radius:10px 10px 0 0;background:#fff;color:#334155;padding:7px 12px;font-size:13.5px;font-weight:700;cursor:pointer;text-align:left}
+.simLabs .slTab .slTabNum{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b}
+.simLabs .slTab .slTabTitle{display:block;white-space:nowrap;line-height:1.3}
+.simLabs .slTab .slTabTitle i{font-style:italic}
+.simLabs .slTab .slTabTitle sub{font-size:.72em;line-height:0;vertical-align:-.25em}
+.simLabs .slTab.on{background:#0f766e;border-color:#0f766e;color:#fff}
+.simLabs .slTab.on .slTabNum{color:#ccfbf1}
+.simLabs .slLab{padding:16px 18px 18px}
+.simLabs .slLab[hidden]{display:none}
+.simLabs h5{margin:14px 0 6px;font-size:14px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#0f766e}
+.simLabs .slObjective{background:#fff;border:1px solid #bfe3dc;border-left:4px solid #0f766e;border-radius:0 10px 10px 0;padding:10px 14px;font-size:16px;line-height:1.5}
+.simLabs .slCols2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px}
+.simLabs .slSteps{margin:0;padding-left:22px;display:grid;gap:6px;font-size:15.5px;line-height:1.5}
+.simLabs .slSteps li::marker{font-weight:800;color:#0f766e}
+.simLabs .slLook{margin:0;font-size:15px;line-height:1.55;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 12px}
+.simLabs .slNotebook{border:1px solid #e2e8f0;border-radius:12px;background:#fff;overflow:hidden}
+.simLabs .slBar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:8px 10px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+.simLabs .slBar button,.simLabs .slCheck button{border:1px solid #cbd5e1;background:#fff;color:#1f2937;border-radius:8px;padding:6px 10px;font-weight:700;font-size:12.5px;cursor:pointer}
+.simLabs .slBar button:hover,.simLabs .slCheck button:hover{border-color:#0f766e;color:#0f766e}
+.simLabs .slBar .slPrimary{background:#0f766e;border-color:#0f766e;color:#fff}
+.simLabs .slBar .slPrimary:hover{color:#fff;background:#115e59}
+.simLabs .slBar .slPrimary.slFlash{box-shadow:0 0 0 4px rgba(15,118,110,.28)}
+.simLabs .slHint{flex-basis:100%;font-size:12px;color:#64748b}
+.simLabs .slTableWrap{overflow-x:auto;max-height:300px}
+.simLabs .slTable{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+.simLabs .slTable th{position:sticky;top:0;background:#f1f5f9;color:#334155;font-weight:800;padding:7px 9px;text-align:left;white-space:nowrap;z-index:1}
+.simLabs .slTable td{padding:4px 9px;border-top:1px solid #eef2f7;white-space:nowrap}
+.simLabs .slTable td:first-child{color:#94a3b8;width:28px;text-align:center}
+.simLabs .slTable td.slAuto{background:#f1f5f9;color:#0f172a}
+.simLabs .slTable input{width:100%;min-width:90px;border:1px solid #dbe3ec;border-radius:6px;padding:4px 6px;font:inherit;background:#fff;color:#0f172a}
+.simLabs .slTable .slEmpty td{text-align:center;color:#94a3b8;font-style:italic;padding:12px}
+.simLabs .slQ{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:11px 14px;margin:10px 0;font-size:15.5px;line-height:1.5}
+.simLabs .slCheck{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.simLabs .slCheck input{width:180px;border:1px solid #cbd5e1;border-radius:8px;padding:6px 9px;font:inherit}
+.simLabs .slFeedback{font-weight:800;font-size:13.5px}
+.simLabs .slFeedback.ok{color:#15803d}
+.simLabs .slFeedback.bad{color:#b91c1c}
+.simLabs .slAnswer{margin-top:8px}
+.simLabs .slAnswer summary{cursor:pointer;font-weight:700;color:#a54600;font-size:14px}
+.simLabs .slAnswer div{margin-top:6px;padding:8px 11px;background:#f8fafc;border-radius:8px}
+@media(max-width:860px){.simLabs .slCols2{grid-template-columns:1fr}}
+html[data-theme="dark"] .simLabs{background:linear-gradient(180deg,#0f2230 0%,#111827 60%);border-color:#29485a;box-shadow:0 10px 26px rgba(0,0,0,.3)}
+html[data-theme="dark"] .simLabs .slHead{background:#102a38;border-color:#29485a}
+html[data-theme="dark"] .simLabs h4{color:#f1f5f9}
+html[data-theme="dark"] .simLabs .slEyebrow,html[data-theme="dark"] .simLabs h5{color:#5eead4}
+html[data-theme="dark"] .simLabs .slTab{background:#111827;border-color:#334155;color:#cbd5e1}
+html[data-theme="dark"] .simLabs .slTab.on{background:#0f766e;border-color:#0f766e;color:#fff}
+html[data-theme="dark"] .simLabs .slObjective,html[data-theme="dark"] .simLabs .slQ,html[data-theme="dark"] .simLabs .slNotebook{background:#0f172a;border-color:#334155;color:#e5e7eb}
+html[data-theme="dark"] .simLabs .slLook{background:#2a2410;border-color:#6b5a1d;color:#fef3c7}
+html[data-theme="dark"] .simLabs .slBar{background:#111827;border-color:#334155}
+html[data-theme="dark"] .simLabs .slBar button,html[data-theme="dark"] .simLabs .slCheck button{background:#111827;border-color:#334155;color:#e5e7eb}
+html[data-theme="dark"] .simLabs .slBar .slPrimary{background:#0f766e;border-color:#0f766e;color:#fff}
+html[data-theme="dark"] .simLabs .slTable th{background:#1e293b;color:#cbd5e1}
+html[data-theme="dark"] .simLabs .slTable td{border-color:#1e293b;color:#e5e7eb}
+html[data-theme="dark"] .simLabs .slTable td.slAuto{background:#1e293b;color:#f1f5f9}
+html[data-theme="dark"] .simLabs .slTable input,html[data-theme="dark"] .simLabs .slCheck input{background:#111827;border-color:#334155;color:#f1f5f9}
+html[data-theme="dark"] .simLabs .slAnswer div{background:#111827}
+html[data-theme="dark"] .simLabs .slSteps li::marker{color:#5eead4}
+
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -209,6 +385,8 @@ button,input,select,textarea{font:inherit}
 
 
         <div class="warning"><b>Sign discipline.</b> This chapter uses a p-type substrate for nMOS. Positive surface potential means the bands bend downward near the SiO\(_2\)-Si interface, promoting electron inversion.</div>
+      
+        <div class="simPanel mosFlow bfUI" data-mf="flatband"></div>
       </section>
 
       <section class="topic" id="surface-regimes" data-title="Accumulation, Depletion, and Inversion" data-subtitle="Three surface regimes viewed through charge and energy bands">
@@ -241,32 +419,14 @@ button,input,select,textarea{font:inherit}
         <div class="eqBox"><span class="mathDisplay">\(\phi_F=V_T\ln\!\left(\frac{N_A}{n_i}\right)\)</span></div>
         <p>Strong inversion is conventionally defined by \(\psi_s=2\phi_F\). At this point the surface electron concentration becomes comparable to the acceptor concentration, which is why the inversion diagram shows an electron sheet near the interface.</p>
         <div class="compareTableWrap"><table class="compareTable"><thead><tr><th>Regime</th><th>Typical condition</th><th>Dominant semiconductor charge</th><th>Band response</th></tr></thead><tbody><tr><td>Accumulation</td><td>\(V_G&lt;V_{FB}\)</td><td>Mobile holes, \(Q_s&gt;0\)</td><td>Bands bend upward</td></tr><tr><td>Depletion</td><td>\(V_{FB}&lt;V_G&lt;V_T\)</td><td>Fixed acceptor ions, \(Q_s&lt;0\)</td><td>Bands bend downward</td></tr><tr><td>Strong inversion</td><td>\(V_G\gtrsim V_T\)</td><td>Depletion charge plus electron sheet</td><td>Surface bends by about \(2\phi_F\)</td></tr></tbody></table></div>
-        <div class="lab" id="capLab">
-          <div class="labHead"><div><h3>Interactive MOS Capacitor Lab</h3><p>Change the gate bias, doping, oxide thickness, temperature, and oxide charge. Compare structure, bands, electrostatic profiles, and C-V response.</p></div><span class="small">p-type Si substrate · nMOS polarity</span></div>
-          <div class="labGrid">
-            <div class="controls">
-              <div class="ctrl"><label>Gate voltage \(V_G\)<output id="capVgOut"></output></label><input id="capVg" type="range" min="-3" max="5" step="0.02" value="1.2"></div>
-              <div class="ctrl"><label>Acceptors \(N_A\)<output id="capNaOut"></output></label><input id="capNa" type="range" min="14" max="18" step="0.02" value="16"></div>
-              <div class="ctrl"><label>Oxide thickness \(t_{ox}\)<output id="capToxOut"></output></label><input id="capTox" type="range" min="2" max="80" step="1" value="12"></div>
-              <div class="ctrl"><label>Temperature \(T\)<output id="capTempOut"></output></label><input id="capTemp" type="range" min="220" max="450" step="1" value="300"></div>
-              <div class="ctrl"><label>Work-function term \(\Phi_{ms}\)<output id="capPhiOut"></output></label><input id="capPhi" type="range" min="-1.2" max="0.8" step="0.01" value="-0.35"></div>
-              <div class="ctrl"><label>Effective oxide charge \(Q_{ox}/q\)<output id="capQoxOut"></output></label><input id="capQox" type="range" min="-12" max="12" step="0.1" value="0"></div>
-              <div class="ctrl"><label>C-V measurement</label><select id="capFreq"><option value="hf">High frequency</option><option value="lf">Low frequency</option></select></div>
-              <div class="buttonRow"><button class="labBtn primary" id="capReset" type="button">Reset</button><button class="labBtn" id="capCsv" type="button">Export C-V CSV</button></div>
-            </div>
-            <div class="labView">
-              <div class="tabs" id="capTabs"><button class="tabBtn active" data-view="structure">Structure</button><button class="tabBtn" data-view="bands">Energy bands</button><button class="tabBtn" data-view="profiles">\(\rho,E,\psi\)</button><button class="tabBtn" data-view="cv">C-V curve</button></div>
-              <canvas id="capCanvas" class="simCanvas"></canvas>
-              <div class="metrics" id="capMetrics"></div>
-              <div class="explain" id="capExplain"></div>
-            </div>
-          </div>
-        </div>
+        <div class="simPanel mosFlow bfUI" data-mf="regimes"></div>
       </section>
 
       <section class="topic" id="surface-depletion" data-title="Surface Depletion and Threshold Voltage" data-subtitle="Interactive surface-potential, depletion-width, electric-field, charge-density, and energy-band analysis">
         <div class="topicHead"><h2>4. Surface Depletion and Threshold Voltage</h2><p>Interactive surface-potential, depletion-width, electric-field, charge-density, and energy-band analysis.</p></div>
-        <p>Use the integrated surface-potential simulator below to move continuously from flat band to positive surface potential in a p-type MOS capacitor. The energy bands and the depletion-approximation quantities remain synchronized.</p>
+        <p>The first simulator moves continuously from accumulation through depletion into strong inversion, with the charge, field and potential profiles in the silicon and the full Q<sub>s</sub>(ψ<sub>s</sub>) relation synchronized with the gate voltage.</p>
+        <div class="simPanel mosLab bfUI" data-ml="surface"></div>
+        <p>The AI Surface-Potential Tutor below works directly in ψ<sub>s</sub>, with tabs for the depletion width, potential, field and charge, and gives state-aware explanations as you move the controls.</p>
         <div class="simGuide">
           <div class="miniCard"><b>1. Set surface potential</b><p>Move ψ<sub>s</sub> from 0 to 0.60 V or select <b>Animate</b> to watch the transition from flat band toward strong inversion.</p></div>
           <div class="miniCard"><b>2. Compare electrostatic profiles</b><p>Use the Width, Potential, Field, and Charge tabs to examine W<sub>d</sub>, ψ(x), E(x), and ρ(x).</p></div>
@@ -284,7 +444,10 @@ button,input,select,textarea{font:inherit}
 
       <section class="topic" id="cv" data-title="MOS C-V Characteristics" data-subtitle="Low- and high-frequency response, physical charge motion, and numerical capacitance calculations">
         <div class="topicHead"><h2>5. MOS C-V Characteristics</h2><p>Low- and high-frequency response, physical charge motion, and numerical capacitance calculations.</p></div>
-        <p>Use the interactive simulator to sweep gate voltage, compare low- and high-frequency C-V behavior, visualize the responding charge, and follow the symbolic and numerical capacitance calculations.</p>
+        <p>The first simulator shows which charge responds to a small ripple on the gate at low and at high frequency; the second sweeps the gate and plots the low-frequency, high-frequency and deep-depletion C–V curves.</p>
+        <div class="simPanel mosFlow bfUI" data-mf="cvcharge"></div>
+        <div class="simPanel mosLab bfUI" data-ml="cv"></div>
+        <p>The AI C–V Tutor below adds the physical charge-motion view, step-by-step numerical capacitance calculations and AI explanations.</p>
         <div class="simulatorLaunchBar">
           <div><b>AI MOS C–V Tutor</b><span>Frequency response, physical charge motion, numerical capacitance, and AI explanations</span></div>
           <button class="simPopupBtn" type="button" data-open-ai-simulator="cv">Open in Pop-up Window ↗</button>
@@ -336,6 +499,8 @@ button,input,select,textarea{font:inherit}
         <h3>6.3 Interface traps</h3>
         <p>Interface traps do not always behave like a simple fixed sheet. Their occupancy depends on the surface Fermi level and on measurement time scale. In C-V data, they often broaden the transition rather than only translating it, which is why nonideal C-V curves can show both <b>shift</b> and <b>stretch-out</b>.</p>
         <div class="eqBox">\[D_{it}=\frac{1}{q}\frac{dQ_{it}}{dE}\quad [\mathrm{cm^{-2}eV^{-1}}]\]</div>
+      
+        <div class="simPanel mosFlow bfUI" data-mf="oxcharge"></div>
       </section>
 
       <section class="topic" id="oxide-transport" data-title="Carrier Transport and Dielectric Breakdown" data-subtitle="Direct tunneling, Fowler-Nordheim tunneling, emission mechanisms, and reliability">
@@ -347,6 +512,8 @@ button,input,select,textarea{font:inherit}
         <h3>7.2 Breakdown</h3>
         <p>Defect generation can form a percolation path through the dielectric. Time-dependent dielectric breakdown is statistical: a device can survive for a long time and then fail after a connected defect path forms.</p>
         <div class="warning"><b>Reliability distinction.</b> Breakdown is not the same as ordinary gate leakage. Leakage may be measurable while the oxide still insulates; breakdown creates a persistent conductive path and often irreversible damage.</div>
+      
+        <div class="simPanel mosFlow bfUI" data-mf="tunnel"></div>
       </section>
 
       <section class="topic" id="mosfet-structure" data-title="MOSFET Structure and Channel Formation" data-subtitle="n-channel structure, inversion channel, and local channel charge">
@@ -357,6 +524,8 @@ button,input,select,textarea{font:inherit}
           <div class="caption">n-channel MOSFET structure and inversion-channel model. The figure derives \(Q_i(x)=-C_{ox}[V_{GS}-V_T-V(x)]\), identifies the source- and drain-end channel charge, and explains why the inversion charge approaches zero at pinch-off.</div>
         </div>
         <div class="callout"><b>Key physical connection.</b> The gate and the local inversion layer behave approximately as a parallel-plate capacitor. Increasing \(V(x)\) toward the drain reduces the local oxide voltage and therefore reduces the magnitude of the negative inversion charge.</div>
+      
+        <div class="simPanel mosFlow bfUI" data-mf="channel"></div>
       </section>
 
       <section class="topic" id="mosfet-iv" data-title="MOSFET I-V Characteristics" data-subtitle="Gradual-channel derivation, linear region, saturation, and channel-length modulation">
@@ -369,8 +538,11 @@ button,input,select,textarea{font:inherit}
         <div class="eqBox">\[\boxed{I_D=\mu_n C_{ox}\frac{W}{L}\left[V_{OV}V_{DS}-\frac{V_{DS}^2}{2}\right](1+\lambda V_{DS})}\quad 0\le V_{DS}&lt;V_{OV}\]</div>
         <div class="eqBox">\[\boxed{I_D=\frac{1}{2}\mu_nC_{ox}\frac{W}{L}V_{OV}^2(1+\lambda V_{DS})}\quad V_{DS}\ge V_{OV}\]</div>
         <p>Here \(V_{OV}=V_{GS}-V_T\). Channel-length modulation \(\lambda\) gives the saturation curve a finite slope because the effective channel length shortens as the drain depletion region expands.</p>
-        <h3>9.3 Interactive nMOS Device Lab</h3>
-        <p class="embeddedNmosIntro">Use the controls to explore channel formation, output and transfer characteristics, channel profiles, body effect, geometry, and small-signal quantities.</p>
+        <h3>9.3 Interactive nMOS simulators</h3>
+        <p class="embeddedNmosIntro">The carrier-flow view shows the channel thinning toward the drain and pinching off; the characteristics view shows the same device as output and transfer curves.</p>
+        <div class="simPanel mosFlow bfUI" data-mf="saturation"></div>
+        <div class="simPanel mosLab bfUI" data-ml="nmosIV"></div>
+        <p>The Interactive nMOS Device Lab below combines channel formation, I–V curves, channel profiles, body effect, geometry and small-signal quantities with an AI tutor.</p>
         <div class="simulatorLaunchBar">
           <div><b>Interactive nMOS Device Lab</b><span>AI-enabled device lab for channel formation, I-V curves, body effect, geometry, and small-signal quantities.</span></div>
           <button class="simPopupBtn" type="button" data-open-ai-simulator="nmos" data-popup-name="Interactive_nMOS_Device_Lab_AI">Open in Pop-up Window ↗</button>
@@ -389,6 +561,9 @@ button,input,select,textarea{font:inherit}
         <p>The gate charge is distributed among source, drain, body, and overlap regions. In the long-channel approximation:</p>
         <table class="compareTable"><thead><tr><th>Region</th><th>Approximate intrinsic capacitance picture</th></tr></thead><tbody><tr><td>Cutoff</td><td>Gate couples mainly to body through oxide and depletion capacitances.</td></tr><tr><td>Linear</td><td>Channel spans source to drain; roughly \(C_{gs}\approx C_{gd}\approx \tfrac12 C_{ox}WL\) before overlap corrections.</td></tr><tr><td>Saturation</td><td>Channel is pinched off at drain; \(C_{gd}\) becomes small and \(C_{gs}\approx \tfrac23 C_{ox}WL\) in the simple charge-partition model.</td></tr></tbody></table>
         <div class="callout"><b>Switching implication.</b> A transistor can have excellent dc current but still switch slowly if the driver must repeatedly charge a large gate capacitance. Dynamic energy is roughly \(E\approx C_GV^2\) per full charge-discharge cycle.</div>
+      
+        <div class="simPanel mosFlow bfUI" data-mf="body"></div>
+        <div class="simPanel mosLab bfUI" data-ml="bodycap"></div>
       </section>
 
       <section class="topic" id="small-signal" data-title="Small-Signal MOSFET Model" data-subtitle="Transconductance, output resistance, body transconductance, and gain">
@@ -400,6 +575,8 @@ button,input,select,textarea{font:inherit}
         <p>Body-effect transconductance is commonly written \(g_{mb}=\eta g_m\), where \(\eta\) depends on \(\gamma\), \(\phi_F\), and body bias.</p>
         <div class="twoCol"><div class="card"><b>Intrinsic voltage gain</b><div class="eqBox">\[A_{v0}\approx g_mr_o\]</div><p>Higher \(g_m\) and larger \(r_o\) increase gain.</p></div><div class="card"><b>Efficiency metric</b><div class="eqBox">\[\frac{g_m}{I_D}=\frac{2}{V_{OV}}\]</div><p>Lower overdrive gives larger transconductance efficiency in strong inversion, but less speed and current density.</p></div></div>
         <div class="warning"><b>Model range.</b> The square-law equations are pedagogically valuable but not quantitatively exact for short-channel modern transistors. Velocity saturation, mobility degradation, DIBL, and quantum confinement alter the behavior.</div>
+      
+        <div class="simPanel mosLab bfUI" data-ml="smallsig"></div>
       </section>
 
       <section class="topic" id="numerical" data-title="Numerical Design Workflow" data-subtitle="A structured route from process parameters to operating point and performance">
@@ -471,7 +648,7 @@ function drawCapBands(ctx,w,h,s){const left=w*.09,right=w*.92,top=h*.13,bot=h*.8
 function drawCapProfiles(ctx,w,h,s){const margin=55,gap=34,bh=(h-90-2*gap)/3,box1={x:margin,y:34,w:w-2*margin,h:bh},box2={x:margin,y:34+bh+gap,w:w-2*margin,h:bh},box3={x:margin,y:34+2*(bh+gap),w:w-2*margin,h:bh};[box1,box2,box3].forEach((b,i)=>axes(ctx,b,'x',i===0?'ρ(x)':i===1?'E(x)':'ψ(x)'));const wdPx=clamp(s.Wd/(s.Wmax||1)*box1.w*.65,0,box1.w*.7),zeroY=box1.y+box1.h*.5;line(ctx,box1.x,zeroY,box1.x+box1.w,zeroY,css('--muted'));if(s.regime==='Accumulation'){ctx.fillStyle='rgba(239,71,111,.65)';ctx.fillRect(box1.x,zeroY-38,12,38);}else{ctx.fillStyle='rgba(220,76,100,.55)';ctx.fillRect(box1.x,zeroY,wdPx,box1.h*.32);if(s.Qinv<0){ctx.fillStyle=css('--electron');ctx.fillRect(box1.x-3,zeroY,7,box1.h*.42);}}text(ctx,'charge density',box1.x+box1.w*.72,box1.y+18,13,css('--muted'),'center');const ePts=[],pPts=[];for(let i=0;i<=100;i++){const x=box2.x+box2.w*i/100,xx=x-box2.x;let y;if(xx<=wdPx&&wdPx>0)y=box2.y+box2.h*.5+(1-xx/wdPx)*box2.h*.34;else y=box2.y+box2.h*.5;ePts.push([x,y]);const ps=xx<=wdPx&&wdPx>0?s.psiS*Math.pow(1-xx/wdPx,2):0;pPts.push([x,box3.y+box3.h*.78-ps/(Math.max(s.psiS,.05))*box3.h*.56]);}plotPath(ctx,ePts,css('--accent'),3);plotPath(ctx,pPts,css('--accent2'),3);text(ctx,'triangular E in depletion',box2.x+box2.w*.72,box2.y+18,13,css('--muted'),'center');text(ctx,'parabolic ψ in depletion',box3.x+box3.w*.72,box3.y+18,13,css('--muted'),'center');line(ctx,box1.x+wdPx,box1.y,box1.x+wdPx,box3.y+box3.h,css('--line2'),1,[5,5]);text(ctx,'Wd',box1.x+wdPx,box3.y+box3.h+18,13,css('--text'),'center','900');}
 function capCurveAt(vg,base){const old=document.getElementById('capVg').value;const s=capState(vg);return s.C/s.Cox;}
 function drawCapCV(ctx,w,h,s){const box={x:70,y:45,w:w-105,h:h-100};axes(ctx,box,'VG (V)','C/Cox');for(let i=0;i<=5;i++){const y=box.y+box.h-box.h*i/5;line(ctx,box.x,y,box.x+box.w,y,css('--line'),1);text(ctx,(i/5).toFixed(1),box.x-9,y,11,css('--muted'),'right');}const vmin=-3,vmax=5,pts=[];for(let i=0;i<=220;i++){const vg=vmin+(vmax-vmin)*i/220,ss=capState(vg),yNorm=ss.C/ss.Cox;pts.push([box.x+(vg-vmin)/(vmax-vmin)*box.w,box.y+box.h-yNorm*box.h]);}plotPath(ctx,pts,css('--accent2'),3);const xcur=box.x+(s.Vg-vmin)/(vmax-vmin)*box.w,ycur=box.y+box.h-(s.C/s.Cox)*box.h;ctx.beginPath();ctx.arc(xcur,ycur,6,0,Math.PI*2);ctx.fillStyle=css('--bad');ctx.fill();line(ctx,xcur,box.y,xcur,box.y+box.h,css('--bad'),1,[5,5]);const xfb=box.x+(s.Vfb-vmin)/(vmax-vmin)*box.w,xvt=box.x+(s.Vth-vmin)/(vmax-vmin)*box.w;line(ctx,xfb,box.y,xfb,box.y+box.h,css('--good'),1,[5,5]);line(ctx,xvt,box.y,xvt,box.y+box.h,css('--warn'),1,[5,5]);text(ctx,'VFB',xfb,box.y+14,12,css('--good'),'center','900');text(ctx,'VT',xvt,box.y+30,12,css('--warn'),'center','900');text(ctx,s.freq==='hf'?'High-frequency C-V':'Low-frequency C-V',box.x+box.w*.7,box.y+18,15,css('--text'),'center','900');}
-capIds.forEach(id=>document.getElementById(id).addEventListener('input',drawCapLab));document.querySelectorAll('#capTabs .tabBtn').forEach(b=>b.addEventListener('click',()=>{capView=b.dataset.view;document.querySelectorAll('#capTabs .tabBtn').forEach(x=>x.classList.toggle('active',x===b));drawCapLab();}));document.getElementById('capReset').addEventListener('click',()=>{const vals={capVg:1.2,capNa:16,capTox:12,capTemp:300,capPhi:-.35,capQox:0,capFreq:'hf'};Object.entries(vals).forEach(([k,v])=>document.getElementById(k).value=v);drawCapLab();});document.getElementById('capCsv').addEventListener('click',()=>{let csv='Vg_V,C_F_per_cm2,C_over_Cox,regime,psi_s_V,Wd_cm\n';for(let vg=-3;vg<=5.0001;vg+=.02){const s=capState(vg);csv+=`${vg.toFixed(3)},${s.C},${s.C/s.Cox},${s.regime},${s.psiS},${s.Wd}\n`;}downloadText('mos_capacitor_cv.csv',csv);});
+capIds.forEach(id=>document.getElementById(id)?.addEventListener('input',drawCapLab));document.querySelectorAll('#capTabs .tabBtn').forEach(b=>b.addEventListener('click',()=>{capView=b.dataset.view;document.querySelectorAll('#capTabs .tabBtn').forEach(x=>x.classList.toggle('active',x===b));drawCapLab();}));document.getElementById('capReset')?.addEventListener('click',()=>{const vals={capVg:1.2,capNa:16,capTox:12,capTemp:300,capPhi:-.35,capQox:0,capFreq:'hf'};Object.entries(vals).forEach(([k,v])=>document.getElementById(k).value=v);drawCapLab();});document.getElementById('capCsv')?.addEventListener('click',()=>{let csv='Vg_V,C_F_per_cm2,C_over_Cox,regime,psi_s_V,Wd_cm\n';for(let vg=-3;vg<=5.0001;vg+=.02){const s=capState(vg);csv+=`${vg.toFixed(3)},${s.C},${s.C/s.Cox},${s.regime},${s.psiS},${s.Wd}\n`;}downloadText('mos_capacitor_cv.csv',csv);});
 
 // ===== 4. MOSFET physics =====
 const fetIds=['fetVgs','fetVds','fetVsb','fetW','fetL','fetMu','fetLam','fetTox','fetNa','fetPhi'];let fetView='channel';
@@ -564,6 +741,15 @@ window.addEventListener('message', function(event) {
     frame.addEventListener('load', () => {
       const doc = frame.contentDocument;
       if (!doc) return;
+      try {
+        const fix = doc.createElement('style');
+        fix.id = 'embeddedHeightFix';
+        fix.textContent = 'html,body{height:auto!important;min-height:0!important;overflow:hidden!important}'
+          + '.app{min-height:0!important;height:auto!important}'
+          + '.ai-panel{position:relative!important;top:auto!important;height:760px!important;min-height:0!important;max-height:none!important}'
+          + '.controls{position:static!important;top:auto!important;max-height:none!important;overflow:visible!important}';
+        (doc.head || doc.documentElement).appendChild(fix);
+      } catch (_) {}
       const root = doc.querySelector('.app') || doc.body;
       schedule();
       [120, 350, 900, 1800, 3200].forEach(delay => setTimeout(schedule, delay));
@@ -584,11 +770,12 @@ window.addEventListener('message', function(event) {
     window.addEventListener('resize', schedule);
   }
 
-  document.querySelectorAll('iframe[data-ai-simulator]').forEach(frame => {
+  document.querySelectorAll('[data-ai-simulator]').forEach(frame => {
     const key = frame.dataset.aiSimulator;
     const encoded = frame.getAttribute('data-sim-html');
     if (!key || !encoded) return;
     frames.set(key,{frame,encoded});
+    if (frame.tagName !== 'IFRAME') return;
     scheduleAutoHeight(frame);
     frame.srcdoc = decodeUtf8Base64(encoded);
   });
@@ -620,5 +807,1126 @@ window.addEventListener('message', function(event) {
 <link rel="stylesheet" href="../shared/maestra-toolbar.css">
 <script defer src="../shared/theme-sync-v2.js"></script>
 <script defer src="../shared/maestra-bridge.js" data-maestra-role="module" data-maestra-module-id="mosfet" data-maestra-module-title="MOS Capacitor and MOSFET" data-maestra-topic-title="Mosfet" data-maestra-canvas-template="mos-device"></script>
+<script id="mosFlowEngine">
+/* ===================== MOS capacitor / MOSFET carrier-flow simulator (mosFlow) =====================
+   Same visual language as the BJT and PN carrier-flow simulators.
+   geometry 'cap' : gate | oxide | p-Si along the depth axis, band diagram along the same depth axis
+   geometry 'fet' : source | channel | drain along the surface, band diagram along the channel surface
+   Usage: <div class="simPanel mosFlow bfUI" data-mf="regimes"></div> */
+(function(){
+'use strict';
+const KB = 8.617e-5, Q = 1.602e-19, E0 = 8.854e-14, ES = 11.7*E0, EOX = 3.9*E0, EG = 1.12, NI = 1.5e10, CHI_OFF = 3.15;
+const FONT = 'Arial, Helvetica, sans-serif';
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), rnd = (a, b) => a + Math.random()*(b - a), pow10 = v => Math.pow(10, v);
+function gauss(){ let u = 0; while (!u) u = Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*Math.random()); }
+const sup = n => String(n).split('').map(c => ({ '-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','.':'·' }[c] || c)).join('');
+const sci = v => { if (!isFinite(v) || v === 0) return '0'; const a = Math.abs(v), e = Math.floor(Math.log10(a)), m = a/pow10(e); return `${v < 0 ? '−' : ''}${m.toFixed(2)}×10${sup(e)}`; };
+function fmtI(I){ const a = Math.abs(I), s = I < 0 ? '−' : ''; if (a < 1e-18) return '≈ 0 A'; for (const [f, n] of [[1,'A'],[1e-3,'mA'],[1e-6,'µA'],[1e-9,'nA'],[1e-12,'pA'],[1e-15,'fA']]) if (a >= f) return s + (a/f).toPrecision(3) + ' ' + n; return s + (a/1e-18).toPrecision(3) + ' aA'; }
+function rtext(g, t, x, y, align){
+  const m = /(\d+(?:\.\d+)?)px/.exec(g.font), size = m ? +m[1] : 12, base = g.font, small = base.replace(/\d+(?:\.\d+)?px/, Math.round(size*0.74) + 'px');
+  const parts = []; const re = /_(\{[^}]*\}|[A-Za-z0-9]+)/g; let last = 0, mm;
+  while ((mm = re.exec(t))){ if (mm.index > last) parts.push([t.slice(last, mm.index), 0]); parts.push([mm[1].replace(/[{}]/g, ''), 1]); last = re.lastIndex; }
+  if (last < t.length) parts.push([t.slice(last), 0]);
+  let w = 0; parts.forEach(pp => { g.font = pp[1] ? small : base; pp.w = g.measureText(pp[0]).width; w += pp.w; });
+  let x0 = align === 'right' ? x - w : align === 'center' ? x - w/2 : x; g.textAlign = 'left';
+  parts.forEach(pp => { g.font = pp[1] ? small : base; g.fillText(pp[0], x0, y + (pp[1] ? size*0.3 : 0)); x0 += pp.w; }); g.font = base;
+}
+function bisect(f, a, b, n = 70){ let fa = f(a); for (let i = 0; i < n; i++){ const m = (a + b)/2, fm = f(m); if ((fm < 0) === (fa < 0)){ a = m; fa = fm; } else b = m; } return (a + b)/2; }
+
+/* ---------- device physics (p-type substrate, n-channel) ---------- */
+function mosPhys(st){
+  const T = 300, VT = KB*T, NA = pow10(st.NA), tox = st.tox*1e-7, Cox = EOX/tox;
+  const phiF = VT*Math.log(NA/NI), gam = Math.sqrt(2*Q*ES*NA)/Cox, Qox = (st.qox || 0)*1e10*Q;
+  const VFB = (st.phims ?? -0.9) - Qox/Cox, VSB = st.vsb || 0;
+  const VTH = VFB + 2*phiF + gam*Math.sqrt(2*phiF + VSB);
+  const LD = Math.sqrt(ES*VT/(Q*NA)), n0p0 = (NI*NI/NA)/NA;
+  const Fq = psi => { const b = psi/VT; const v = Math.exp(-b) + b - 1 + n0p0*(Math.exp(b) - b - 1); return Math.sqrt(Math.max(v, 0)); };
+  const Qs = psi => -Math.sign(psi)*Math.SQRT2*ES*VT/LD*Fq(psi);
+  const Wdmax = Math.sqrt(2*ES*2*phiF/(Q*NA));
+  return { VT, NA, tox, Cox, phiF, gam, Qox, VFB, VTH, LD, Qs, Wdmax, VSB };
+}
+function capState(p, VG, frozenQinv){
+  let psi;
+  if (frozenQinv !== undefined){   // high-frequency: inversion charge cannot follow
+    psi = bisect(ps => p.VFB + ps + (Q*p.NA*Math.sqrt(2*ES*Math.max(ps, 0)/(Q*p.NA)) + frozenQinv)/p.Cox - VG, 0, 3*p.phiF + 2);
+    const Wd = Math.sqrt(2*ES*Math.max(psi, 0)/(Q*p.NA));
+    return { psi, Wd, Qdep:-Q*p.NA*Wd, Qinv:-frozenQinv, Qacc:0, Qs:-Q*p.NA*Wd - frozenQinv, Vox:VG - p.VFB - psi };
+  }
+  psi = bisect(ps => p.VFB + ps - p.Qs(ps)/p.Cox - VG, -0.8, 2*p.phiF + 0.6);
+  const Qs = p.Qs(psi), Wd = psi > 0 ? Math.min(Math.sqrt(2*ES*psi/(Q*p.NA)), p.Wdmax*1.02) : 0;
+  const Qdep = -Q*p.NA*Wd, Qinv = psi > 0 ? Math.min(0, Qs - Qdep) : 0, Qacc = psi < 0 ? Qs : 0;
+  return { psi, Wd, Qdep, Qinv, Qacc, Qs, Vox:VG - p.VFB - psi };
+}
+/* EKV-style drain current: continuous from subthreshold to strong inversion */
+function fetCurrent(p, st){
+  const mu = 450, WL = 10, kp = mu*p.Cox*WL, nsl = 1 + p.gam/(2*Math.sqrt(2*p.phiF + p.VSB)), VT = p.VT, lam = st.lam ?? 0.05;
+  const f = v => { const u = Math.log1p(Math.exp(v/(2*nsl*VT))); return u*u; };
+  const ID = 2*nsl*kp*VT*VT*(f(st.vgs - p.VTH) - f(st.vgs - p.VTH - nsl*st.vds))*(1 + lam*st.vds);
+  const vov = st.vgs - p.VTH, vdsat = Math.max(vov/nsl, 0), S = nsl*VT*Math.log(10);
+  return { ID, vov, vdsat, nsl, S, kp };
+}
+
+/* ---------------- presets ---------------- */
+const PRESETS = {
+  flatband: { geo:'cap', vg:-0.9, NA:16, tox:10, phims:-0.9,
+    title:'Ideal MOS capacitor: work functions, flat band and voltage partition',
+    lead:'The gate voltage is shared between the oxide and the silicon surface: V<sub>G</sub> − V<sub>FB</sub> = V<sub>ox</sub> + ψ<sub>s</sub>. At V<sub>G</sub> = V<sub>FB</sub> the bands are flat, no charge is induced, and the work-function difference Φ<sub>ms</sub> is fully cancelled.',
+    controls:['vg', 'phims', 'NA'], metrics:['vfb', 'vox', 'psi', 'regime'],
+    tryit:['Press <b>Flat band</b>: the silicon bands become flat and neither the gate nor the surface carries charge.', 'Move V<sub>G</sub> a little above V<sub>FB</sub> and compare V<sub>ox</sub> with ψ<sub>s</sub>: at first most of the voltage lands on the silicon.', 'Change Φ<sub>ms</sub>: the whole picture shifts along the V<sub>G</sub> axis by the same amount.'] },
+  regimes: { geo:'cap', vg:1.2, NA:16, tox:10, phims:-0.9, modes:true,
+    title:'Accumulation, depletion and inversion, carrier by carrier',
+    lead:'Negative gate voltage pulls holes to the surface (accumulation); positive voltage pushes them away and exposes acceptor ions (depletion). Beyond threshold, electrons generated thermally in the depletion region are swept to the surface and form the inversion layer, while the depletion width stops growing.',
+    controls:['modes', 'vg', 'NA', 'tox'], metrics:['regime', 'psi', 'wd', 'qinv', 'vth'] },
+  cvcharge: { geo:'cap', vg:1.8, NA:16, tox:10, phims:-0.9, ac:true, freq:'hf',
+    title:'What responds to the small-signal voltage: low versus high frequency',
+    lead:'A small ripple is added to the gate bias. At low frequency, thermal generation and recombination keep up and the inversion electrons follow the ripple, so the capacitance returns to C<sub>ox</sub>. At high frequency the inversion charge is frozen, only the depletion edge moves, and the capacitance stays near C<sub>min</sub>.',
+    controls:['freq', 'vg', 'NA'], metrics:['regime', 'clf', 'chf', 'resp'],
+    tryit:['In inversion, switch between <b>Low</b> and <b>High frequency</b> and watch which charge breathes with the ripple.', 'Move to depletion: both frequencies look the same, because only ions respond there.', 'In accumulation holes respond immediately at any frequency, so both curves return to C<sub>ox</sub>.'] },
+  oxcharge: { geo:'cap', vg:1.0, NA:16, tox:50, phims:-0.9, qox:10, traps:true,
+    title:'Nonideal MOS: fixed oxide charge and interface traps',
+    lead:'Positive fixed oxide charge (⊕ near the interface) images part of its charge in the silicon, so less gate voltage is needed to reach any surface condition: V<sub>FB</sub> shifts by −Q<sub>ox</sub>/C<sub>ox</sub> (a 50 nm oxide is used so the shift is easy to see). Interface traps (squares) fill or empty as the Fermi level sweeps through the gap at the surface.',
+    controls:['vg', 'qox', 'phims'], metrics:['vfb', 'dvfb', 'vth', 'traps'] },
+  tunnel: { geo:'cap', vg:5, NA:17, tox:6, phims:-0.9, tunnel:true,
+    title:'Oxide conduction: direct and Fowler–Nordheim tunneling',
+    lead:'At high oxide field the barrier that electrons in the inversion layer see becomes triangular, and they tunnel through it into the gate (Fowler–Nordheim). In very thin oxides they can tunnel straight through the full trapezoidal barrier even at low voltage (direct tunneling).',
+    controls:['vg', 'tox'], metrics:['eox', 'mech', 'jfn', 'regime'] },
+  channel: { geo:'fet', vgs:1.2, vds:0.1, NA:17, tox:10, phims:-0.9,
+    title:'Channel formation: the gate lowers the source barrier',
+    lead:'Along the surface, the n⁺ source and drain are separated by a p-type barrier. Raising V<sub>GS</sub> bends the surface down and lowers that barrier. Below threshold only a few electrons diffuse over it; above threshold an inversion layer connects source and drain and electrons drift through.',
+    controls:['vgs', 'vds', 'NA'], metrics:['vth', 'barrier', 'ns', 'id'] },
+  saturation: { geo:'fet', vgs:1.8, vds:1.5, NA:17, tox:10, phims:-0.9, modes:true,
+    title:'Linear region, pinch-off and saturation',
+    lead:'The drain voltage pulls the channel potential up toward the drain, thinning the inversion layer there. Electrons speed up where the channel is thin, so the current stays the same everywhere. Once V<sub>DS</sub> ≥ V<sub>GS</sub> − V<sub>T</sub> the channel pinches off near the drain and the current saturates.',
+    controls:['modes', 'vgs', 'vds'], metrics:['region', 'vdsat', 'id', 'pinch'],
+    tryit:['Start in the linear region and raise V<sub>DS</sub>: the channel electrons thin out toward the drain and move faster there.', 'Cross V<sub>DS,sat</sub>: the channel pinches off and the extra drain voltage drops across the short pinched region, so I<sub>D</sub> barely changes.', 'Compare the electron quasi-Fermi level with the band edge: it follows −V(x) along the channel.'] },
+  body: { geo:'fet', vgs:1.4, vds:0.8, NA:17, tox:10, phims:-0.9, vsb:0,
+    title:'Body effect: reverse-biasing the substrate',
+    lead:'A source-to-body reverse bias V<sub>SB</sub> widens the depletion region under the gate, so more gate voltage is spent supporting depletion charge before the channel forms. The threshold rises as V<sub>T</sub> = V<sub>T0</sub> + γ(√(2φ<sub>F</sub> + V<sub>SB</sub>) − √(2φ<sub>F</sub>)).',
+    controls:['vsb', 'vgs', 'vds'], metrics:['vth', 'dvth', 'id', 'wdch'],
+    tryit:['Raise V<sub>SB</sub> at fixed V<sub>GS</sub>: the depletion region under the channel deepens, the channel thins and I<sub>D</sub> falls.', 'Find the V<sub>GS</sub> that restores the original current: the difference is ΔV<sub>T</sub>.', 'Double V<sub>SB</sub>: ΔV<sub>T</sub> grows less than twice, the square-root dependence.'] }
+};
+
+class MosFlow {
+  constructor(host, key){
+    const c = this.cfg = PRESETS[key]; this.host = host; this.key = key;
+    this.S = { vg:c.vg ?? 1, vgs:c.vgs ?? 1, vds:c.vds ?? 0.1, vsb:c.vsb ?? 0, NA:c.NA ?? 16, tox:c.tox ?? 10, phims:c.phims ?? -0.9, qox:c.qox ?? 0, freq:c.freq || 'hf',
+      speed:1, paused:matchMedia('(prefers-reduced-motion: reduce)').matches, bandP:true };
+    this.P = []; this.F = []; this.acc = {}; this.t = 0; this.lastRead = 0; this.Rng = null; this.tunnelCount = 0; this.tunnelRate = 0;
+    this.sea = []; for (let i = 0; i < 90; i++) this.sea.push({ u:Math.random(), v:Math.random(), ph:rnd(0, 6.28) });
+    this.ions = []; for (let x = 0.003; x < 1; x += 0.0105) for (let r = 0; r < 6; r++) this.ions.push({ x:x + (r % 2)*0.005, y:0.08 + r*0.17 });
+    this.gateMarks = []; for (let i = 0; i < 60; i++) this.gateMarks.push({ y:(i + 0.5)/60, j:rnd(-0.3, 0.3) });
+    this.traps = []; for (let i = 0; i < 14; i++) this.traps.push({ y:(i + 0.5)/14, e:rnd(0.1, 1.02) });
+    this.visible = true; this.build();
+  }
+  get cap(){ return this.cfg.geo === 'cap'; }
+  phys(){
+    const S = this.S, p = mosPhys(S);
+    if (this.cap){
+      let VG = S.vg, frozen;
+      if (this.cfg.ac){ const ripple = 0.25*Math.sin(2*Math.PI*this.t/2.4); VG = S.vg + ripple; if (S.freq === 'hf'){ const s0 = capState(p, S.vg); if (s0.Qinv < 0 && s0.psi > 1.5*p.phiF) frozen = -s0.Qinv; } }
+      const s = capState(p, VG, frozen);
+      return { p, s, VG };
+    }
+    const I = fetCurrent(p, S);
+    return { p, I };
+  }
+  /* channel electron sheet density profile (normalized) and channel potential V(x) for the fet view */
+  channel(xi){
+    const m = this.M, S = this.S, vov = m.I.vov, vdsat = m.I.vdsat, n = m.I.nsl;
+    if (vov <= 0) return { q:0.02*Math.exp(vov/(2*n*0.02585)), V:0 };
+    const vde = Math.min(S.vds, vdsat), lin = S.vds < vdsat, Lp = lin ? 1 : Math.max(0.82, 1 - 0.12*Math.min((S.vds - vdsat)/1.5, 1));
+    if (xi <= Lp){
+      const tot = vov*vde - n*vde*vde/2, target = tot*xi/Lp;
+      const V = (vov - Math.sqrt(Math.max(vov*vov - 2*n*target, 0)))/n;
+      return { q:Math.max((vov - n*V)/vov, lin ? 0 : 0.03), V };
+    }
+    const f = (xi - Lp)/(1 - Lp); return { q:0.03, V:vde + (S.vds - vde)*f*f };
+  }
+  /* ---------- geometry helpers (cap) ---------- */
+  capGeom(){
+    const m = this.M, G = { gate:[0, 0.13], ox:[0.13, 0.23], si:[0.23, 1] };
+    const depth = Math.max(m.p.Wdmax*1.6, 0.05e-4);           // cm shown in silicon
+    G.depth = depth; G.X = d => G.si[0] + (d/depth)*(G.si[1] - G.si[0]);
+    G.wdx = G.X(Math.min(m.s.Wd, depth)) - G.si[0];
+    return G;
+  }
+  capPsi(d){ const s = this.M.s; if (s.psi >= 0){ const Wd = Math.max(s.Wd, 1e-9); return d < Wd ? s.psi*(1 - d/Wd)**2 : 0; } return s.psi*Math.exp(-d/(this.M.p.LD*1.2)); }
+
+  /* ---------- particles ---------- */
+  emit(k, r, dt, fn){ this.acc[k] = (this.acc[k] || 0) + r*dt; while (this.acc[k] >= 1){ this.acc[k]--; fn(); } }
+  stepCap(dt){
+    const m = this.M, G = this.G, s = m.s, surf = G.si[0], hf = this.cfg.ac && this.S.freq === 'hf';
+    const sInv = hf ? capState(m.p, this.S.vg) : s;
+    const tInv = clamp(Math.round(-sInv.Qinv/Q/1.2e11), 0, 60), tAcc = clamp(Math.round(s.Qacc/Q/1.2e11), 0, 60);
+    const inv = this.P.filter(p => p.kind === 'inv' && !p.leaving), acc = this.P.filter(p => p.kind === 'acc' && !p.leaving);
+    const gRate = 10;
+    if (inv.length < tInv) this.emit('gen', gRate*(tInv - inv.length), dt, () => {
+      const x = rnd(surf + 0.01, surf + Math.max(G.wdx*0.9, 0.02)), y = rnd(.08, .92);
+      this.F.push({ x, y, t:0, g:true }); this.P.push({ kind:'inv', sp:'e', x, y, tx:rnd(surf + 0.004, surf + 0.022), a:1 }); this.P.push({ kind:'gh', sp:'h', x, y, a:1 });
+    });
+    if (inv.length > tInv) this.emit('rec', 10*(inv.length - tInv), dt, () => { const p = inv[Math.floor(Math.random()*inv.length)]; if (p){ p.dead = true; this.F.push({ x:p.x, y:p.y, t:0 }); } });
+    if (acc.length < tAcc) this.emit('acc', 14*(tAcc - acc.length), dt, () => this.P.push({ kind:'acc', sp:'h', x:rnd(0.7, 0.98), y:rnd(.08, .92), tx:rnd(surf + 0.004, surf + 0.022), a:1 }));
+    if (acc.length > tAcc) this.emit('accx', 14*(acc.length - tAcc), dt, () => { const p = acc[Math.floor(Math.random()*acc.length)]; if (p){ p.leaving = true; p.tx = rnd(0.7, 0.98); } });
+    if (this.cfg.tunnel){
+      const eox = Math.abs(s.Vox)/m.p.tox, tox = this.S.tox;
+      const rate = s.Vox > 0 && inv.length ? clamp(tox < 3 ? 2 + 4*(3 - tox) : 18*Math.exp(-(2.42e8/Math.max(eox, 1) - 20.2)/4), 0, 18) : 0;
+      this.emit('tun', rate, dt, () => { const src = inv[Math.floor(Math.random()*inv.length)]; if (src){ src.kind = 'tun'; src.tx = G.gate[1] - 0.01; this.tunnelCount++; } });
+    }
+    for (const p of this.P){
+      if (p.kind === 'inv' || p.kind === 'acc'){
+        const tx = p.tx, v = (p.leaving ? 0.35 : 0.45)*dt;
+        if (Math.abs(p.x - tx) > v) p.x += Math.sign(tx - p.x)*v; else { p.x = tx; if (p.leaving){ p.dead = true; } else p.tx = clamp(tx + gauss()*0.002, surf + 0.003, surf + 0.026); }
+        p.y = clamp(p.y + gauss()*Math.sqrt(2*0.004*dt), 0.05, 0.95);
+      } else if (p.kind === 'gh'){ p.x += 0.35*dt; if (p.x > surf + G.wdx + 0.05) { p.a -= dt*2; if (p.a <= 0) p.dead = true; } }
+      else if (p.kind === 'tun'){ p.x -= 0.9*dt; if (p.x <= G.gate[1] - 0.02){ p.a -= dt*3; if (p.a <= 0) p.dead = true; } }
+    }
+  }
+  stepFet(dt){
+    const m = this.M, S = this.S, ID = m.I.ID, Iref = 2e-4;
+    const R = ID <= 0 ? 0 : clamp(38*ID/(ID + Iref) + (ID < 1e-7 ? 0 : 0.4), 0, 38) + (ID < 1e-9 ? 0 : 0);
+    const sub = m.I.vov <= 0;
+    this.emit('src', sub ? clamp(0.25 + 3*Math.log10(1 + ID/1e-10)/4, 0, 4) : R, dt, () => this.P.push({ sp:'e', x:0.02, y:rnd(0.2, 0.8), a:1 }));
+    for (const p of this.P){
+      const xi = (p.x - 0.2)/0.6;
+      let v;
+      if (p.x < 0.2) v = 0.3;
+      else if (p.x > 0.8) v = 0.2;
+      else if (sub) v = 0.03 + gauss()*0.15;
+      else { const c = this.channel(clamp(xi, 0, 1)); v = clamp(0.2/Math.max(c.q, 0.1), 0.2, 1.6); }
+      p.x += v*dt; p.y = clamp(p.y + gauss()*Math.sqrt(2*0.006*dt), 0.05, 0.95);
+      if (p.x < 0.01) p.x = 0.02;
+      if (p.x > 0.98){ p.a -= dt*3; if (p.a <= 0) p.dead = true; }
+    }
+  }
+  step(dt){
+    if (this.cap) this.stepCap(dt); else this.stepFet(dt);
+    if (this.P.length > 700) this.P.splice(0, this.P.length - 700);
+    this.P = this.P.filter(p => !p.dead);
+    for (const f of this.F) f.t += dt; this.F = this.F.filter(f => f.t < 0.6);
+    const k = 1 - Math.exp(-dt/4); this.tunnelRate += (this.tunnelCount/Math.max(dt, 1e-3) - this.tunnelRate)*k; this.tunnelCount = 0;
+  }
+
+  /* ---------- DOM ---------- */
+  build(){
+    const c = this.cfg, S = this.S, h = [], has = k => c.controls.includes(k);
+    const slider = (k, lab, min, max, step, val) => `<label data-mk="${k}"><span>${lab}</span> <output data-out="${k}"></output><input type="range" data-min="${k}" min="${min}" max="${max}" step="${step}" value="${val}"></label>`;
+    if (has('modes') && this.cap) h.push(`<div class="bf-btns">${[['acc','Accumulation',-2],['fb','Flat band','fb'],['dep','Depletion','dep'],['inv','Inversion','inv']].map(([k, t]) => `<button type="button" data-mm="${k}">${t}</button>`).join('')}</div>`);
+    if (has('modes') && !this.cap) h.push(`<div class="bf-btns">${[['off','Cutoff'],['lin','Linear'],['edge','Edge of saturation'],['sat','Saturation']].map(([k, t]) => `<button type="button" data-mm="${k}">${t}</button>`).join('')}</div>`);
+    if (c === PRESETS.flatband) h.push(`<div class="bf-btns"><button type="button" data-mm="fb">Flat band</button><button type="button" data-mm="dep">Small positive bias</button></div>`);
+    if (has('freq')) h.push(`<div class="bf-seg" role="group"><button type="button" data-mfreq="lf">Low frequency</button><button type="button" data-mfreq="hf">High frequency</button></div>`);
+    if (has('vg')) h.push(slider('vg', 'Gate voltage V<sub>G</sub>', this.cfg.tunnel ? -2 : -3, this.cfg.tunnel ? 14 : 4, 0.01, S.vg));
+    if (has('vgs')) h.push(slider('vgs', 'Gate–source voltage V<sub>GS</sub>', 0, 3, 0.005, S.vgs));
+    if (has('vds')) h.push(slider('vds', 'Drain–source voltage V<sub>DS</sub>', 0, 3, 0.01, S.vds));
+    if (has('vsb')) h.push(slider('vsb', 'Source–body reverse bias V<sub>SB</sub>', 0, 4, 0.05, S.vsb));
+    if (has('NA')) h.push(slider('NA', 'Substrate doping N<sub>A</sub>', 15, 18, 0.05, S.NA));
+    if (has('tox')) h.push(slider('tox', 'Oxide thickness t<sub>ox</sub>', this.cfg.tunnel ? 1.5 : 2, this.cfg.tunnel ? 15 : 40, 0.1, S.tox));
+    if (has('phims')) h.push(slider('phims', 'Work-function difference Φ<sub>ms</sub>', -1.2, 0.8, 0.01, S.phims));
+    if (has('qox')) h.push(slider('qox', 'Fixed oxide charge Q<sub>ox</sub>/q (10¹⁰ cm⁻²)', -20, 50, 0.5, S.qox));
+    const MET = { vfb:'Flat-band V<sub>FB</sub>', vox:'Oxide drop V<sub>ox</sub>', psi:'Surface potential ψ<sub>s</sub>', regime:'Regime', wd:'Depletion width W<sub>d</sub>', qinv:'Inversion electrons', clf:'C/C<sub>ox</sub> low frequency', chf:'C/C<sub>ox</sub> high frequency',
+      resp:'Charge that follows the ripple', dvfb:'ΔV<sub>FB</sub> from oxide charge', vth:'Threshold V<sub>T</sub>', traps:'Filled interface traps', eox:'Oxide field ℰ<sub>ox</sub>', mech:'Dominant mechanism', jfn:'FN current density',
+      barrier:'Source barrier height', ns:'Inversion density at source', id:'Drain current I<sub>D</sub> (W/L = 10)', region:'Region', vdsat:'V<sub>DS,sat</sub>', pinch:'Channel at drain end', dvth:'ΔV<sub>T</sub> from body bias', wdch:'Depletion under channel' };
+    h.push(`<div class="simMetrics">${c.metrics.map(k => `<div class="simMetric"><b>${MET[k]}</b><span data-metric="${k}">—</span></div>`).join('')}</div>`);
+    h.push(`<details class="bf-disp"><summary>Display options</summary><label class="bf-tg"><input type="checkbox" data-mchk="bandP" checked>Carriers on band diagram</label>${slider('speed', 'Animation speed', 0.25, 2, 0.05, 1)}</details>`);
+    h.push(`<div class="bf-row"><button type="button" class="bf-play">${S.paused ? 'Play' : 'Pause'}</button><button type="button" class="bf-clear">Clear carriers</button></div>`);
+    const cap = this.cap;
+    this.host.innerHTML = `<h4>${c.title}</h4><p>${c.lead}</p>
+      <div class="simLayout"><div class="simControls">${h.join('')}</div>
+      <div class="simCanvasWrap bf-stage">
+        <div class="bf-legend" aria-hidden="true"><span><i class="bf-dot e"></i>Electron</span><span><i class="bf-dot h"></i>Hole</span><span><i class="bf-dot maj"></i>Majority at rest</span><span>⊖ Acceptor ions</span>${cap ? '<span>+ / − Gate charge</span>' : ''}<span><i class="bf-dot fl"></i>Recombination</span><span><i class="bf-dot gn"></i>Generation</span></div>
+        <canvas class="bf-cv" data-mcv="dev" role="img" aria-label="${c.title}"></canvas>
+        <canvas class="bf-cv" data-mcv="band" role="img" aria-label="Band diagram on the same axis"></canvas>
+        <p class="bf-cap">${cap ? 'Band diagram along the depth axis (electron energy upward): gate metal with its Fermi level E<sub>Fm</sub>, the SiO₂ barrier, and the silicon bands bending near the surface; dashed: silicon Fermi level E<sub>F</sub>, dotted: E<sub>i</sub>. The oxide barrier is drawn to scale (≈3.1 eV above E<sub>C</sub>).' : 'Band diagram along the silicon surface from source to drain (electron energy upward). Dashed: electron quasi-Fermi level, −qV(x) along the channel. The source–channel barrier is what the gate controls.'} Charge and carrier counts are scaled for display.</p>
+      </div></div>
+      ${c.tryit ? `<div class="bf-try"><b>Try this</b><ol>${c.tryit.map(t => `<li>${t}</li>`).join('')}</ol></div>` : ''}`;
+    const q = s => this.host.querySelector(s), qa = s => this.host.querySelectorAll(s);
+    this.cv = { dev:q('[data-mcv="dev"]'), band:q('[data-mcv="band"]') };
+    qa('input[data-min]').forEach(i => i.addEventListener('input', () => { this.S[i.dataset.min] = +i.value; this.Rng = null; this.readout(0, true); }));
+    qa('[data-mchk]').forEach(cb => cb.addEventListener('change', () => { this.S[cb.dataset.mchk] = cb.checked; }));
+    qa('[data-mfreq]').forEach(b => b.addEventListener('click', () => { this.S.freq = b.dataset.mfreq; this.readout(0, true); }));
+    qa('[data-mm]').forEach(b => b.addEventListener('click', () => {
+      const S = this.S, k = b.dataset.mm, p = mosPhys(S);
+      if (this.cap){ S.vg = k === 'acc' ? p.VFB - 1.5 : k === 'fb' ? p.VFB : k === 'dep' ? (p.VFB + p.VTH)/2 : p.VTH + 1.2; S.vg = +S.vg.toFixed(2); }
+      else { const V = { off:[0.3, 1.0], lin:[1.8, 0.2], edge:[1.8, 0], sat:[1.8, 2.0] }[k]; S.vgs = V[0]; S.vds = k === 'edge' ? Math.max(0.05, +((1.8 - p.VTH)/fetCurrent(p, { ...S, vgs:1.8 }).nsl).toFixed(2)) : V[1]; }
+      this.sync(); this.Rng = null; this.readout(0, true); }));
+    const play = q('.bf-play'); play.addEventListener('click', () => { this.S.paused = !this.S.paused; play.textContent = this.S.paused ? 'Play' : 'Pause'; });
+    q('.bf-clear').addEventListener('click', () => { this.P = []; this.F = []; });
+    this.readTheme(); this.M = this.phys(); if (this.cap) this.G = this.capGeom();
+    this.resize(); new ResizeObserver(() => this.resize()).observe(q('.bf-stage'));
+    this.sync(); this.readout(0, true);
+  }
+  sync(){ this.host.querySelectorAll('input[data-min]').forEach(i => { i.value = this.S[i.dataset.min]; }); }
+  readTheme(){
+    const cs = getComputedStyle(this.host), g = n => cs.getPropertyValue(n).trim();
+    this.C = { ink:g('--bf-ink'), muted:g('--bf-muted'), rule:g('--bf-rule'), panel:g('--bf-panel'), e:g('--bf-e'), h:g('--bf-h'), fermi:g('--bf-fermi'), cur:g('--bf-cur'), flash:g('--bf-flash'),
+      n:g('--bf-n'), nplus:g('--bf-nplus'), p:g('--bf-p'), pplus:g('--bf-pplus'), dep:g('--bf-dep'), metal:g('--bf-metal'), gap:g('--bf-gap') };
+  }
+  resize(){
+    [['dev', 0.38, 220, 310], ['band', 0.36, 200, 290]].forEach(([k, r, a, b]) => {
+      const c = this.cv[k], w = c.clientWidth; if (!w) return; const hh = Math.round(clamp(w*r, a, b)), dpr = window.devicePixelRatio || 1;
+      c.width = Math.round(w*dpr); c.height = Math.round(hh*dpr); c.style.height = hh + 'px'; c.cssW = w; c.cssH = hh; c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+    });
+  }
+  carrier(g, sp, x, y, r, a){ g.globalAlpha = a; if (sp === 'e'){ g.fillStyle = this.C.e; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); } else { g.strokeStyle = this.C.h; g.lineWidth = 1.8; g.beginPath(); g.arc(x, y, r - 0.4, 0, 7); g.stroke(); } g.globalAlpha = 1; }
+  ion(g, px, py, donor){ const C = this.C; g.strokeStyle = C.muted; g.lineWidth = 1.2; g.beginPath(); g.arc(px, py, 4.2, 0, 7); g.stroke(); g.beginPath(); g.moveTo(px - 2.5, py); g.lineTo(px + 2.5, py); if (donor){ g.moveTo(px, py - 2.5); g.lineTo(px, py + 2.5); } g.stroke(); }
+  sub(g, main, s, x, y, align, size){ size = size || 13; g.font = `700 ${size}px ${FONT}`; const w1 = g.measureText(main).width; g.font = `700 ${Math.round(size*0.72)}px ${FONT}`; const w2 = g.measureText(s).width; const x0 = align === 'right' ? x - w1 - w2 : align === 'center' ? x - (w1 + w2)/2 : x; g.textAlign = 'left'; g.font = `700 ${size}px ${FONT}`; g.fillText(main, x0, y); g.font = `700 ${Math.round(size*0.72)}px ${FONT}`; g.fillText(s, x0 + w1, y + size*0.3); }
+  scale(g, L, B, T, lo, hi){ const ppe = (B - T)/(hi - lo), step = ppe > (B - T)*0.55 ? 0.5 : ppe < 14 ? 2 : 1, len = step*ppe, xb = L - 14, yb = B - 2, C = this.C;
+    g.strokeStyle = C.ink; g.lineWidth = 2; g.beginPath(); g.moveTo(xb, yb); g.lineTo(xb, yb - len); g.moveTo(xb - 4, yb); g.lineTo(xb + 4, yb); g.moveTo(xb - 4, yb - len); g.lineTo(xb + 4, yb - len); g.stroke();
+    g.fillStyle = C.ink; g.font = `700 10px ${FONT}`; g.textAlign = 'center'; g.fillText(step + ' eV', xb, yb - len - 5); }
+
+  /* ---------- drawing: capacitor ---------- */
+  drawCapDevice(){
+    const c = this.cv.dev, g = c.getContext('2d'), W = c.cssW, H = c.cssH, C = this.C, G = this.G, m = this.M, s = m.s; if (!W) return;
+    g.clearRect(0, 0, W, H);
+    const L = W < 520 ? 40 : 58, R = W - L, T = Math.round(H*0.14), B = Math.round(H*0.78), X = x => L + x*(R - L), Y = y => T + y*(B - T);
+    g.fillStyle = C.metal; g.fillRect(X(G.gate[0]), T, X(G.gate[1]) - X(G.gate[0]), B - T);
+    g.fillStyle = C.gap; g.fillRect(X(G.ox[0]), T, X(G.ox[1]) - X(G.ox[0]), B - T);
+    g.fillStyle = C.p; g.fillRect(X(G.si[0]), T, X(1) - X(G.si[0]), B - T);
+    const surf = G.si[0], wde = surf + G.wdx;
+    if (s.Wd > 0){ g.fillStyle = C.dep; g.fillRect(X(surf), T, X(wde) - X(surf), B - T); for (const q of this.ions) if (q.x > surf + 0.004 && q.x < wde) this.ion(g, X(q.x), Y(q.y), false); }
+    // majority holes in neutral silicon
+    this.sea.forEach(sq => { const x = wde + 0.01 + sq.u*(1 - wde - 0.02); if (x > 0.995) return; this.carrier(g, 'h', X(x + 0.004*Math.sin(this.t*2 + sq.ph)), Y(0.05 + sq.v*0.9 + 0.02*Math.cos(this.t*1.7 + sq.ph)), 3.2, 0.3); });
+    // gate charge (+ or −) at the metal–oxide interface
+    const Qg = -(s.Qs + (m.p.Qox || 0)), ng = clamp(Math.round(Math.abs(Qg)/Q/1.2e11), 0, 60);
+    g.fillStyle = Qg >= 0 ? C.h : C.e; g.font = `700 13px ${FONT}`; g.textAlign = 'center';
+    for (let i = 0; i < ng; i++){ const mk = this.gateMarks[Math.floor(i*60/Math.max(ng, 1)) % 60]; g.fillText(Qg >= 0 ? '+' : '−', X(G.gate[1]) - 7 + mk.j*6, Y(mk.y) + 4); }
+    // fixed oxide charge
+    if (this.S.qox){ const no = clamp(Math.round(Math.abs(this.S.qox)*0.6), 0, 30); for (let i = 0; i < no; i++){ const px = X(G.ox[1]) - 6, py = Y((i + 0.5)/no); this.ion(g, px, py, this.S.qox > 0); } }
+    // interface traps
+    if (this.cfg.traps){
+      const ecS = EG/2 + m.p.phiF - s.psi;       // E_C at surface relative to E_F
+      this.traps.forEach(tr => { const Et = ecS - tr.e, filled = Et < 0, px = X(surf) + 3, py = Y(tr.y); g.strokeStyle = C.ink; g.lineWidth = 1.2; g.fillStyle = filled ? C.e : C.panel; g.fillRect(px - 3.5, py - 3.5, 7, 7); g.strokeRect(px - 3.5, py - 3.5, 7, 7); });
+    }
+    for (const p of this.P){ if (p.kind === 'gh' && p.a <= 0) continue; this.carrier(g, p.sp, X(p.x), Y(p.y), 3.6, p.a ?? 1); }
+    for (const f of this.F){ g.globalAlpha = Math.max(0, 1 - f.t/0.6); g.strokeStyle = f.g ? C.cur : C.flash; g.lineWidth = 2; g.beginPath(); g.arc(X(f.x), Y(f.y), 3 + f.t*20, 0, 7); g.stroke(); g.globalAlpha = 1; }
+    g.strokeStyle = C.ink; g.lineWidth = 1.4; g.strokeRect(X(0), T, X(1) - X(0), B - T);
+    [G.gate[1], G.ox[1]].forEach(x => { g.beginPath(); g.moveTo(X(x), T); g.lineTo(X(x), B); g.stroke(); });
+    g.fillStyle = C.ink; g.font = `700 13px ${FONT}`; g.textAlign = 'center';
+    g.fillText('Gate (metal)', X(0.065), B + 20); g.fillText('SiO₂', X(0.18), B + 20); g.fillText('p-type Si', X(0.62), B + 20);
+    g.fillStyle = C.muted; g.font = `400 12px ${FONT}`;
+    rtext(g, `t_{ox} = ${this.S.tox.toFixed(1)} nm`, X(0.18), B + 36, 'center');
+    if (s.Wd > 0){ const yb = B + 34; g.strokeStyle = C.muted; g.lineWidth = 1.2; g.beginPath(); g.moveTo(X(surf), yb - 5); g.lineTo(X(surf), yb + 5); g.moveTo(X(wde), yb - 5); g.lineTo(X(wde), yb + 5); g.moveTo(X(surf), yb); g.lineTo(X(wde), yb); g.stroke(); g.fillStyle = C.muted; rtext(g, `W_d = ${(s.Wd*1e7).toFixed(0)} nm`, Math.max((X(surf) + X(wde))/2, X(surf) + 40), yb + 16, 'center'); }
+    g.textAlign = 'left'; g.font = `700 12px ${FONT}`; g.fillStyle = C.muted; rtext(g, `V_G = ${m.VG.toFixed(2)} V  ·  ${this.regime()}`, L, 16, 'left');
+    g.textAlign = 'right'; g.fillText(`${(G.depth*1e4*1000).toFixed(0)} nm of silicon shown`, R, 16);
+  }
+  drawCapBand(){
+    const c = this.cv.band, g = c.getContext('2d'), W = c.cssW, H = c.cssH, C = this.C, G = this.G, m = this.M, s = m.s, p = m.p; if (!W) return;
+    g.clearRect(0, 0, W, H);
+    const L = W < 520 ? 40 : 58, R = W - L, T = 14, B = H - 18, X = x => L + x*(R - L), N = 240;
+    const ecB = EG/2 + p.phiF, ecS = ecB - s.psi, eoxS = ecS + CHI_OFF, eoxG = eoxS - s.Vox, efm = -m.VG;
+    const si = []; for (let i = 0; i <= N; i++){ const x = G.si[0] + (1 - G.si[0])*i/N, d = (x - G.si[0])/(1 - G.si[0])*G.depth; si.push([x, ecB - this.capPsi(d)]); }
+    const lo = Math.min(-EG/2 - p.phiF - 0.3, efm - 0.4, ecB - EG - 0.3, ecS - EG - 0.2), hi = Math.max(ecB, ecS, efm) + 0.9 + (this.cfg.tunnel ? Math.max(0, Math.min(eoxS, eoxG) - Math.max(ecB, ecS, efm)) : 0);
+    if (!this.Rng) this.Rng = { lo, hi }; else { this.Rng.lo += (lo - this.Rng.lo)*0.15; this.Rng.hi += (hi - this.Rng.hi)*0.15; }
+    const Y = E => B - (E - this.Rng.lo)/(this.Rng.hi - this.Rng.lo)*(B - T);
+    // metal: filled electron sea below E_Fm
+    g.fillStyle = C.metal; g.globalAlpha = 0.45; g.fillRect(X(0), Y(efm), X(G.gate[1]) - X(0), B - Y(efm)); g.globalAlpha = 1;
+    g.strokeStyle = C.fermi; g.lineWidth = 1.8; g.setLineDash([6, 4]); g.beginPath(); g.moveTo(X(0), Y(efm)); g.lineTo(X(G.gate[1]), Y(efm)); g.stroke(); g.setLineDash([]);
+    // oxide barrier
+    g.fillStyle = C.gap; g.fillRect(X(G.ox[0]), T, X(G.ox[1]) - X(G.ox[0]), B - T);
+    g.save(); g.beginPath(); g.rect(0, T, W, B - T); g.clip();
+    g.strokeStyle = C.ink; g.lineWidth = 2.2; g.beginPath(); g.moveTo(X(G.ox[0]), Y(eoxG)); g.lineTo(X(G.ox[1]), Y(eoxS)); g.stroke();
+    g.beginPath(); g.moveTo(X(G.ox[0]), Y(eoxG)); g.lineTo(X(G.ox[0]), B); g.moveTo(X(G.ox[1]), Y(eoxS)); g.lineTo(X(G.ox[1]), Y(ecS)); g.stroke(); g.restore();
+    if (Y(Math.max(eoxS, eoxG)) < T + 2){ g.fillStyle = C.muted; g.font = `700 11px ${FONT}`; g.textAlign = 'center'; g.fillText(`↑ SiO₂ barrier ${(eoxS - ecS).toFixed(1)} eV`, X((G.ox[0] + G.ox[1])/2) + 20, T + 12); }
+    // silicon bands
+    g.fillStyle = C.gap; g.beginPath(); si.forEach(([x, e], i) => i ? g.lineTo(X(x), Y(e)) : g.moveTo(X(x), Y(e))); for (let i = N; i >= 0; i--) g.lineTo(X(si[i][0]), Y(si[i][1] - EG)); g.closePath(); g.fill();
+    g.strokeStyle = C.ink; g.lineWidth = 2.2;
+    [0, -EG].forEach(o => { g.beginPath(); si.forEach(([x, e], i) => i ? g.lineTo(X(x), Y(e + o)) : g.moveTo(X(x), Y(e + o))); g.stroke(); });
+    g.strokeStyle = C.muted; g.lineWidth = 1.1; g.setLineDash([2, 4]); g.beginPath(); si.forEach(([x, e], i) => i ? g.lineTo(X(x), Y(e - EG/2)) : g.moveTo(X(x), Y(e - EG/2))); g.stroke(); g.setLineDash([]);
+    g.strokeStyle = C.fermi; g.lineWidth = 1.8; g.setLineDash([6, 4]); g.beginPath(); g.moveTo(X(G.si[0]), Y(0)); g.lineTo(X(1), Y(0)); g.stroke(); g.setLineDash([]);
+    // labels
+    g.fillStyle = C.ink; this.sub(g, 'E', 'C', R + 6, Y(ecB) + 4, 'left'); this.sub(g, 'E', 'V', R + 6, Y(ecB - EG) + 4, 'left');
+    g.fillStyle = C.fermi; this.sub(g, 'E', 'F', X(0.8), Y(0) - 5, 'center', 12); this.sub(g, 'E', 'Fm', X(0) + 4, Y(efm) - 6, 'left', 12);
+    g.fillStyle = C.muted; this.sub(g, 'E', 'i', X(0.93), Y(ecB - EG/2) - 5, 'center', 11);
+    g.font = `400 11px ${FONT}`; g.textAlign = 'center'; if (Y(Math.max(eoxS, eoxG)) >= T + 2) g.fillText('SiO₂ barrier', X((G.ox[0] + G.ox[1])/2), Math.max(T + 12, Y(Math.max(eoxS, eoxG)) - 6));
+    if (Math.abs(s.psi) > 0.03){ const px = X(G.si[0]) + 14; g.strokeStyle = C.muted; g.lineWidth = 1.2; g.beginPath(); g.moveTo(px, Y(ecS)); g.lineTo(px, Y(ecB)); g.stroke(); g.fillStyle = C.muted; this.sub(g, 'qψ', 's', px + 5, (Y(ecS) + Y(ecB))/2 + 4, 'left', 12); }
+    if (Math.abs(m.VG) > 0.05){ const px = X(G.gate[1]) - 18; g.strokeStyle = C.fermi; g.lineWidth = 1.2; g.beginPath(); g.moveTo(px, Y(0)); g.lineTo(px, Y(efm)); g.stroke(); g.setLineDash([3, 3]); g.beginPath(); g.moveTo(X(0), Y(0)); g.lineTo(X(G.gate[1]), Y(0)); g.stroke(); g.setLineDash([]); g.fillStyle = C.fermi; this.sub(g, 'qV', 'G', px - 4, (Y(0) + Y(efm))/2 + 4, 'right', 12); }
+    this.scale(g, L, B, T, this.Rng.lo, this.Rng.hi);
+    if (this.S.bandP) for (const pp of this.P){ if (pp.x < G.si[0]) { if (pp.kind === 'tun') this.carrier(g, 'e', X(pp.x), Y(ecS + 0.05), 3.2, pp.a); continue; } const d = (pp.x - G.si[0])/(1 - G.si[0])*G.depth, e = ecB - this.capPsi(d); this.carrier(g, pp.sp, X(pp.x), pp.sp === 'e' ? Y(e) - (4 + 7*pp.y) : Y(e - EG) + (4 + 7*pp.y), 3.1, pp.a ?? 1); }
+  }
+  /* ---------- drawing: transistor ---------- */
+  fetEc(x){
+    const m = this.M, p = m.p, S = this.S, ecSrc = 0.08, ecDrn = ecSrc - S.vds;
+    const psiG = bisect(ps => p.VFB + ps + p.gam*Math.sqrt(Math.max(ps, 0)) - (S.vgs + p.VSB), 0, 6);
+    const xi = clamp((x - 0.2)/0.6, 0, 1), ch = this.channel(xi);
+    let ecCh;
+    const bodyEc = p.VSB + EG/2 + p.phiF;
+    if (m.I.vov > 0) ecCh = EG/2 - p.phiF - ch.V; else ecCh = bodyEc - Math.min(psiG, 2*p.phiF + p.VSB);
+    ecCh = Math.min(ecCh, bodyEc);
+    const s1 = 1/(1 + Math.exp(-(x - 0.2)/0.012)), s2 = 1/(1 + Math.exp(-(x - 0.8)/0.012));
+    return ecSrc*(1 - s1) + ecCh*s1*(1 - s2) + ecDrn*s2;
+  }
+  drawFetDevice(){
+    const c = this.cv.dev, g = c.getContext('2d'), W = c.cssW, H = c.cssH, C = this.C, m = this.M, S = this.S; if (!W) return;
+    g.clearRect(0, 0, W, H);
+    const L = W < 520 ? 30 : 46, R = W - L, X = x => L + x*(R - L), top = Math.round(H*0.22), gateH = 16, oxH = 6, si0 = top + gateH + oxH, B = Math.round(H*0.84), Y = y => si0 + y*(B - si0);
+    const jd = 0.34;   // n+ junction depth (fraction of Si height shown)
+    g.fillStyle = C.p; g.fillRect(X(0), si0, X(1) - X(0), B - si0);
+    const wdc = clamp(0.18 + 0.12*Math.sqrt(1 + S.vsb) + (m.I.vov > 0 ? 0 : 0), 0.15, 0.6);
+    g.fillStyle = C.dep; g.globalAlpha = 0.85; g.fillRect(X(0.2), si0, X(0.8) - X(0.2), (B - si0)*wdc); g.globalAlpha = 1;
+    for (const q of this.ions){ if (q.x > 0.205 && q.x < 0.795 && q.y*1 < wdc && q.y > 0.1) this.ion(g, X(q.x), Y(q.y), false); }
+    g.fillStyle = C.nplus; g.fillRect(X(0), si0, X(0.2) - X(0), (B - si0)*jd); g.fillRect(X(0.8), si0, X(1) - X(0.8), (B - si0)*jd);
+    this.sea.forEach(sq => { const x = sq.u, y = sq.v; if (y < jd && (x < 0.2 || x > 0.8)) this.carrier(g, 'e', X(x), Y(y*jd*0.95 + 0.02), 3, 0.32); else if (y > wdc + 0.05) this.carrier(g, 'h', X(x), Y(y), 3, 0.25); });
+    // inversion layer shading
+    if (m.I.vov > 0){ for (let i = 0; i < 60; i++){ const xi = i/60, ch = this.channel(xi), x = 0.2 + 0.6*xi; g.fillStyle = C.e; g.globalAlpha = 0.25*ch.q; g.fillRect(X(x), si0, X(0.01) - X(0) + 1, (B - si0)*0.07); } g.globalAlpha = 1; }
+    // gate stack
+    g.fillStyle = C.gap; g.fillRect(X(0.18), top + gateH, X(0.82) - X(0.18), oxH);
+    g.fillStyle = C.metal; g.fillRect(X(0.2), top, X(0.8) - X(0.2), gateH);
+    g.strokeStyle = C.ink; g.lineWidth = 1.3; g.strokeRect(X(0), si0, X(1) - X(0), B - si0); g.strokeRect(X(0.2), top, X(0.8) - X(0.2), gateH);
+    g.fillStyle = C.metal; g.fillRect(X(0.02), si0 - 8, X(0.14) - X(0.02), 8); g.fillRect(X(0.86), si0 - 8, X(0.98) - X(0.86), 8);
+    g.fillStyle = C.ink; g.font = `700 12px ${FONT}`; g.textAlign = 'center';
+    g.fillText('S', X(0.08), si0 - 12); g.fillText('D', X(0.92), si0 - 12); g.fillText('G', X(0.5), top - 5);
+    g.fillText('n⁺ source', X(0.1), Y(jd) + 16); g.fillText('n⁺ drain', X(0.9), Y(jd) + 16); g.fillText('p-type body', X(0.5), B - 8);
+    // channel electrons (move along the surface)
+    for (const p of this.P){ const yy = p.x < 0.2 || p.x > 0.8 ? Y(0.03 + p.y*0.25) : Y(0.01 + p.y*0.05); this.carrier(g, 'e', X(p.x), yy, 3.4, p.a); }
+    // current arrow
+    const ID = m.I.ID;
+    if (ID > 1e-9){ const w = 1.3 + clamp((Math.log10(ID) + 9)/6, 0, 1)*4; this.arrowL(g, X(0.14), Y(0.05) - 0, X(0.02), Y(0.05), w, C.cur); this.arrowL(g, X(0.98), Y(0.05), X(0.86), Y(0.05), w, C.cur); }
+    g.textAlign = 'left'; g.font = `700 12px ${FONT}`; g.fillStyle = C.muted; rtext(g, `V_{GS} = ${S.vgs.toFixed(2)} V · V_{DS} = ${S.vds.toFixed(2)} V${S.vsb ? ` · V_{SB} = ${S.vsb.toFixed(2)} V` : ''} · ${this.fetRegion()}`, L, 14, 'left');
+  }
+  arrowL(g, x1, y1, x2, y2, w, col){ const a = Math.atan2(y2 - y1, x2 - x1), hl = 6 + w*1.6; g.strokeStyle = col; g.fillStyle = col; g.lineWidth = w; g.lineCap = 'round'; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2 - Math.cos(a)*hl*0.8, y2 - Math.sin(a)*hl*0.8); g.stroke(); g.beginPath(); g.moveTo(x2, y2); g.lineTo(x2 - hl*Math.cos(a - 0.45), y2 - hl*Math.sin(a - 0.45)); g.lineTo(x2 - hl*Math.cos(a + 0.45), y2 - hl*Math.sin(a + 0.45)); g.closePath(); g.fill(); g.lineCap = 'butt'; }
+  drawFetBand(){
+    const c = this.cv.band, g = c.getContext('2d'), W = c.cssW, H = c.cssH, C = this.C, m = this.M, S = this.S; if (!W) return;
+    g.clearRect(0, 0, W, H);
+    const L = W < 520 ? 30 : 46, R = W - L - 26, T = 14, B = H - 18, X = x => L + x*(R - L), N = 240, ec = [];
+    for (let i = 0; i <= N; i++) ec.push(this.fetEc(i/N));
+    const fn = x => x < 0.2 ? 0 : x > 0.8 ? -S.vds : -this.channel(clamp((x - 0.2)/0.6, 0, 1)).V;
+    const lo = Math.min(...ec) - EG - 0.2, hi = Math.max(...ec) + 0.3;
+    if (!this.Rng) this.Rng = { lo, hi }; else { this.Rng.lo += (lo - this.Rng.lo)*0.15; this.Rng.hi += (hi - this.Rng.hi)*0.15; }
+    const Y = E => B - (E - this.Rng.lo)/(this.Rng.hi - this.Rng.lo)*(B - T);
+    g.setLineDash([3, 4]); g.strokeStyle = C.rule; g.lineWidth = 1; [0.2, 0.8].forEach(x => { g.beginPath(); g.moveTo(X(x), T); g.lineTo(X(x), B); g.stroke(); }); g.setLineDash([]);
+    g.fillStyle = C.gap; g.beginPath(); ec.forEach((e, i) => i ? g.lineTo(X(i/N), Y(e)) : g.moveTo(X(0), Y(e))); for (let i = N; i >= 0; i--) g.lineTo(X(i/N), Y(ec[i] - EG)); g.closePath(); g.fill();
+    g.strokeStyle = C.ink; g.lineWidth = 2.2; [0, -EG].forEach(o => { g.beginPath(); ec.forEach((e, i) => i ? g.lineTo(X(i/N), Y(e + o)) : g.moveTo(X(0), Y(e + o))); g.stroke(); });
+    g.strokeStyle = C.e; g.lineWidth = 1.8; g.setLineDash([6, 4]); g.beginPath(); for (let i = 0; i <= N; i++){ const x = i/N; i ? g.lineTo(X(x), Y(fn(x))) : g.moveTo(X(x), Y(fn(x))); } g.stroke(); g.setLineDash([]);
+    g.fillStyle = C.ink; this.sub(g, 'E', 'C', R + 6, Y(ec[N]) + 4, 'left'); this.sub(g, 'E', 'V', R + 6, Y(ec[N] - EG) + 4, 'left'); g.fillStyle = C.e; this.sub(g, 'E', 'Fn', R + 6, Y(-S.vds) + 16, 'left', 12);
+    g.fillStyle = C.muted; g.font = `700 12px ${FONT}`; g.textAlign = 'center'; g.fillText('source', X(0.1), T + 10); g.fillText('channel (surface)', X(0.5), T + 10); g.fillText('drain', X(0.9), T + 10);
+    const bar = this.fetEc(0.22) - 0.08;
+    if (bar > 0.04){ const px = X(0.2) + 8; g.strokeStyle = C.muted; g.lineWidth = 1.2; g.beginPath(); g.moveTo(px, Y(0.08)); g.lineTo(px, Y(0.08 + bar)); g.stroke(); g.fillStyle = C.muted; g.font = `700 11px ${FONT}`; g.textAlign = 'left'; g.fillText(`barrier ${bar.toFixed(2)} eV`, px + 5, (Y(0.08) + Y(0.08 + bar))/2 + 4); }
+    this.scale(g, L + 14, B, T, this.Rng.lo, this.Rng.hi);
+    if (S.bandP) for (const p of this.P) this.carrier(g, 'e', X(p.x), Y(this.fetEc(p.x)) - (4 + 7*p.y), 3.1, p.a);
+  }
+  regime(){ const s = this.M.s, p = this.M.p; if (s.psi < -0.02) return 'Accumulation'; if (Math.abs(s.psi) <= 0.02) return 'Flat band'; if (s.psi < p.phiF) return 'Depletion'; if (s.psi < 2*p.phiF - 0.03) return 'Weak inversion'; return 'Strong inversion'; }
+  fetRegion(){ const I = this.M.I, S = this.S; if (I.vov <= 0) return 'Cutoff / subthreshold'; return S.vds < I.vdsat ? 'Linear (triode)' : 'Saturation'; }
+  readout(now, force){
+    if (!force && now - this.lastRead < 150) return; this.lastRead = now;
+    const S = this.S, m = this.M = this.phys(), set = (k, t) => { const el = this.host.querySelector(`[data-metric="${k}"]`); if (el) el.innerHTML = t; };
+    const o = (k, t) => { const el = this.host.querySelector(`output[data-out="${k}"]`); if (el) el.textContent = t; };
+    o('vg', S.vg.toFixed(2) + ' V'); o('vgs', S.vgs.toFixed(3) + ' V'); o('vds', S.vds.toFixed(2) + ' V'); o('vsb', S.vsb.toFixed(2) + ' V'); o('NA', `10${sup((+S.NA).toFixed(2).replace(/0+$/, '').replace(/\.$/, ''))} cm⁻³`);
+    o('tox', S.tox.toFixed(1) + ' nm'); o('phims', S.phims.toFixed(2) + ' V'); o('qox', S.qox.toFixed(1)); o('speed', S.speed.toFixed(2) + '×');
+    const p = m.p;
+    set('vfb', p.VFB.toFixed(3) + ' V'); set('vth', p.VTH.toFixed(3) + ' V');
+    if (this.cap){
+      const s = m.s; set('vox', s.Vox.toFixed(3) + ' V'); set('psi', `${s.psi.toFixed(3)} V <small>(2φ<sub>F</sub> = ${(2*p.phiF).toFixed(2)})</small>`); set('regime', this.regime());
+      set('wd', (s.Wd*1e7).toFixed(1) + ' nm'); set('qinv', sci(-s.Qinv/Q) + ' cm⁻²');
+      const dq = 0.01, a = capState(p, S.vg - dq), b = capState(p, S.vg + dq), Clf = Math.abs(b.Qs - a.Qs)/(2*dq)/p.Cox;
+      const s0 = capState(p, S.vg); let Chf = Clf;
+      if (s0.Qinv < 0 && s0.psi > p.phiF){ const Cd = ES/Math.max(s0.Wd, 1e-9); Chf = Cd/(Cd + p.Cox); }
+      set('clf', Clf.toFixed(3)); set('chf', Chf.toFixed(3));
+      set('resp', this.regime().includes('inversion') ? (S.freq === 'lf' ? 'inversion electrons' : 'depletion edge only') : this.regime() === 'Accumulation' ? 'accumulated holes' : 'depletion edge');
+      set('dvfb', (-(p.Qox)/p.Cox).toFixed(3) + ' V');
+      const ecS = EG/2 + p.phiF - s.psi; set('traps', `${this.traps.filter(t => ecS - t.e < 0).length} of ${this.traps.length}`);
+      const eox = Math.abs(s.Vox)/p.tox; set('eox', (eox/1e6).toFixed(2) + ' MV/cm');
+      set('mech', S.tox < 3 ? 'Direct tunneling' : eox > 5e6 ? 'Fowler–Nordheim' : 'Negligible (thick barrier)');
+      const phib = 3.1, jfn = 1.54e-6*eox*eox/phib*Math.exp(-6.83e7*Math.pow(phib, 1.5)*Math.sqrt(0.42)/Math.max(eox, 1)); set('jfn', eox > 1e5 ? sci(jfn) + ' A/cm²' : '—');
+    } else {
+      const I = m.I; set('id', fmtI(I.ID)); set('region', this.fetRegion()); set('vdsat', I.vdsat.toFixed(3) + ' V');
+      set('barrier', Math.max(0, this.fetEc(0.3) - 0.08).toFixed(3) + ' eV'); set('ns', sci(Math.max(p.Cox*Math.max(I.vov, 0)/Q, 0)) + ' cm⁻²' + (I.vov <= 0 ? ' (subthreshold)' : ''));
+      set('pinch', I.vov <= 0 ? 'no channel' : S.vds >= I.vdsat ? 'pinched off' : 'open');
+      const p0 = mosPhys({ ...S, vsb:0 }); set('dvth', (p.VTH - p0.VTH).toFixed(3) + ' V');
+      set('wdch', (Math.sqrt(2*ES*(2*p.phiF + S.vsb)/(Q*p.NA))*1e7).toFixed(0) + ' nm');
+    }
+    this.host.querySelectorAll('[data-mfreq]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mfreq === S.freq)));
+    if (this.cap){ const r = this.regime(); this.host.querySelectorAll('[data-mm]').forEach(b => b.classList.toggle('here', { acc:'Accumulation', fb:'Flat band', dep:'Depletion', inv:'Strong inversion' }[b.dataset.mm] === r)); }
+    else { const r = this.fetRegion(), I = m.I; this.host.querySelectorAll('[data-mm]').forEach(b => b.classList.toggle('here', { off:r.startsWith('Cutoff'), lin:r.startsWith('Linear') && S.vds < 0.8*I.vdsat, edge:Math.abs(S.vds - I.vdsat) < 0.06 && I.vov > 0, sat:r === 'Saturation' && S.vds > I.vdsat + 0.06 }[b.dataset.mm])); }
+  }
+  frame(dt, now){
+    this.M = this.phys(); if (this.cap) this.G = this.capGeom();
+    if (!this.S.paused){ const sdt = dt*this.S.speed; this.t += sdt; this.step(sdt); }
+    if (this.cap){ this.drawCapDevice(); this.drawCapBand(); } else { this.drawFetDevice(); this.drawFetBand(); }
+    this.readout(now);
+  }
+}
+const insts = new Set(); let running = false, last = 0;
+const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.target.__mf) e.target.__mf.visible = e.isIntersecting; }), { rootMargin:'120px' }) : null;
+function loop(now){ const dt = Math.min(0.05, (now - last)/1000); last = now; for (const f of insts){ if (!f.host.isConnected){ insts.delete(f); continue; } if (f.visible && f.host.offsetParent !== null) f.frame(dt, now); } if (insts.size) requestAnimationFrame(loop); else running = false; }
+function mount(host){ const k = host.dataset.mf; if (!PRESETS[k] || host.__mf) return; host.classList.add('bfUI'); PRESETS[k].key = k; try { host.__mf = new MosFlow(host, k); } catch (e){ console.error('MosFlow', k, e); return; } insts.add(host.__mf); if (io) io.observe(host); if (!running){ running = true; last = performance.now(); requestAnimationFrame(loop); } }
+new MutationObserver(() => { for (const f of insts) f.readTheme(); }).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+window.MosFlow = { mountAll(root){ (root || document).querySelectorAll('.mosFlow[data-mf]').forEach(mount); } };
+window.mosPhysShared = { mosPhys, capState, fetCurrent };
+})();
+</script>
+<script id="mosLabEngine">
+/* ===================== MOS analytic simulators (mosLab) =====================
+   Same card, controls, tokens and fonts as the carrier-flow simulators (.bfUI).
+   Usage in topic bodies:  ${bjtLabEmbed('profiles')}   → mounted by BjtLab.mountAll(pageBody). */
+(function(){
+'use strict';
+const Q = 1.602e-19, KB = 8.617e-5, EPS = 11.7*8.854e-14, FONT = 'Arial, Helvetica, sans-serif';
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const log10 = Math.log10;
+const pow10 = v => Math.pow(10, v);
+function fmtI(I){
+  const a = Math.abs(I), s = I < 0 ? '−' : ''; if (!isFinite(a)) return '—'; if (a < 1e-18) return '0 A';
+  for (const [f, n] of [[1,'A'],[1e-3,'mA'],[1e-6,'µA'],[1e-9,'nA'],[1e-12,'pA'],[1e-15,'fA']]) if (a >= f*0.9995) return s + (a/f).toPrecision(3) + ' ' + n;
+  return s + (a/1e-18).toPrecision(3) + ' aA';
+}
+const sci = (v, d = 2) => { if (!isFinite(v)) return '—'; if (v === 0) return '0'; const e = Math.floor(log10(Math.abs(v))), m = v/pow10(e); return `${m.toFixed(d)}×10${sup(e)}`; };
+function sup(n){ const m = { '-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹' }; return String(n).split('').map(c => m[c] || c).join(''); }
+const cm3 = v => `10${sup(Math.round(v*100)/100 === Math.round(v) ? Math.round(v) : v.toFixed(1))} cm⁻³`;
+function niT(T){ const Eg = 1.17 - 4.73e-4*T*T/(T + 636), Eg3 = 1.17 - 4.73e-4*90000/936; return 9.65e9*Math.pow(T/300, 1.5)*Math.exp(-Eg/(2*KB*T) + Eg3/(2*KB*300)); }
+function bisect(f, a, b, n = 80){ let fa = f(a); for (let i = 0; i < n; i++){ const m = (a + b)/2, fm = f(m); if ((fm < 0) === (fa < 0)){ a = m; fa = fm; } else b = m; } return (a + b)/2; }
+
+/* ---------------- plotting core ---------------- */
+function niceStep(span, n){ const raw = span/n, p = pow10(Math.floor(log10(raw))), r = raw/p; return (r < 1.5 ? 1 : r < 3.5 ? 2 : r < 7.5 ? 5 : 10)*p; }
+function plot(g, C, box, o){
+  const { L, T, R, B } = box, xa = o.x, ya = o.y;
+  const tx = v => xa.log ? log10(Math.max(v, 1e-300)) : v, ty = v => ya.log ? log10(Math.max(v, 1e-300)) : (ya.sym ? Math.sign(v)*Math.max(0, log10(Math.abs(v) + 1e-300) - ya.sym) : v);
+  const x0 = tx(xa.min), x1 = tx(xa.max), y0 = ty(ya.min), y1 = ty(ya.max);
+  const X = v => L + (tx(v) - x0)/(x1 - x0)*(R - L), Y = v => B - (ty(v) - y0)/(y1 - y0)*(B - T);
+  g.save(); g.font = `400 11.5px ${FONT}`; g.lineWidth = 1;
+  (o.bands || []).forEach(b => { g.fillStyle = b.col || C.gap; const a = X(b.x0), c = X(b.x1); g.fillRect(Math.max(L, a), T, Math.min(R, c) - Math.max(L, a), B - T); if (b.label){ g.fillStyle = C.muted; rtext(g, b.label, (Math.max(L, a) + Math.min(R, c))/2, T + 12, 'center'); } });
+  // ticks
+  const xt = [], yt = [];
+  if (xa.log){ for (let e = Math.ceil(x0); e <= Math.floor(x1); e++) xt.push([pow10(e), xa.fmt ? xa.fmt(pow10(e)) : '10' + sup(e)]); }
+  else { const st = xa.step || niceStep(x1 - x0, xa.n || 6); for (let v = Math.ceil(x0/st - 1e-9)*st; v <= x1 + 1e-9; v += st) xt.push([v, xa.fmt ? xa.fmt(v) : +v.toFixed(6) + '']); }
+  if (ya.log){ const every = Math.max(1, Math.ceil((y1 - y0)/7)); for (let e = Math.ceil(y0); e <= Math.floor(y1); e += every) yt.push([pow10(e), ya.fmt ? ya.fmt(pow10(e)) : '10' + sup(e)]); }
+  else if (ya.sym){ yt.push([0, '0']); for (let e = Math.ceil(ya.sym + 1); e <= Math.floor(ya.sym + y1); e += 2){ yt.push([pow10(e), '+10' + sup(e)]); yt.push([-pow10(e), '−10' + sup(e)]); } }
+  else { const st = ya.step || niceStep(y1 - y0, ya.n || 5); for (let v = Math.ceil(y0/st - 1e-9)*st; v <= y1 + 1e-9; v += st) yt.push([v, ya.fmt ? ya.fmt(v) : +v.toFixed(6) + '']); }
+  g.strokeStyle = C.grid;
+  xt.forEach(([v]) => { const x = X(v); g.beginPath(); g.moveTo(x, T); g.lineTo(x, B); g.stroke(); });
+  yt.forEach(([v]) => { const y = Y(v); g.beginPath(); g.moveTo(L, y); g.lineTo(R, y); g.stroke(); });
+  if (!ya.log && !ya.sym && y0 < 0 && y1 > 0){ g.strokeStyle = C.muted; g.beginPath(); g.moveTo(L, Y(0)); g.lineTo(R, Y(0)); g.stroke(); }
+  if (!xa.log && x0 < 0 && x1 > 0){ g.strokeStyle = C.muted; g.beginPath(); g.moveTo(X(0), T); g.lineTo(X(0), B); g.stroke(); }
+  g.strokeStyle = C.ink; g.lineWidth = 1.3; g.beginPath(); g.moveTo(L, T); g.lineTo(L, B); g.lineTo(R, B); g.stroke();
+  g.fillStyle = C.muted; g.textAlign = 'center'; g.textBaseline = 'top';
+  xt.forEach(([v, t]) => g.fillText(t, X(v), B + 4));
+  g.textAlign = 'right'; g.textBaseline = 'middle';
+  yt.forEach(([v, t]) => g.fillText(t, L - 5, Y(v)));
+  g.textBaseline = 'alphabetic';
+  if (xa.label){ rtext(g, xa.label, (L + R)/2, B + 30, 'center'); }
+  if (ya.label){ g.save(); g.translate(12, (T + B)/2); g.rotate(-Math.PI/2); rtext(g, ya.label, 0, 0, 'center'); g.restore(); }
+  g.beginPath(); g.rect(L, T - 2, R - L, B - T + 4); g.clip();
+  (o.series || []).forEach(s => {
+    if (!s.pts || s.pts.length < 2) return;
+    g.strokeStyle = s.col; g.lineWidth = s.w || 2.2; g.setLineDash(s.dash || []);
+    g.beginPath(); let pen = false;
+    s.pts.forEach(([x, y]) => { if (!isFinite(y) || (ya.log && y <= 0)){ pen = false; return; } const px = X(x), py = Y(y); if (pen) g.lineTo(px, py); else { g.moveTo(px, py); pen = true; } });
+    g.stroke(); g.setLineDash([]);
+    if (s.fill){ g.globalAlpha = 0.18; g.fillStyle = s.col; g.beginPath(); g.moveTo(X(s.pts[0][0]), Y(s.fillTo ?? 0)); s.pts.forEach(([x, y]) => g.lineTo(X(x), Y(y))); g.lineTo(X(s.pts[s.pts.length - 1][0]), Y(s.fillTo ?? 0)); g.closePath(); g.fill(); g.globalAlpha = 1; }
+  });
+  (o.vlines || []).forEach(v => { g.strokeStyle = v.col || C.muted; g.lineWidth = v.w || 1.2; g.setLineDash(v.dash || [4, 4]); g.beginPath(); g.moveTo(X(v.x), T); g.lineTo(X(v.x), B); g.stroke(); g.setLineDash([]); if (v.label){ g.fillStyle = v.col || C.muted; rtext(g, v.label, X(v.x) + (v.align === 'right' ? -4 : 4), T + (v.dy || 12), v.align || 'left'); } });
+  (o.hlines || []).forEach(v => { g.strokeStyle = v.col || C.muted; g.lineWidth = v.w || 1.2; g.setLineDash(v.dash || [4, 4]); g.beginPath(); g.moveTo(L, Y(v.y)); g.lineTo(R, Y(v.y)); g.stroke(); g.setLineDash([]); if (v.label){ g.fillStyle = v.col || C.muted; rtext(g, v.label, R - 4, Y(v.y) - 5, 'right'); } });
+  (o.points || []).forEach(p => { if (!isFinite(p.y) || (ya.log && p.y <= 0)) return; g.fillStyle = p.col || C.ink; g.beginPath(); g.arc(X(p.x), Y(p.y), p.r || 5, 0, 7); g.fill(); if (p.ring){ g.strokeStyle = C.panel; g.lineWidth = 2; g.stroke(); } });
+  (o.texts || []).forEach(t => { g.fillStyle = t.col || C.ink; g.font = `${t.bold ? 700 : 400} ${t.size || 12}px ${FONT}`; rtext(g, t.t, X(t.x) + (t.dx || 0), Y(t.y) + (t.dy || 0), t.align || 'left'); });
+  g.restore();
+  if (o.legend){ g.save(); g.font = `700 12px ${FONT}`; let x = L + 8; const ly = o.legendBottom ? B - 16 : T + 9; o.legend.forEach(([t, col, dash]) => { g.strokeStyle = col; g.lineWidth = 2.4; g.setLineDash(dash || []); g.beginPath(); g.moveTo(x, ly); g.lineTo(x + 18, ly); g.stroke(); g.setLineDash([]); g.fillStyle = col; rtext(g, t, x + 23, ly + 4, 'left'); x += 30 + g.measureText(t.replace(/_/g, '')).width + 12; }); g.restore(); }
+  return { X, Y };
+}
+function rtext(g, t, x, y, align){
+  // draws "I_C", "τ_{grade}", "V_{CE}" with real subscripts in the current font
+  const m = /(\d+(?:\.\d+)?)px/.exec(g.font), size = m ? +m[1] : 12, base = g.font, small = base.replace(/\d+(?:\.\d+)?px/, Math.round(size*0.74) + 'px');
+  const parts = []; const re = /_(\{[^}]*\}|[A-Za-z0-9]+)/g; let last = 0, mm;
+  while ((mm = re.exec(t))){ if (mm.index > last) parts.push([t.slice(last, mm.index), 0]); parts.push([mm[1].replace(/[{}]/g, ''), 1]); last = re.lastIndex; }
+  if (last < t.length) parts.push([t.slice(last), 0]);
+  let w = 0; parts.forEach(pp => { g.font = pp[1] ? small : base; pp.w = g.measureText(pp[0]).width; w += pp.w; });
+  let x0 = align === 'right' ? x - w : align === 'center' ? x - w/2 : x;
+  const ta = g.textAlign; g.textAlign = 'left';
+  parts.forEach(pp => { g.font = pp[1] ? small : base; g.fillText(pp[0], x0, y + (pp[1] ? size*0.3 : 0)); x0 += pp.w; });
+  g.font = base; g.textAlign = ta;
+}
+const htmlSub = t => String(t).replace(/([A-Za-zτβγαΔηℰ]+)_(\{[^}]*\}|[A-Za-z0-9,]+)/g, (m, a, b) => `${a}<sub>${b.replace(/[{}]/g, '')}</sub>`);
+function sub(g, main, s, x, y, align, size, col){
+  size = size || 12; if (col) g.fillStyle = col;
+  g.font = `700 ${size}px ${FONT}`; const w1 = g.measureText(main).width;
+  g.font = `700 ${Math.round(size*0.72)}px ${FONT}`; const w2 = g.measureText(s).width;
+  const x0 = align === 'right' ? x - w1 - w2 : align === 'center' ? x - (w1 + w2)/2 : x;
+  g.textAlign = 'left'; g.font = `700 ${size}px ${FONT}`; g.fillText(main, x0, y);
+  g.font = `700 ${Math.round(size*0.72)}px ${FONT}`; g.fillText(s, x0 + w1, y + size*0.3);
+}
+function arrow(g, x1, y1, x2, y2, w, col){
+  const a = Math.atan2(y2 - y1, x2 - x1), hl = 6 + w*1.5;
+  g.strokeStyle = col; g.fillStyle = col; g.lineWidth = w; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2 - Math.cos(a)*hl*0.8, y2 - Math.sin(a)*hl*0.8); g.stroke();
+  g.beginPath(); g.moveTo(x2, y2); g.lineTo(x2 - hl*Math.cos(a - 0.45), y2 - hl*Math.sin(a - 0.45)); g.lineTo(x2 - hl*Math.cos(a + 0.45), y2 - hl*Math.sin(a + 0.45)); g.closePath(); g.fill(); g.lineCap = 'butt';
+}
+const box = (W, H, l, t, r, b) => ({ L:l, T:t, R:W - r, B:H - b });
+
+/* ---------------- MOS presets (analytic) ---------------- */
+const P = {};
+const MS = () => window.mosPhysShared;
+const dopM = v => `10${sup((+v).toFixed(2).replace(/0+$/, '').replace(/\.$/, ''))} cm⁻³`;
+const NAm = v => ({ k:'NA', label:'Substrate doping N<sub>A</sub>', min:15, max:18, step:0.05, val:v, fmt:dopM });
+const TOXm = v => ({ k:'tox', label:'Oxide thickness t<sub>ox</sub>', min:2, max:40, step:0.5, val:v, fmt:x => x.toFixed(1) + ' nm' });
+const PHIm = { k:'phims', label:'Work-function difference Φ<sub>ms</sub>', min:-1.2, max:0.8, step:0.01, val:-0.9, fmt:x => x.toFixed(2) + ' V' };
+const ESm = 11.7*8.854e-14;
+
+/* 4 — surface electrostatics */
+P.surface = {
+  title:'Surface electrostatics: bands, charge, field, potential and Q<sub>s</sub>(ψ<sub>s</sub>)',
+  lead:'The exact charge–potential relation of a p-type surface, solved self-consistently with the gate. The top panel shows the energy bands through the gate stack; the profiles below use the depletion approximation plus a thin inversion (or accumulation) sheet at the surface, on the same depth axis; the last panel shows the full Q<sub>s</sub>(ψ<sub>s</sub>) curve and where the present bias sits on it.',
+  controls:[{ k:'vg', label:'Gate voltage V<sub>G</sub>', min:-2.5, max:4, step:0.01, val:0.8, fmt:x => x.toFixed(2) + ' V' }, NAm(16), TOXm(10), PHIm,
+    { type:'btns', btns:[['Flat band', st => { st.vg = +MS().mosPhys(st).VFB.toFixed(2); }], ['Threshold', st => { st.vg = +MS().mosPhys(st).VTH.toFixed(2); }]] }],
+  metrics:[['psi', 'Surface potential ψ<sub>s</sub>', m => m.s.psi.toFixed(3) + ' V'], ['phif', '2φ<sub>F</sub>', m => (2*m.p.phiF).toFixed(3) + ' V'],
+    ['wd', 'Depletion width W<sub>d</sub>', m => (m.s.Wd*1e7).toFixed(1) + ' nm'], ['es', 'Surface field ℰ<sub>s</sub>', m => (Math.abs(m.s.Qs)/ESm/1e3).toFixed(1) + ' kV/cm'],
+    ['qd', 'Depletion charge Q<sub>d</sub>/q', m => sci(-m.s.Qdep/Q, 2) + ' cm⁻²'], ['qi', 'Inversion charge Q<sub>n</sub>/q', m => sci(-m.s.Qinv/Q, 2) + ' cm⁻²'], ['vt', 'Threshold V<sub>T</sub>', m => m.p.VTH.toFixed(3) + ' V']],
+  compute(st){
+    const p = MS().mosPhys(st), s = MS().capState(p, st.vg), D = p.Wdmax*1.6*1e7, pts = { rho:[], E:[], psi:[] }, N = 300;
+    for (let i = 0; i <= N; i++){ const xn = D*i/N, x = xn*1e-7; let r = 0, E = 0, ps = 0;
+      if (s.psi > 0 && x < s.Wd){ r = -p.NA; E = Q*p.NA*(s.Wd - x)/ESm; ps = s.psi*(1 - x/s.Wd)**2; }
+      if (s.psi < 0){ ps = s.psi*Math.exp(-x/p.LD); E = -Math.abs(s.Qs)/ESm*Math.exp(-x/p.LD); }
+      pts.rho.push([xn, r]); pts.E.push([xn, E/1e3]); pts.psi.push([xn, ps]); }
+    const qs = []; for (let i = 0; i <= 300; i++){ const ps = -0.4 + (2*p.phiF + 0.75)*i/300; qs.push([ps, Math.abs(p.Qs(ps))/Q]); }
+    return { p, s, pts, D, qs, x0:-0.14*D };
+  },
+  panels:[
+    { ratio:0.34, min:200, max:270, cap:'Energy bands through the gate stack (electron energy upward): gate metal with E_Fm, the SiO₂ layer, and the silicon bands bending near the surface. Dashed: E_F in the silicon; dotted: E_i. The SiO₂ barrier (≈3.1 eV above E_C) runs off the top of the panel.', draw(g, W, H, m, st, C){
+      const p = m.p, s = m.s, EG = 1.12, ecB = EG/2 + p.phiF, ecS = ecB - s.psi, efm = -st.vg, xg = m.x0, xo = m.x0*0.45;
+      const ec = m.pts.psi.map(([x, ps]) => [x, ecB - ps]), ev = ec.map(([x, e]) => [x, e - EG]), ei = ec.map(([x, e]) => [x, e - EG/2]);
+      const lo = Math.min(ecB - EG, ecS - EG, efm) - 0.3, hi = Math.max(ecB, ecS, efm) + 0.7;
+      const r = plot(g, C, box(W, H, 70, 14, 34, 34), { x:{ min:m.x0, max:m.D, label:'Depth into silicon (nm), gate stack at left' }, y:{ min:lo, max:hi, n:4, label:'Energy (eV)' },
+        bands:[{ x0:xg, x1:xo, col:C.metal }, { x0:xo, x1:0, col:C.gap }],
+        series:[{ pts:ec, col:C.ink, w:2.2 }, { pts:ev, col:C.ink, w:2.2 }, { pts:ei, col:C.muted, w:1.2, dash:[2, 4] }, { pts:[[0, 0], [m.D, 0]], col:C.fermi, w:1.6, dash:[6, 4] }, { pts:[[xg, efm], [xo, efm]], col:C.fermi, w:2, dash:[6, 4] }] });
+      const eoxS = ecS + 3.15, eoxG = eoxS - s.Vox;
+      g.save(); g.beginPath(); g.rect(r.X(xo), 14, r.X(0) - r.X(xo), H - 48); g.clip();
+      g.strokeStyle = C.ink; g.lineWidth = 2; g.beginPath(); g.moveTo(r.X(xo), r.Y(eoxG)); g.lineTo(r.X(0), r.Y(eoxS)); g.stroke(); g.restore();
+      g.strokeStyle = C.ink; g.lineWidth = 1.4; g.beginPath(); g.moveTo(r.X(0), r.Y(hi)); g.lineTo(r.X(0), r.Y(lo)); g.moveTo(r.X(xo), r.Y(hi)); g.lineTo(r.X(xo), r.Y(lo)); g.stroke();
+      g.fillStyle = C.muted; g.font = `700 11px ${FONT}`; g.textAlign = 'center'; g.fillText('gate', r.X((xg + xo)/2), 28); g.fillText('SiO₂', r.X(xo/2), 28);
+      g.fillStyle = C.ink; sub(g, 'E', 'C', r.X(m.D) + 4, r.Y(ecB) + 4, 'left'); sub(g, 'E', 'V', r.X(m.D) + 4, r.Y(ecB - EG) + 4, 'left');
+      g.fillStyle = C.fermi; sub(g, 'E', 'F', r.X(m.D*0.82), r.Y(0) - 5, 'center', 12); sub(g, 'E', 'Fm', r.X(xg) + 3, r.Y(efm) - 6, 'left', 11);
+      g.fillStyle = C.muted; sub(g, 'E', 'i', r.X(m.D*0.93), r.Y(ecB - EG/2) - 5, 'center', 11);
+      if (Math.abs(s.psi) > 0.02){ const px = r.X(0) + 10; g.strokeStyle = C.muted; g.lineWidth = 1.2; g.beginPath(); g.moveTo(px, r.Y(ecS)); g.lineTo(px, r.Y(ecB)); g.stroke(); g.fillStyle = C.muted; sub(g, 'qψ', 's', px + 5, (r.Y(ecS) + r.Y(ecB))/2 + 4, 'left', 12); }
+      const reg = s.psi < -0.02 ? 'accumulation' : s.psi < 0.02 ? 'flat band' : s.psi < p.phiF ? 'depletion' : s.psi < 2*p.phiF - 0.03 ? 'weak inversion' : 'strong inversion';
+      g.fillStyle = C.ink; g.font = `700 12px ${FONT}`; g.textAlign = 'right'; g.fillText(reg, r.X(m.D), 28);
+    } },
+    { ratio:0.22, min:130, max:180, cap:'Charge density in the silicon (depletion approximation). The arrow marks the inversion (or accumulation) sheet at the surface, drawn to its sheet density.', draw(g, W, H, m, st, C){
+      const r = plot(g, C, box(W, H, 70, 14, 34, 34), { x:{ min:m.x0, max:m.D, label:'Depth into silicon (nm)' }, bands:[{ x0:m.x0, x1:0, col:C.gap }], y:{ min:-m.p.NA*1.3, max:m.p.NA*0.4, n:3, fmt:v => v === 0 ? '0' : sci(v, 0), label:'ρ/q (cm⁻³)' }, series:[{ pts:m.pts.rho, col:C.fermi, w:2, fill:true }] });
+      const sheet = m.s.psi > 0 ? -m.s.Qinv/Q : m.s.Qacc/Q;
+      if (sheet > 1e9){ const col = m.s.psi > 0 ? C.e : C.h, h = clamp(Math.log10(sheet) - 9, 0.5, 5)/5*(H - 60); arrow(g, r.X(0) + 4, r.Y(0), r.X(0) + 4, m.s.psi > 0 ? r.Y(0) + h*0.4 : r.Y(0) - h*0.4, 2.4, col); g.fillStyle = col; g.font = `700 11px ${FONT}`; g.textAlign = 'left'; g.fillText((m.s.psi > 0 ? 'electron sheet ' : 'hole sheet ') + sci(sheet, 1) + ' cm⁻²', r.X(0) + 10, r.Y(0) + (m.s.psi > 0 ? 24 : -14)); }
+    } },
+    { ratio:0.2, min:120, max:170, cap:'Electric field in the silicon: maximum at the surface, falling linearly to zero at the depletion edge.', draw(g, W, H, m, st, C){
+      const mx = Math.max(...m.pts.E.map(p => Math.abs(p[1])), 1);
+      plot(g, C, box(W, H, 70, 14, 34, 34), { x:{ min:m.x0, max:m.D, label:'Depth into silicon (nm)' }, bands:[{ x0:m.x0, x1:0, col:C.gap }], y:{ min:-mx*1.15, max:mx*1.15, n:4, label:'ℰ (kV/cm)' }, series:[{ pts:m.pts.E, col:C.cur, w:2.2, fill:true }] });
+    } },
+    { ratio:0.2, min:120, max:170, cap:'Potential ψ(x) relative to the bulk; the surface value is ψ_s.', draw(g, W, H, m, st, C){
+      const mx = Math.max(Math.abs(m.s.psi), 0.05);
+      plot(g, C, box(W, H, 70, 14, 34, 34), { x:{ min:m.x0, max:m.D, label:'Depth into silicon (nm)' }, bands:[{ x0:m.x0, x1:0, col:C.gap }], y:{ min:Math.min(-0.05, m.s.psi*1.15), max:Math.max(0.05, m.s.psi*1.15), n:4, label:'ψ (V)' }, series:[{ pts:m.pts.psi, col:C.e, w:2.4 }], hlines:[{ y:2*m.p.phiF, label:'2φ_F' }] });
+    } },
+    { ratio:0.3, min:170, max:240, cap:'|Q_s| versus ψ_s on a log scale: accumulation (left), depletion (Q ∝ √ψ_s) and inversion, where the charge grows as e^{qψ/2kT}. The dot is the present bias.', draw(g, W, H, m, st, C){
+      plot(g, C, box(W, H, 70, 14, 20, 34), { x:{ min:-0.4, max:2*m.p.phiF + 0.35, label:'Surface potential ψ_s (V)' }, y:{ min:1e8, max:1e14, log:true, label:'|Q_s|/q (cm⁻²)' },
+        series:[{ pts:m.qs, col:C.fermi, w:2.4 }], vlines:[{ x:0, label:'flat band' }, { x:m.p.phiF, label:'φ_F' }, { x:2*m.p.phiF, label:'2φ_F' }], points:[{ x:m.s.psi, y:Math.max(Math.abs(m.s.Qs)/Q, 1e8), col:C.ink }] });
+    } }],
+};
+
+/* 5 — C–V */
+function cvCurves(st){
+  const ms = MS(), p = ms.mosPhys(st), lf = [], hf = [], dd = [], dv = 0.01;
+  const v0 = p.VFB - 3, v1 = p.VTH + 3;
+  for (let i = 0; i <= 220; i++){
+    const V = v0 + (v1 - v0)*i/220, a = ms.capState(p, V - dv), b = ms.capState(p, V + dv), s = ms.capState(p, V);
+    const Cl = Math.abs(b.Qs - a.Qs)/(2*dv)/p.Cox; lf.push([V, Cl]);
+    let Ch = Cl; if (s.psi > p.phiF){ const Cd = ESm/Math.max(s.Wd, 1e-9); Ch = Cd/(Cd + p.Cox); } hf.push([V, Ch]);
+    let Cdd = Cl; if (V > p.VFB + 0.05 && s.psi > 0){ const x = V - p.VFB, ps = Math.pow(-p.gam/2 + Math.sqrt(p.gam*p.gam/4 + x), 2), Wd = Math.sqrt(2*ESm*ps/(Q*p.NA)), Cd = ESm/Wd; Cdd = Cd/(Cd + p.Cox); } dd.push([V, Cdd]);
+  }
+  return { p, lf, hf, dd, v0, v1 };
+}
+P.cv = {
+  title:'MOS C–V: low frequency, high frequency and deep depletion',
+  lead:'Capacitance per area normalized to C<sub>ox</sub>, from the small-signal derivative of the exact surface charge. At high frequency the inversion charge cannot follow, so the curve stays at C<sub>min</sub>; under a fast sweep even the inversion layer cannot form and the device enters deep depletion.',
+  controls:[{ k:'vg', label:'Cursor V<sub>G</sub>', min:-4, max:5, step:0.01, val:1.5, fmt:x => x.toFixed(2) + ' V' }, NAm(16), TOXm(10), PHIm,
+    { k:'qox', label:'Fixed oxide charge Q<sub>ox</sub>/q (10¹⁰ cm⁻²)', min:-10, max:20, step:0.5, val:0, fmt:x => x.toFixed(1) },
+    { k:'dd', type:'check', label:'Show deep-depletion (fast sweep) curve', val:false }],
+  metrics:[['cox', 'C<sub>ox</sub>', m => (m.c.p.Cox*1e9).toFixed(1) + ' nF/cm²'], ['vfb', 'Flat-band V<sub>FB</sub>', m => m.c.p.VFB.toFixed(3) + ' V'], ['vt', 'Threshold V<sub>T</sub>', m => m.c.p.VTH.toFixed(3) + ' V'],
+    ['cmin', 'C<sub>min</sub>/C<sub>ox</sub> (HF)', m => m.cmin.toFixed(3)], ['cfb', 'C<sub>FB</sub>/C<sub>ox</sub>', m => m.cfb.toFixed(3)], ['cur', 'LF / HF at cursor', m => `${m.atL.toFixed(3)} / ${m.atH.toFixed(3)}`]],
+  compute(st){
+    const c = cvCurves(st), near = (arr, v) => arr.reduce((b, q) => Math.abs(q[0] - v) < Math.abs(b[0] - v) ? q : b)[1];
+    const Cd0 = ESm/c.p.LD, cfb = Cd0/(Cd0 + c.p.Cox);
+    return { c, cmin:Math.min(...c.hf.map(q => q[1])), cfb, atL:near(c.lf, st.vg), atH:near(c.hf, st.vg) };
+  },
+  panels:[{ ratio:0.46, min:260, max:360, cap:'Low-frequency (green), high-frequency (blue) and deep-depletion (dashed) C–V. Vertical markers: V_FB and V_T.', draw(g, W, H, m, st, C){
+    const c = m.c, ser = [{ pts:c.lf, col:C.cur, w:2.4 }, { pts:c.hf, col:C.e, w:2.4 }]; if (st.dd) ser.push({ pts:c.dd, col:C.muted, w:1.6, dash:[6, 4] });
+    plot(g, C, box(W, H, 64, 16, 20, 40), { x:{ min:c.v0, max:c.v1, label:'Gate voltage V_G (V)' }, y:{ min:0, max:1.08, n:5, fmt:v => v.toFixed(1), label:'C / C_ox' }, series:ser,
+      vlines:[{ x:c.p.VFB, label:'V_FB' }, { x:c.p.VTH, label:'V_T' }, { x:st.vg, col:C.ink, dash:[2, 3] }], points:[{ x:st.vg, y:m.atL, col:C.cur }, { x:st.vg, y:m.atH, col:C.e }], legend:[['low frequency', C.cur], ['high frequency', C.e]], legendBottom:true });
+  } }],
+};
+
+/* 9 — nMOS I–V */
+P.nmosIV = {
+  title:'nMOS output and transfer characteristics',
+  lead:'A charge-based (EKV-type) long-channel model with W/L = 10, μ<sub>n</sub> = 450 cm²/V·s and channel-length modulation λ. It is continuous from subthreshold through strong inversion, so the same curves show the exponential tail and the square law.',
+  controls:[{ k:'vgs', label:'Cursor V<sub>GS</sub>', min:0, max:3, step:0.01, val:1.6, fmt:x => x.toFixed(2) + ' V' }, { k:'vds', label:'Cursor V<sub>DS</sub>', min:0, max:3, step:0.01, val:1.5, fmt:x => x.toFixed(2) + ' V' },
+    NAm(17), TOXm(10), { k:'lam', label:'Channel-length modulation λ', min:0, max:0.3, step:0.005, val:0.05, fmt:x => x.toFixed(3) + ' V⁻¹' }, { k:'vsb', label:'Source–body bias V<sub>SB</sub>', min:0, max:3, step:0.05, val:0, fmt:x => x.toFixed(2) + ' V' }],
+  metrics:[['vt', 'Threshold V<sub>T</sub>', m => m.p.VTH.toFixed(3) + ' V'], ['id', 'I<sub>D</sub> at cursor', m => fmtI(m.I.ID)], ['reg', 'Region', m => m.reg], ['vdsat', 'V<sub>DS,sat</sub>', m => m.I.vdsat.toFixed(3) + ' V'],
+    ['gm', 'g<sub>m</sub>', m => (m.gm*1e3).toFixed(3) + ' mS'], ['ss', 'Subthreshold swing S', m => (m.I.S*1e3).toFixed(1) + ' mV/dec']],
+  compute(st){
+    const ms = MS(), p = ms.mosPhys({ ...st, phims:-0.9 }), I = ms.fetCurrent(p, st), fam = [], tr = [];
+    for (let k = 1; k <= 5; k++){ const vg = p.VTH + 0.4*k, pts = []; for (let i = 0; i <= 150; i++){ const vd = 3*i/150; pts.push([vd, ms.fetCurrent(p, { ...st, vgs:vg, vds:vd }).ID*1e3]); } fam.push({ vg, pts }); }
+    for (let i = 0; i <= 200; i++){ const vg = 3*i/200; tr.push([vg, ms.fetCurrent(p, { ...st, vgs:vg }).ID]); }
+    const d = 0.005, gm = (ms.fetCurrent(p, { ...st, vgs:st.vgs + d }).ID - ms.fetCurrent(p, { ...st, vgs:st.vgs - d }).ID)/(2*d);
+    const reg = I.vov <= 0 ? 'Subthreshold' : st.vds < I.vdsat ? 'Linear' : 'Saturation';
+    return { p, I, fam, tr, gm, reg };
+  },
+  panels:[
+    { ratio:0.36, min:210, max:280, cap:'Output characteristics I_D–V_DS for V_GS = V_T + 0.4, 0.8 … 2.0 V; dashed: V_DS = V_DS,sat locus; dot: cursor.', draw(g, W, H, m, st, C){
+      const top = Math.max(...m.fam[4].pts.map(q => q[1]))*1.1, sat = m.fam.map(f => { const vd = Math.max(f.vg - m.p.VTH, 0)/m.I.nsl; return [vd, MS().fetCurrent(m.p, { ...st, vgs:f.vg, vds:vd }).ID*1e3]; });
+      plot(g, C, box(W, H, 64, 14, 20, 38), { x:{ min:0, max:3, label:'V_DS (V)' }, y:{ min:0, max:top, n:4, label:'I_D (mA)' }, series:[...m.fam.map(f => ({ pts:f.pts, col:C.cur, w:2 })), { pts:[[0, 0], ...sat], col:C.muted, w:1.3, dash:[5, 4] }],
+        points:[{ x:st.vds, y:m.I.ID*1e3, col:C.ink }], texts:m.fam.map(f => ({ x:2.95, y:f.pts[f.pts.length - 1][1], t:`V_GS = ${f.vg.toFixed(2)}`, align:'right', dy:-4, col:C.muted })) });
+    } },
+    { ratio:0.3, min:180, max:240, cap:'Transfer characteristic at the cursor V_DS on a log scale: exponential subthreshold tail below V_T, square law above.', draw(g, W, H, m, st, C){
+      plot(g, C, box(W, H, 64, 14, 20, 38), { x:{ min:0, max:3, label:'V_GS (V)' }, y:{ min:1e-13, max:1e-1, log:true, label:'I_D (A)' }, series:[{ pts:m.tr, col:C.e, w:2.4 }], vlines:[{ x:m.p.VTH, label:'V_T' }], points:[{ x:st.vgs, y:Math.max(m.I.ID, 1e-13), col:C.ink }] });
+    } }],
+};
+
+/* 10 — body effect and intrinsic capacitances */
+P.bodycap = {
+  title:'Body effect and intrinsic gate capacitances',
+  lead:'V<sub>T</sub>(V<sub>SB</sub>) = V<sub>FB</sub> + 2φ<sub>F</sub> + γ√(2φ<sub>F</sub> + V<sub>SB</sub>) with γ = √(2qε<sub>s</sub>N<sub>A</sub>)/C<sub>ox</sub>. The Meyer model splits the gate charge between source and drain: C<sub>gs</sub> = C<sub>gd</sub> = WLC<sub>ox</sub>/2 at V<sub>DS</sub> = 0, and C<sub>gs</sub> → ⅔WLC<sub>ox</sub>, C<sub>gd</sub> → 0 in saturation.',
+  controls:[{ k:'vsb', label:'Cursor V<sub>SB</sub>', min:0, max:4, step:0.05, val:1, fmt:x => x.toFixed(2) + ' V' }, NAm(17), TOXm(10),
+    { k:'vgs', label:'V<sub>GS</sub> for capacitances', min:0.8, max:3, step:0.01, val:1.8, fmt:x => x.toFixed(2) + ' V' }, { k:'vds', label:'Cursor V<sub>DS</sub>', min:0, max:3, step:0.01, val:0.5, fmt:x => x.toFixed(2) + ' V' }],
+  metrics:[['gam', 'Body-effect γ', m => m.p0.gam.toFixed(3) + ' √V'], ['vt0', 'V<sub>T0</sub>', m => m.p0.VTH.toFixed(3) + ' V'], ['vt', 'V<sub>T</sub>(V<sub>SB</sub>)', m => m.p.VTH.toFixed(3) + ' V'],
+    ['cgs', 'C<sub>gs</sub> / WLC<sub>ox</sub>', m => m.cgs.toFixed(3)], ['cgd', 'C<sub>gd</sub> / WLC<sub>ox</sub>', m => m.cgd.toFixed(3)], ['wlc', 'WLC<sub>ox</sub> (W/L = 10 µm/1 µm)', m => (m.p.Cox*10e-4*1e-4*1e15).toFixed(1) + ' fF']],
+  compute(st){
+    const ms = MS(), p0 = ms.mosPhys({ ...st, vsb:0 }), p = ms.mosPhys(st), vt = [];
+    for (let i = 0; i <= 80; i++){ const v = 4*i/80; vt.push([v, ms.mosPhys({ ...st, vsb:v }).VTH]); }
+    const vov = st.vgs - p.VTH, mey = vd => { if (vov <= 0) return [0, 0]; const x = Math.min(vd, vov), d = 2*vov - x; return [2/3*(1 - ((vov - x)**2)/(d*d)), 2/3*(1 - (vov*vov)/(d*d))]; };
+    const cs = [], cd = []; for (let i = 0; i <= 120; i++){ const v = 3*i/120, [a, b] = mey(v); cs.push([v, a]); cd.push([v, b]); }
+    const [cgs, cgd] = mey(st.vds);
+    return { p0, p, vt, cs, cd, cgs, cgd, vov };
+  },
+  panels:[
+    { ratio:0.3, min:180, max:240, cap:'Threshold voltage versus source–body reverse bias: a square-root rise set by γ.', draw(g, W, H, m, st, C){
+      const lo = m.vt[0][1] - 0.1, hi = m.vt[m.vt.length - 1][1] + 0.1;
+      plot(g, C, box(W, H, 64, 14, 20, 38), { x:{ min:0, max:4, label:'V_SB (V)' }, y:{ min:lo, max:hi, n:4, label:'V_T (V)' }, series:[{ pts:m.vt, col:C.fermi, w:2.4 }], points:[{ x:st.vsb, y:m.p.VTH, col:C.ink }] });
+    } },
+    { ratio:0.3, min:180, max:240, cap:'Meyer intrinsic capacitances versus V_DS at the chosen V_GS (normalized to WLC_ox): green C_gs, red C_gd; saturation begins at the dashed line.', draw(g, W, H, m, st, C){
+      plot(g, C, box(W, H, 64, 14, 20, 38), { x:{ min:0, max:3, label:'V_DS (V)' }, y:{ min:0, max:0.75, n:3, fmt:v => v.toFixed(2), label:'C / WLC_ox' }, series:[{ pts:m.cs, col:C.cur, w:2.4 }, { pts:m.cd, col:C.h, w:2.4 }],
+        vlines:m.vov > 0 ? [{ x:m.vov, label:'V_DS,sat' }] : [], points:[{ x:st.vds, y:m.cgs, col:C.cur }, { x:st.vds, y:m.cgd, col:C.h }], legend:[['C_gs', C.cur], ['C_gd', C.h]], legendBottom:true });
+    } }],
+};
+
+/* 11 — small signal */
+P.smallsig = {
+  title:'Small-signal model at a bias point',
+  lead:'Linearize the characteristics around the operating point: g<sub>m</sub> = ∂I<sub>D</sub>/∂V<sub>GS</sub> is the slope of the transfer curve and 1/r<sub>o</sub> = ∂I<sub>D</sub>/∂V<sub>DS</sub> the slope of the output curve. A common-source stage with drain resistor R<sub>D</sub> then has gain −g<sub>m</sub>(R<sub>D</sub> ∥ r<sub>o</sub>).',
+  controls:[{ k:'vgs', label:'Bias V<sub>GS</sub>', min:0.8, max:3, step:0.01, val:1.5, fmt:x => x.toFixed(2) + ' V' }, { k:'vds', label:'Bias V<sub>DS</sub>', min:0.1, max:3, step:0.01, val:2, fmt:x => x.toFixed(2) + ' V' },
+    { k:'lam', label:'λ', min:0.005, max:0.3, step:0.005, val:0.05, fmt:x => x.toFixed(3) + ' V⁻¹' }, { k:'rd', label:'Drain resistor R<sub>D</sub>', min:0.5, max:50, step:0.5, val:5, fmt:x => x.toFixed(1) + ' kΩ' },
+    { k:'amp', label:'Input amplitude v<sub>gs</sub>', min:0, max:200, step:5, val:50, fmt:x => x.toFixed(0) + ' mV' }],
+  hidden:{ NA:17, tox:10, vsb:0 },
+  metrics:[['id', 'I<sub>D</sub> at bias', m => fmtI(m.I.ID)], ['gm', 'g<sub>m</sub>', m => (m.gm*1e3).toFixed(3) + ' mS'], ['ro', 'r<sub>o</sub>', m => (m.ro/1e3).toFixed(1) + ' kΩ'],
+    ['a0', 'Intrinsic gain g<sub>m</sub>r<sub>o</sub>', m => (m.gm*m.ro).toFixed(1)], ['av', 'Stage gain −g<sub>m</sub>(R<sub>D</sub>∥r<sub>o</sub>)', m => (-m.gm*m.rpar).toFixed(2)], ['lin', 'Nonlinearity at this amplitude', m => (m.hd*100).toFixed(1) + ' %']],
+  compute(st){
+    const ms = MS(), p = ms.mosPhys({ ...st, phims:-0.9 }), f = (vg, vd) => ms.fetCurrent(p, { ...st, vgs:vg, vds:vd }).ID, I = ms.fetCurrent(p, st), d = 0.005;
+    const gm = (f(st.vgs + d, st.vds) - f(st.vgs - d, st.vds))/(2*d), gds = (f(st.vgs, st.vds + d) - f(st.vgs, st.vds - d))/(2*d), ro = 1/Math.max(gds, 1e-12), rpar = 1/(1/(st.rd*1e3) + 1/ro);
+    const tr = [], out = []; for (let i = 0; i <= 160; i++){ const vg = 3*i/160; tr.push([vg, f(vg, st.vds)*1e3]); const vd = 3*i/160; out.push([vd, f(st.vgs, vd)*1e3]); }
+    const a = st.amp*1e-3, up = f(st.vgs + a, st.vds) - I.ID, dn = I.ID - f(st.vgs - a, st.vds), hd = a > 0 ? Math.abs(up - dn)/(up + dn) : 0;
+    return { p, I, gm, ro, rpar, tr, out, hd, a };
+  },
+  panels:[
+    { ratio:0.3, min:180, max:240, cap:'Transfer curve with the tangent at the bias point (slope g_m); the shaded band is the input swing ±v_gs.', draw(g, W, H, m, st, C){
+      const top = Math.max(...m.tr.map(q => q[1]))*1.05, I0 = m.I.ID*1e3, tan = [[st.vgs - 0.8, I0 - m.gm*1e3*0.8], [st.vgs + 0.8, I0 + m.gm*1e3*0.8]];
+      plot(g, C, box(W, H, 64, 14, 20, 38), { x:{ min:0, max:3, label:'V_GS (V)' }, y:{ min:0, max:top, n:4, label:'I_D (mA)' }, bands:m.a > 0 ? [{ x0:st.vgs - m.a, x1:st.vgs + m.a, col:C.gap }] : [], series:[{ pts:m.tr, col:C.e, w:2.4 }, { pts:tan, col:C.flash, w:1.6, dash:[6, 4] }], points:[{ x:st.vgs, y:I0, col:C.ink }] });
+    } },
+    { ratio:0.3, min:180, max:240, cap:'Output curve at the bias V_GS with its tangent (slope 1/r_o).', draw(g, W, H, m, st, C){
+      const top = Math.max(...m.out.map(q => q[1]))*1.1, I0 = m.I.ID*1e3, sl = 1e3/m.ro, tan = [[0, I0 - sl*st.vds], [3, I0 + sl*(3 - st.vds)]];
+      plot(g, C, box(W, H, 64, 14, 20, 38), { x:{ min:0, max:3, label:'V_DS (V)' }, y:{ min:0, max:top, n:4, label:'I_D (mA)' }, series:[{ pts:m.out, col:C.cur, w:2.4 }, { pts:tan, col:C.flash, w:1.6, dash:[6, 4] }], points:[{ x:st.vds, y:I0, col:C.ink }] });
+    } }],
+};
+
+/* ---------------- instance ---------------- */
+class Lab {
+  constructor(host, key){
+    this.host = host; this.key = key; this.cfg = P[key];
+    this.st = Object.assign({}, this.cfg.hidden || {});
+    this.cfg.controls.forEach(c => { if (c.k) this.st[c.k] = c.val; });
+    this.build();
+  }
+  build(){
+    const c = this.cfg, h = [];
+    c.controls.forEach(ct => {
+      if (ct.type === 'seg') h.push(`${ct.label ? `<p class="bf-seglabel">${ct.label}</p>` : ''}<div class="bf-seg" role="group" data-blk="${ct.k}">${ct.opts.map(([v, t]) => `<button type="button" data-blseg="${ct.k}" data-v="${v}">${t}</button>`).join('')}</div>`);
+      else if (ct.type === 'check') h.push(`<label class="bf-chk"><input type="checkbox" data-blchk="${ct.k}" ${ct.val ? 'checked' : ''}>${htmlSub(ct.label)}</label>`);
+      else if (ct.type === 'btns') h.push(`<div class="bf-btns">${ct.btns.map(([t], i) => `<button type="button" data-blbtn="${i}">${htmlSub(t)}</button>`).join('')}</div>`);
+      else h.push(`<label data-blk="${ct.k}"><span>${ct.label}</span> <output data-out="${ct.k}"></output><input type="range" data-blin="${ct.k}" min="${ct.min}" max="${ct.max}" step="${ct.step}" value="${ct.val}"></label>`);
+    });
+    h.push(`<div class="simMetrics">${c.metrics.map(([k, lab]) => `<div class="simMetric"><b>${lab}</b><span data-metric="${k}">—</span></div>`).join('')}</div>`);
+    this.host.innerHTML = `<h4>${c.title}</h4><p>${c.lead}</p>
+      <div class="simLayout"><div class="simControls">${h.join('')}</div>
+      <div class="simCanvasWrap bf-stage">${c.status ? '<div class="bf-status" data-blstatus></div>' : ''}${c.panels.map((p, i) => `<canvas class="bf-cv" data-blp="${i}" role="img" aria-label="${(p.cap || c.title).replace(/"/g, '')}"></canvas>${p.cap ? `<p class="bf-cap">${htmlSub(p.cap)}</p>` : ''}`).join('')}</div></div>
+      ${c.table ? '<div class="bf-comp-wrap"><table class="bf-comp"></table></div>' : ''}
+      ${c.tryit ? `<div class="bf-try"><b>Try this</b><ol>${c.tryit.map(t => `<li>${t}</li>`).join('')}</ol></div>` : ''}`;
+    const qa = s => this.host.querySelectorAll(s);
+    this.cvs = [...qa('canvas[data-blp]')];
+    qa('input[data-blin]').forEach(inp => inp.addEventListener('input', () => { this.st[inp.dataset.blin] = +inp.value; this.update(); }));
+    qa('[data-blseg]').forEach(b => b.addEventListener('click', () => { this.st[b.dataset.blseg] = b.dataset.v; this.update(); }));
+    qa('[data-blchk]').forEach(b => b.addEventListener('change', () => { this.st[b.dataset.blchk] = b.checked; this.update(); }));
+    const btnCtl = c.controls.find(x => x.type === 'btns');
+    qa('[data-blbtn]').forEach(b => b.addEventListener('click', () => { const a = btnCtl.btns[+b.dataset.blbtn][1]; if (typeof a === 'function') a(this.st); else Object.assign(this.st, a); this.sync(); this.update(); }));
+    this.readTheme();
+    new ResizeObserver(() => this.draw()).observe(this.host.querySelector('.bf-stage'));
+    this.sync(); this.update();
+    if (window.MathJax && typeof MathJax.typesetPromise === 'function') MathJax.typesetPromise([this.host]).catch(() => {});
+  }
+  sync(){
+    const st = this.st;
+    this.host.querySelectorAll('input[data-blin]').forEach(i => { i.value = st[i.dataset.blin]; });
+    this.host.querySelectorAll('[data-blchk]').forEach(i => { i.checked = !!st[i.dataset.blchk]; });
+  }
+  readTheme(){
+    const cs = getComputedStyle(this.host), g = n => cs.getPropertyValue(n).trim();
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    this.C = { ink:g('--bf-ink'), muted:g('--bf-muted'), rule:g('--bf-rule'), panel:g('--bf-panel'), e:g('--bf-e'), h:g('--bf-h'), fermi:g('--bf-fermi'), cur:g('--bf-cur'), flash:g('--bf-flash'),
+      n:g('--bf-n'), nplus:g('--bf-nplus'), p:g('--bf-p'), pplus:g('--bf-pplus'), dep:g('--bf-dep'), metal:g('--bf-metal'), gap:g('--bf-gap'), grid: dark ? 'rgba(255,255,255,.07)' : 'rgba(15,23,42,.07)', grid2: dark ? '#475569' : '#cbd5e1' };
+  }
+  update(){
+    const c = this.cfg, st = this.st;
+    this.m = c.compute(st);
+    this.host.querySelectorAll('[data-blseg]').forEach(b => b.setAttribute('aria-pressed', String(st[b.dataset.blseg] === b.dataset.v)));
+    c.controls.forEach(ct => {
+      if (!ct.k || ct.type) return;
+      const o = this.host.querySelector(`output[data-out="${ct.k}"]`); if (o) o.textContent = ct.fmt ? ct.fmt(st[ct.k]) : st[ct.k];
+      const lab = this.host.querySelector(`label[data-blk="${ct.k}"]`); if (lab) lab.hidden = ct.when ? !ct.when(st) : false;
+    });
+    c.metrics.forEach(([k, , f]) => { const el = this.host.querySelector(`[data-metric="${k}"]`); if (el) el.textContent = f(this.m, st); });
+    if (c.status){ const [cls, txt] = c.status(this.m), el = this.host.querySelector('[data-blstatus]'); el.className = 'bf-status ' + cls; el.innerHTML = htmlSub(txt); }
+    if (c.table) this.host.querySelector('.bf-comp').innerHTML = c.table(this.m);
+    this.draw();
+  }
+  draw(){
+    if (!this.m) return;
+    this.cfg.panels.forEach((p, i) => {
+      const cv = this.cvs[i], w = cv.clientWidth; if (!w) return;
+      const hgt = Math.round(clamp(w*p.ratio, p.min, p.max)), dpr = window.devicePixelRatio || 1;
+      if (cv.width !== Math.round(w*dpr) || cv.height !== Math.round(hgt*dpr)){ cv.width = Math.round(w*dpr); cv.height = Math.round(hgt*dpr); cv.style.height = hgt + 'px'; }
+      const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, hgt);
+      p.draw(g, w, hgt, this.m, this.st, this.C);
+    });
+  }
+}
+const labs = new Set();
+function mount(host){
+  const key = host.dataset.ml; if (!P[key] || host.__bl) return;
+  host.classList.add('bfUI');
+  try { host.__bl = new Lab(host, key); labs.add(host.__bl); } catch (err){ console.error('BjtLab', key, err); }
+}
+new MutationObserver(() => { for (const l of labs){ if (!l.host.isConnected){ labs.delete(l); continue; } l.readTheme(); l.draw(); } }).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+window.MosLab = { mountAll(root){ (root || document).querySelectorAll('.mosLab[data-ml]').forEach(mount); }, presets:Object.keys(P) };
+
+})();
+</script>
+<script id="mosSimLabContent">
+/* ===================== Guided-lab content for the MOS capacitor / MOSFET simulators ===================== */
+(function(){
+  const R = String.raw;
+  const flow = k => `.mosFlow[data-mf="${k}"]`, lab = k => `.mosLab[data-ml="${k}"]`;
+  window.SIM_LAB_SETS = [
+
+  /* 3 */
+  { key:'regimes', name:'Surface regimes of the MOS capacitor', selector:flow('regimes'), labs:[
+    { id:'rg-identify', title:'Map the four regimes', objective:R`Record the surface potential, depletion width and induced charge in each regime and relate them to \(2\phi_F\).`,
+      steps:['Press Accumulation, Flat band, Depletion and Inversion in turn and capture a row each time.', R`Note the sign of \(\psi_s\) and where the induced charge sits in the device picture.`, R`Compare \(\psi_s\) in inversion with the value of \(2\phi_F\) shown in the readout.`],
+      look:R`\(\psi_s<0\) in accumulation, \(0<\psi_s<2\phi_F\) in depletion, and \(\psi_s\) locks near \(2\phi_F\) once the electron sheet forms.`,
+      cols:[['reg', 'Regime', 'metric:regime'], ['vg', R`\(V_G\)`, 'param:vg'], ['psi', R`\(\psi_s\)`, 'metric:psi'], ['wd', R`\(W_d\)`, 'metric:wd'], ['qn', 'Inversion electrons', 'metric:qinv']],
+      questions:[{ q:R`Compute \(2\phi_F=2\frac{kT}{q}\ln(N_A/n_i)\) for \(N_A=10^{16}\ \text{cm}^{-3}\) at 300 K (\(n_i=1.5\times10^{10}\ \text{cm}^{-3}\)).`, a:R`\(2\times0.02585\times\ln(6.67\times10^5)\approx0.693\ \text{V}\).`, check:{ value:0.693, tol:0.01, unit:'V' } }] },
+    { id:'rg-wdmax', title:'Maximum depletion width', objective:R`Show that \(W_d\) stops growing at threshold.`,
+      steps:[R`Starting in depletion, raise \(V_G\) in 0.2 V steps through threshold and capture \(W_d\) at each step.`, R`Plot \(W_d\) against \(V_G\) from the CSV.`],
+      look:R`\(W_d\) grows as \(\sqrt{\psi_s}\) in depletion, then saturates at \(W_{d,\max}=\sqrt{2\varepsilon_s(2\phi_F)/qN_A}\) because extra gate charge is now balanced by inversion electrons.`,
+      cols:[['vg', R`\(V_G\)`, 'param:vg'], ['wd', R`\(W_d\)`, 'metric:wd'], ['reg', 'Regime', 'metric:regime']],
+      questions:[{ q:R`Compute \(W_{d,\max}\) in nm for \(N_A=10^{16}\ \text{cm}^{-3}\) (\(\varepsilon_s=1.04\times10^{-12}\ \text{F/cm}\)).`, a:R`\(\sqrt{2(1.036\times10^{-12})(0.693)/(1.602\times10^{-19}\cdot10^{16})}\approx2.99\times10^{-5}\ \text{cm}\approx299\ \text{nm}\).`, check:{ value:299, tol:6, unit:'nm' } }] },
+    { id:'rg-doping', title:'Doping and threshold', objective:R`Measure how \(V_T\) and \(W_{d,\max}\) change with substrate doping.`,
+      steps:[R`Press Inversion, then capture rows for \(N_A=10^{15}\), \(10^{16}\) and \(10^{17}\ \text{cm}^{-3}\).`],
+      look:R`Heavier doping raises \(2\phi_F\) and, more strongly, the depletion charge \(qN_AW_{d,\max}\) the gate must support, so \(V_T\) rises while \(W_{d,\max}\) shrinks.`,
+      cols:[['na', R`\(N_A\)`, 'param:NA'], ['vt', R`\(V_T\)`, 'metric:vth'], ['wd', R`\(W_d\)`, 'metric:wd']],
+      questions:[{ q:'Why does the depletion charge term dominate the rise of V_T with doping?', a:R`It scales as \(\sqrt{N_A}\) (through \(\gamma\)), while \(2\phi_F\) grows only logarithmically.` }] }] },
+
+  /* 4 */
+  { key:'surface', name:'Surface electrostatics and threshold', selector:lab('surface'), labs:[
+    { id:'sf-psi', title:'Surface potential versus gate voltage', objective:R`Trace \(\psi_s(V_G)\) from accumulation into strong inversion.`,
+      steps:[R`Capture rows from \(V_G=-1\) V to \(+2\) V in 0.25 V steps.`, R`Plot \(\psi_s\) against \(V_G\).`],
+      look:R`\(\psi_s\) follows \(V_G\) steeply in depletion, then flattens just above \(2\phi_F\): the surface pins once inversion starts.`,
+      cols:[['vg', R`\(V_G\)`, 'param:vg'], ['psi', R`\(\psi_s\)`, 'metric:psi'], ['qd', R`\(Q_d/q\)`, 'metric:qd'], ['qi', R`\(Q_n/q\)`, 'metric:qi']],
+      questions:[{ q:'Why does ψ_s barely increase above threshold even though V_G keeps rising?', a:R`The inversion electron density grows as \(e^{q\psi_s/kT}\), so a few kT of extra band bending supplies all the extra charge; the added gate voltage drops across the oxide instead.` }] },
+    { id:'sf-field', title:'Surface field at threshold', objective:'Relate the surface field to the depletion charge by Gauss’s law.',
+      steps:['Press <b>Threshold</b> and capture a row.', R`Repeat at \(N_A=10^{17}\ \text{cm}^{-3}\).`],
+      look:R`\(\varepsilon_s\mathcal{E}_s=qN_AW_{d,\max}\) at threshold (the inversion sheet is still small).`,
+      cols:[['na', R`\(N_A\)`, 'param:NA'], ['es', R`\(\mathcal{E}_s\)`, 'metric:es'], ['wd', R`\(W_d\)`, 'metric:wd']],
+      questions:[{ q:R`Compute \(\mathcal{E}_s\) (kV/cm) at threshold for \(N_A=10^{16}\ \text{cm}^{-3}\), \(W_{d,\max}=299\ \text{nm}\).`, a:R`\(qN_AW/\varepsilon_s=1.602\times10^{-19}\cdot10^{16}\cdot2.99\times10^{-5}/1.036\times10^{-12}\approx46\ \text{kV/cm}\).`, check:{ value:46, tol:2, unit:'kV/cm' } }] },
+    { id:'sf-qn', title:'Inversion charge above threshold', objective:R`Compare the exact inversion charge with \(Q_n\approx C_{ox}(V_G-V_T)\).`,
+      steps:[R`Capture rows at \(V_G=V_T+0.5\), \(V_T+1\) and \(V_T+2\) V.`, R`Compute \(C_{ox}(V_G-V_T)/q\) for each and compare.`],
+      look:R`The simulated sheet is somewhat smaller than the linear estimate because \(\psi_s\) keeps creeping above \(2\phi_F\), so a little of each extra volt still falls on the silicon.`,
+      cols:[['vg', R`\(V_G\)`, 'param:vg'], ['qi', R`\(Q_n/q\)`, 'metric:qi'], ['est', 'Your C_ox(V_G−V_T)/q']],
+      questions:[{ q:R`Estimate \(Q_n/q\) (cm⁻²) for \(t_{ox}=10\ \text{nm}\) and \(V_G-V_T=1\ \text{V}\) with the linear model.`, a:R`\(C_{ox}/q=3.45\times10^{-7}/1.602\times10^{-19}\approx2.16\times10^{12}\ \text{cm}^{-2}\) (the exact result is about 1.75×10¹²).`, check:{ value:2.16e12, tol:0.1e12, unit:'cm⁻²' } }] }] },
+
+  /* 5 */
+  { key:'cv', name:'MOS C–V measurement', selector:lab('cv'), labs:[
+    { id:'cv-cox', title:'Oxide capacitance', objective:R`Read \(C_{ox}\) and relate it to \(t_{ox}\).`,
+      steps:[R`Capture \(C_{ox}\) for \(t_{ox}\) = 5, 10 and 20 nm.`],
+      look:R`\(C_{ox}=\varepsilon_{ox}/t_{ox}\): halving the oxide doubles the accumulation capacitance.`,
+      cols:[['tox', R`\(t_{ox}\)`, 'param:tox'], ['cox', R`\(C_{ox}\)`, 'metric:cox'], ['cmin', R`\(C_{min}/C_{ox}\)`, 'metric:cmin']],
+      questions:[{ q:R`Compute \(C_{ox}\) in nF/cm² for \(t_{ox}=10\ \text{nm}\) (\(\varepsilon_{ox}=3.9\varepsilon_0\)).`, a:R`\(3.9\times8.854\times10^{-14}/10^{-6}=3.45\times10^{-7}\ \text{F/cm}^2=345\ \text{nF/cm}^2\).`, check:{ value:345, tol:3, unit:'nF/cm²' } }] },
+    { id:'cv-cmin', title:'Doping from C_min', objective:R`Use the high-frequency minimum to estimate the substrate doping.`,
+      steps:[R`Capture \(C_{min}/C_{ox}\) at \(N_A=10^{15}\), \(10^{16}\) and \(10^{17}\ \text{cm}^{-3}\).`],
+      look:R`\(C_{min}=C_{ox}C_d/(C_{ox}+C_d)\) with \(C_d=\varepsilon_s/W_{d,\max}\): heavier doping gives a thinner depletion layer and a higher minimum.`,
+      cols:[['na', R`\(N_A\)`, 'param:NA'], ['cmin', R`\(C_{min}/C_{ox}\)`, 'metric:cmin'], ['vt', R`\(V_T\)`, 'metric:vt']],
+      questions:[{ q:R`Compute \(C_{min}/C_{ox}\) for \(N_A=10^{16}\ \text{cm}^{-3}\), \(t_{ox}=10\ \text{nm}\) (\(W_{d,\max}=299\ \text{nm}\)).`, a:R`\(C_d=1.036\times10^{-12}/2.99\times10^{-5}=3.46\times10^{-8}\ \text{F/cm}^2\); \(C_d/(C_d+C_{ox})\approx0.091\).`, check:{ value:0.091, tol:0.004 } }] },
+    { id:'cv-qox', title:'Flat-band shift from oxide charge', objective:R`Measure \(\Delta V_{FB}=-qQ_{ox}/C_{ox}\).`,
+      steps:[R`At \(t_{ox}=10\ \text{nm}\), capture \(V_{FB}\) for \(Q_{ox}/q\) = 0, 10 and 20 ×10¹⁰ cm⁻².`, 'Repeat one point at 20 nm oxide.'],
+      look:'The curve shifts rigidly left; a thicker oxide makes the same charge shift the curve further.',
+      cols:[['qox', R`\(Q_{ox}/q\)`, 'param:qox'], ['tox', R`\(t_{ox}\)`, 'param:tox'], ['vfb', R`\(V_{FB}\)`, 'metric:vfb']],
+      questions:[{ q:R`Compute \(|\Delta V_{FB}|\) (V) for \(Q_{ox}/q=10^{11}\ \text{cm}^{-2}\), \(t_{ox}=10\ \text{nm}\).`, a:R`\(1.602\times10^{-19}\cdot10^{11}/3.45\times10^{-7}\approx0.046\ \text{V}\).`, check:{ value:0.046, tol:0.003, unit:'V' } }] }] },
+
+  /* 6 */
+  { key:'oxcharge', name:'Oxide charge and interface traps', selector:flow('oxcharge'), labs:[
+    { id:'ox-shift', title:'Fixed-charge shift', objective:R`Verify that \(V_{FB}\) and \(V_T\) shift by the same \(-qQ_{ox}/C_{ox}\).`,
+      steps:[R`Capture rows for \(Q_{ox}/q\) = 0, 10, 20 and 40 ×10¹⁰ cm⁻² (50 nm oxide).`],
+      look:'Both voltages move negative by the same amount, linear in the charge.',
+      cols:[['qox', R`\(Q_{ox}/q\)`, 'param:qox'], ['vfb', R`\(V_{FB}\)`, 'metric:vfb'], ['dvfb', R`\(\Delta V_{FB}\)`, 'metric:dvfb'], ['vt', R`\(V_T\)`, 'metric:vth']],
+      questions:[{ q:R`Compute \(|\Delta V_{FB}|\) (V) for \(Q_{ox}/q=3\times10^{11}\ \text{cm}^{-2}\) and a 50 nm oxide.`, a:R`\(C_{ox}=6.91\times10^{-8}\ \text{F/cm}^2\); \(1.602\times10^{-19}\cdot3\times10^{11}/6.91\times10^{-8}\approx0.70\ \text{V}\).`, check:{ value:0.70, tol:0.02, unit:'V' } }] },
+    { id:'ox-traps', title:'Interface-trap occupancy', objective:'Relate trap filling to the surface Fermi-level position.',
+      steps:[R`Sweep \(V_G\) from accumulation to inversion and capture the number of filled traps every 0.5 V.`],
+      look:R`Traps fill as \(E_F\) at the surface rises past their energies, so the trapped charge depends on bias and stretches a real C–V curve along the voltage axis.`,
+      cols:[['vg', R`\(V_G\)`, 'param:vg'], ['tr', 'Filled traps', 'metric:traps']],
+      questions:[{ q:'How can fixed oxide charge be distinguished from interface traps on a C–V curve?', a:'Fixed charge shifts the curve rigidly; interface traps change their charge with bias, so they distort (stretch) the curve and add frequency-dependent capacitance.' }] }] },
+
+  /* 7 */
+  { key:'tunnel', name:'Oxide conduction', selector:flow('tunnel'), labs:[
+    { id:'tn-field', title:'Oxide field and Fowler–Nordheim current', objective:'Measure how steeply the tunneling current depends on the oxide field.',
+      steps:[R`At \(t_{ox}=6\ \text{nm}\), capture rows for \(V_G\) = 3, 4, 5, 6 and 7 V.`, R`Plot \(\ln(J/\mathcal{E}^2)\) against \(1/\mathcal{E}\) from the CSV.`],
+      look:R`A Fowler–Nordheim plot is a straight line with slope \(-B\propto\Phi_B^{3/2}\).`,
+      cols:[['vg', R`\(V_G\)`, 'param:vg'], ['eox', R`\(\mathcal{E}_{ox}\)`, 'metric:eox'], ['j', 'FN current density', 'metric:jfn'], ['mech', 'Mechanism', 'metric:mech']],
+      questions:[{ q:R`What is the oxide field (MV/cm) for \(V_{ox}=6\ \text{V}\) across 6 nm?`, a:R`\(6/(6\times10^{-7}\ \text{cm})=10^7\ \text{V/cm}=10\ \text{MV/cm}\).`, check:{ value:10, tol:0.2, unit:'MV/cm' } }] },
+    { id:'tn-direct', title:'Direct tunneling in thin oxides', objective:'Compare thin and thick oxides at the same gate voltage.',
+      steps:[R`At \(V_G=2\ \text{V}\), capture rows for \(t_{ox}\) = 8, 4, 2.5 and 1.8 nm.`],
+      look:'Below about 3 nm electrons cross the whole barrier directly, so leakage appears even at low field.',
+      cols:[['tox', R`\(t_{ox}\)`, 'param:tox'], ['eox', R`\(\mathcal{E}_{ox}\)`, 'metric:eox'], ['mech', 'Mechanism', 'metric:mech']],
+      questions:[{ q:'Why did thin-oxide scaling push the industry toward high-κ gate dielectrics?', a:R`A high-κ film gives the same \(C_{ox}\) with a physically thicker layer, which suppresses direct tunneling.` }] }] },
+
+  /* 8 */
+  { key:'channel', name:'Channel formation and subthreshold conduction', selector:flow('channel'), labs:[
+    { id:'ch-ss', title:'Subthreshold swing from the barrier', objective:'Measure how many millivolts of gate voltage change the current by a decade below threshold.',
+      steps:[R`At \(V_{DS}=0.1\ \text{V}\), capture \(I_D\) at \(V_{GS}\) = 0.10, 0.15, 0.20 and 0.25 V.`, 'Compute the mV per decade from the CSV.'],
+      look:R`Each \(n\cdot60\) mV lowers the source barrier by enough to raise the current tenfold, with \(n=1+C_d/C_{ox}\).`,
+      cols:[['vgs', R`\(V_{GS}\)`, 'param:vgs'], ['bar', 'Barrier', 'metric:barrier'], ['id', R`\(I_D\)`, 'metric:id']],
+      questions:[{ q:R`With \(n=1+\gamma/(2\sqrt{2\phi_F})=1.29\), what subthreshold swing (mV/dec) does the model predict at 300 K?`, a:R`\(n\cdot2.303kT/q=1.29\times59.5\approx77\ \text{mV/dec}\).`, check:{ value:77, tol:3, unit:'mV/dec' } }] },
+    { id:'ch-ns', title:'Inversion density above threshold', objective:R`Check \(n_s\approx C_{ox}(V_{GS}-V_T)/q\).`,
+      steps:[R`Capture rows at \(V_{GS}=V_T+0.5\) and \(V_T+1\) V.`],
+      look:'Above threshold the sheet density grows linearly with gate overdrive.',
+      cols:[['vgs', R`\(V_{GS}\)`, 'param:vgs'], ['ns', R`\(n_s\)`, 'metric:ns'], ['id', R`\(I_D\)`, 'metric:id']],
+      questions:[{ q:R`Compute \(n_s\) (cm⁻²) for \(t_{ox}=10\ \text{nm}\) and \(V_{GS}-V_T=1\ \text{V}\).`, a:R`\(C_{ox}/q\approx2.16\times10^{12}\ \text{cm}^{-2}\).`, check:{ value:2.16e12, tol:0.1e12, unit:'cm⁻²' } }] }] },
+
+  /* 9 */
+  { key:'nmosIV', name:'nMOS output and transfer characteristics', selector:lab('nmosIV'), labs:[
+    { id:'iv-square', title:'Square law in saturation', objective:R`Show that \(I_D\propto(V_{GS}-V_T)^2\) in saturation.`,
+      steps:[R`Set \(V_{DS}=3\ \text{V}\). Capture \(I_D\) at \(V_{GS}=V_T+0.5\) and \(V_T+1.0\) V.`, 'Compute the ratio.'],
+      look:'Doubling the overdrive quadruples the saturation current.',
+      cols:[['vgs', R`\(V_{GS}\)`, 'param:vgs'], ['id', R`\(I_D\)`, 'metric:id'], ['reg', 'Region', 'metric:reg']],
+      questions:[{ q:'What current ratio does the square law predict when the overdrive doubles at fixed V_DS?', a:'(2)² = 4.', check:{ value:4, tol:0.15 } }] },
+    { id:'iv-vdsat', title:'Edge of saturation', objective:R`Locate \(V_{DS,sat}\) and compare with \((V_{GS}-V_T)/n\).`,
+      steps:[R`At \(V_{GS}=1.6\ \text{V}\), sweep \(V_{DS}\) and capture rows either side of the region change.`],
+      look:'The region readout switches where the dashed locus meets the curve.',
+      cols:[['vds', R`\(V_{DS}\)`, 'param:vds'], ['vdsat', R`\(V_{DS,sat}\)`, 'metric:vdsat'], ['reg', 'Region', 'metric:reg']],
+      questions:[{ q:R`Compute \(V_{DS,sat}=(V_{GS}-V_T)/n\) for \(V_{GS}=1.6\ \text{V}\), \(V_T=0.388\ \text{V}\), \(n=1.29\).`, a:R`\(1.212/1.29\approx0.94\ \text{V}\).`, check:{ value:0.94, tol:0.02, unit:'V' } }] },
+    { id:'iv-lambda', title:'Channel-length modulation', objective:R`Relate the saturation slope to \(\lambda\).`,
+      steps:[R`In saturation, capture \(I_D\) at \(V_{DS}\) = 2 and 3 V for \(\lambda\) = 0.02, 0.05 and 0.1 V⁻¹.`],
+      look:R`\(r_o\approx1/(\lambda I_D)\): larger \(\lambda\), steeper curves.`,
+      cols:[['lam', 'λ', 'param:lam'], ['vds', R`\(V_{DS}\)`, 'param:vds'], ['id', R`\(I_D\)`, 'metric:id']],
+      questions:[{ q:R`Estimate \(r_o\) (kΩ) for \(\lambda=0.05\ \text{V}^{-1}\) and \(I_D=1\ \text{mA}\).`, a:R`\(1/(0.05\times10^{-3})=20\ \text{k}\Omega\).`, check:{ value:20, tol:0.5, unit:'kΩ' } }] }] },
+
+  /* 10 */
+  { key:'bodycap', name:'Body effect and gate capacitances', selector:lab('bodycap'), labs:[
+    { id:'bd-gamma', title:'Body-effect coefficient', objective:R`Measure \(\Delta V_T(V_{SB})\) and extract \(\gamma\).`,
+      steps:[R`Capture \(V_T\) at \(V_{SB}\) = 0, 1, 2 and 4 V.`, R`Plot \(V_T\) against \(\sqrt{2\phi_F+V_{SB}}-\sqrt{2\phi_F}\); the slope is \(\gamma\).`],
+      look:R`A straight line of slope \(\gamma=\sqrt{2q\varepsilon_sN_A}/C_{ox}\).`,
+      cols:[['vsb', R`\(V_{SB}\)`, 'param:vsb'], ['vt', R`\(V_T\)`, 'metric:vt'], ['gam', 'γ', 'metric:gam']],
+      questions:[{ q:R`Compute \(\Delta V_T\) (V) for \(V_{SB}=1\ \text{V}\) with \(\gamma=0.528\ \sqrt{\text{V}}\), \(2\phi_F=0.812\ \text{V}\).`, a:R`\(0.528(\sqrt{1.812}-\sqrt{0.812})\approx0.235\ \text{V}\).`, check:{ value:0.235, tol:0.01, unit:'V' } }] },
+    { id:'bd-meyer', title:'Meyer capacitances', objective:R`Follow \(C_{gs}\) and \(C_{gd}\) from \(V_{DS}=0\) into saturation.`,
+      steps:[R`At \(V_{GS}=1.8\ \text{V}\), capture rows at \(V_{DS}\) = 0, 0.5, 1.0 and 2.0 V.`],
+      look:R`Both start at ½ \(WLC_{ox}\); in saturation \(C_{gs}\to\frac23WLC_{ox}\) and \(C_{gd}\to0\).`,
+      cols:[['vds', R`\(V_{DS}\)`, 'param:vds'], ['cgs', R`\(C_{gs}\)`, 'metric:cgs'], ['cgd', R`\(C_{gd}\)`, 'metric:cgd']],
+      questions:[{ q:R`What is \(C_{gs}\) (fF) in saturation for \(WLC_{ox}=34.5\ \text{fF}\)?`, a:R`\(\frac23\times34.5\approx23.0\ \text{fF}\).`, check:{ value:23.0, tol:0.5, unit:'fF' } }] }] },
+
+  /* 11 */
+  { key:'smallsig', name:'Small-signal parameters', selector:lab('smallsig'), labs:[
+    { id:'ss-gm', title:'Transconductance versus bias', objective:R`Compare the measured \(g_m\) with \(2I_D/(V_{GS}-V_T)\).`,
+      steps:[R`Capture rows at \(V_{GS}\) = 1.0, 1.5, 2.0 and 2.5 V in saturation.`],
+      look:R`\(g_m\) grows with bias, as \(\sqrt{I_D}\) in the square-law region.`,
+      cols:[['vgs', R`\(V_{GS}\)`, 'param:vgs'], ['id', R`\(I_D\)`, 'metric:id'], ['gm', R`\(g_m\)`, 'metric:gm']],
+      questions:[{ q:R`Using the square law, what is \(g_m\) (mS) for \(I_D=1\ \text{mA}\) at an overdrive of 0.5 V?`, a:R`\(2I_D/V_{OV}=4\ \text{mS}\).`, check:{ value:4, tol:0.1, unit:'mS' } }] },
+    { id:'ss-gain', title:'Intrinsic gain', objective:R`Show that \(g_mr_o\) falls as the bias current rises.`,
+      steps:[R`Capture rows for three \(V_{GS}\) values at \(\lambda=0.05\ \text{V}^{-1}\).`, R`Then make \(R_D\) much larger than \(r_o\) and compare the stage gain with \(g_mr_o\).`],
+      look:R`\(g_mr_o\approx2/(\lambda V_{OV})\): lower overdrive gives higher intrinsic gain.`,
+      cols:[['vgs', R`\(V_{GS}\)`, 'param:vgs'], ['a0', R`\(g_mr_o\)`, 'metric:a0'], ['av', 'Stage gain', 'metric:av']],
+      questions:[{ q:R`Estimate \(g_mr_o\) for \(\lambda=0.05\ \text{V}^{-1}\) and \(V_{OV}=0.5\ \text{V}\).`, a:R`\(2/(0.05\times0.5)=80\).`, check:{ value:80, tol:2 } }] },
+    { id:'ss-valid', title:'Where the small-signal model fails', objective:'Find the input amplitude at which distortion becomes noticeable.',
+      steps:['Increase the input amplitude from 10 to 200 mV at a fixed bias, capturing the nonlinearity readout.', 'Repeat at a larger overdrive.'],
+      look:R`Distortion grows with \(v_{gs}/V_{OV}\); a larger overdrive tolerates a larger signal.`,
+      cols:[['amp', R`\(v_{gs}\)`, 'param:amp'], ['vgs', R`\(V_{GS}\)`, 'param:vgs'], ['lin', 'Nonlinearity', 'metric:lin']],
+      questions:[{ q:'Why does a larger overdrive tolerate a larger input signal?', a:R`The square law is linearized about \(V_{OV}\); the second-order term relative to the first is \(v_{gs}/2V_{OV}\), so it stays small for a larger \(V_{OV}\).` }] }] }
+  ];
+})();
+</script>
+<script id="mosSimLabEngine">
+
+/* ===================== Per-simulator guided labs =====================
+   Every simulator in the chapter gets a "Guided labs" card directly below it
+   with 3-4 labs: objective, procedure, a lab notebook (auto-capture from
+   in-page simulators, typed entries for embedded ones), CSV export, and
+   analysis questions with answer checking. Content lives in SIM_LAB_SETS. */
+(function(){
+  'use strict';
+  const STORE = 'mosSimLabNotebook_v1';
+  const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const load = () => { try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (_) { return {}; } };
+  const save = data => { try { localStorage.setItem(STORE, JSON.stringify(data)); } catch (_) {} };
+
+  function readSource(simEl, spec) {
+    if (!simEl || !spec) return '';
+    const [kind, key] = spec.split(':');
+    const sel = kind === 'param' ? `[data-out="${key}"]` : kind === 'metric' ? `[data-metric="${key}"]` : `[data-val="${key}"]`;
+    const el = simEl.querySelector(sel);
+    return el ? el.textContent.replace(/\s+/g, ' ').trim() : '';
+  }
+  // Plain-text symbols such as V_AK or I_H are shown with real subscripts;
+  // MathJax segments \( … \) and HTML tags are left untouched.
+  function fmt(html) {
+    return String(html ?? '').split(/(\\\([\s\S]*?\\\)|<[^>]+>)/).map((part, i) => i % 2 ? part
+      : part.replace(/(^|[^A-Za-z0-9\\])([A-Za-zαβγτΔηε]{1,3})_([A-Za-z0-9]{1,10})(?![A-Za-z0-9_])/g, (m, pre, a, b) => `${pre}<i>${a}</i><sub>${b}</sub>`)).join('');
+  }
+  function parseNumber(text) {
+    const m = String(text).replace(/,/g, '').replace(/[−–]/g, '-').match(/-?\d*\.?\d+(?:e[-+]?\d+)?/i);
+    return m ? parseFloat(m[0]) : NaN;
+  }
+
+  function labHtml(set, lab, idx) {
+    const hasAuto = lab.cols.some(c => c[2]);
+    const questions = (lab.questions || []).map((q, qi) => `
+      <div class="slQ" data-q="${qi}">
+        <div class="slQText"><b>Q${qi + 1}.</b> ${fmt(q.q)}</div>
+        ${q.check ? `<div class="slCheck"><input type="text" inputmode="decimal" placeholder="your answer${q.check.unit ? ' (' + esc(q.check.unit) + ')' : ''}" aria-label="Answer to question ${qi + 1}"><button type="button" data-sl-act="check">Check</button><span class="slFeedback" aria-live="polite"></span></div>` : ''}
+        <details class="slAnswer"><summary>Show solution</summary><div>${fmt(q.a)}</div></details>
+      </div>`).join('');
+    return `
+    <div class="slLab" data-lab-id="${esc(lab.id)}" ${idx ? 'hidden' : ''}>
+      <div class="slObjective"><b>Objective.</b> ${fmt(lab.objective)}</div>
+      <div class="slCols2">
+        <div><h5>Procedure</h5><ol class="slSteps">${lab.steps.map(s => `<li>${fmt(s)}</li>`).join('')}</ol></div>
+        <div><h5>What to look for</h5><p class="slLook">${fmt(lab.look)}</p></div>
+      </div>
+      <h5>Lab notebook</h5>
+      <div class="slNotebook">
+        <div class="slBar">
+          ${hasAuto ? '<button type="button" class="slPrimary" data-sl-act="capture">● Capture current values</button>' : ''}
+          <button type="button" data-sl-act="add">+ Add ${hasAuto ? 'blank ' : ''}row</button>
+          <button type="button" data-sl-act="undo">Delete last row</button>
+          <button type="button" data-sl-act="clear">Clear</button>
+          <button type="button" data-sl-act="csv">Download CSV</button>
+          <span class="slHint">${hasAuto ? 'Grey cells are captured from the simulator; white cells are for your own entries.' : 'Type the values you read from the simulator above; entries are kept in this browser.'}</span>
+        </div>
+        <div class="slTableWrap"><table class="slTable"><thead><tr><th>#</th>${lab.cols.map(c => `<th>${fmt(c[1])}</th>`).join('')}</tr></thead><tbody></tbody></table></div>
+      </div>
+      <h5>Analysis questions</h5>
+      ${questions}
+    </div>`;
+  }
+  function cardHtml(set) {
+    return `
+    <section class="simLabs" data-sim-labs="${esc(set.key)}" aria-label="Guided labs for ${esc(set.name)}">
+      <div class="slHead">
+        <div><span class="slEyebrow">Guided labs · ${set.labs.length} activities</span><h4>${fmt(set.name)}</h4></div>
+        <div class="slTabs" role="tablist">${set.labs.map((l, i) => `<button type="button" role="tab" class="slTab${i ? '' : ' on'}" aria-selected="${i ? 'false' : 'true'}" data-sl-tab="${i}"><span class="slTabNum">Lab ${i + 1}</span><span class="slTabTitle">${fmt(l.title)}</span></button>`).join('')}</div>
+      </div>
+      ${set.labs.map((l, i) => labHtml(set, l, i)).join('')}
+    </section>`;
+  }
+
+  function renderRows(card, lab, labEl) {
+    const data = load(), rows = data[lab.id] || [];
+    const tbody = labEl.querySelector('tbody');
+    if (!rows.length) { tbody.innerHTML = `<tr class="slEmpty"><td colspan="${lab.cols.length + 1}">No entries yet.</td></tr>`; return; }
+    tbody.innerHTML = rows.map((r, ri) => `<tr><td>${ri + 1}</td>${lab.cols.map(c => {
+      const v = r[c[0]] ?? '';
+      return (c[2] && r.__auto) ? `<td class="slAuto">${esc(v)}</td>` : `<td><input type="text" value="${esc(v)}" data-row="${ri}" data-col="${esc(c[0])}" aria-label="${esc(c[1].replace(/<[^>]+>/g, ''))}, row ${ri + 1}"></td>`;
+    }).join('')}</tr>`).join('');
+  }
+  function csv(lab) {
+    const rows = load()[lab.id] || [];
+    if (!rows.length) return;
+    const greek = { alpha: 'α', beta: 'β', gamma: 'γ', tau: 'τ', Delta: 'Δ', eta: 'η', mu: 'µ', max: 'max', mathcal: '', text: '' };
+    const clean = h => String(h).replace(/<[^>]+>/g, '').replace(/\\\(|\\\)/g, '').replace(/\\text\{([^}]*)\}/g, '$1').replace(/\\([A-Za-z]+)/g, (m, w) => greek[w] ?? w).replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
+    const q = v => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
+    const text = [lab.cols.map(c => q(clean(c[1]))).join(','), ...rows.map(r => lab.cols.map(c => q(r[c[0]] ?? '')).join(','))].join('\n');
+    const url = URL.createObjectURL(new Blob(['\ufeff' + text], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = `bjt_${lab.id}.csv`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+
+  function wire(card, set, simEl) {
+    const labs = set.labs;
+    card.querySelectorAll('.slLab').forEach((labEl, i) => renderRows(card, labs[i], labEl));
+    card.addEventListener('click', ev => {
+      const tab = ev.target.closest('[data-sl-tab]');
+      if (tab) {
+        const i = +tab.dataset.slTab;
+        card.querySelectorAll('[data-sl-tab]').forEach((t, k) => { t.classList.toggle('on', k === i); t.setAttribute('aria-selected', String(k === i)); });
+        card.querySelectorAll('.slLab').forEach((l, k) => { l.hidden = k !== i; });
+        return;
+      }
+      const btn = ev.target.closest('[data-sl-act]');
+      if (!btn) return;
+      const labEl = btn.closest('.slLab'), lab = labs.find(l => l.id === labEl.dataset.labId);
+      const data = load(); data[lab.id] = data[lab.id] || [];
+      const act = btn.dataset.slAct;
+      if (act === 'capture') {
+        const row = { __auto: true };
+        lab.cols.forEach(c => { row[c[0]] = c[2] ? readSource(simEl, c[2]) : ''; });
+        data[lab.id].push(row); save(data); renderRows(card, lab, labEl);
+        btn.classList.add('slFlash'); setTimeout(() => btn.classList.remove('slFlash'), 350);
+      } else if (act === 'add') { data[lab.id].push({}); save(data); renderRows(card, lab, labEl); labEl.querySelector('tbody tr:last-child input')?.focus(); }
+      else if (act === 'undo') { data[lab.id].pop(); save(data); renderRows(card, lab, labEl); }
+      else if (act === 'clear') { if (!data[lab.id].length || confirm('Clear all entries for this lab?')) { data[lab.id] = []; save(data); renderRows(card, lab, labEl); } }
+      else if (act === 'csv') csv(lab);
+      else if (act === 'check') {
+        const qEl = btn.closest('.slQ'), q = lab.questions[+qEl.dataset.q], input = qEl.querySelector('input'), fb = qEl.querySelector('.slFeedback');
+        const v = parseNumber(input.value);
+        if (!Number.isFinite(v)) { fb.textContent = 'Enter a number.'; fb.className = 'slFeedback'; return; }
+        const ok = Math.abs(v - q.check.value) <= q.check.tol;
+        fb.textContent = ok ? '✓ Correct' : (v > q.check.value ? '✗ Too high — try again' : '✗ Too low — try again');
+        fb.className = 'slFeedback ' + (ok ? 'ok' : 'bad');
+      }
+    });
+    card.addEventListener('input', ev => {
+      const inp = ev.target.closest('input[data-row]'); if (!inp) return;
+      const labEl = inp.closest('.slLab'), lab = labs.find(l => l.id === labEl.dataset.labId);
+      const data = load(); const row = (data[lab.id] || [])[+inp.dataset.row]; if (!row) return;
+      row[inp.dataset.col] = inp.value; save(data);
+    });
+    card.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.matches('.slCheck input')) ev.target.nextElementSibling?.click(); });
+  }
+
+  function findTargets(scope) {
+    const out = [];
+    (window.SIM_LAB_SETS || []).forEach(set => {
+      scope.querySelectorAll(set.selector).forEach(el => {
+        if (set.filter && !set.filter(el)) return;
+        const anchor = set.anchor ? (set.anchor(el) || el) : el;
+        out.push({ set, el, anchor });
+      });
+    });
+    return out;
+  }
+  function injectSimLabs(scope = document) {
+    const added = [];
+    findTargets(scope).forEach(({ set, el, anchor }) => {
+      if (anchor.dataset.simLabsDone === set.key) return;
+      anchor.dataset.simLabsDone = set.key;
+      const wrap = document.createElement('div');
+      wrap.innerHTML = cardHtml(set).trim();
+      const card = wrap.firstElementChild;
+      anchor.insertAdjacentElement('afterend', card);
+      wire(card, set, el.matches('.mosFlow, .mosLab') ? el : null);
+      added.push(card);
+    });
+    if (added.length && window.MathJax && typeof MathJax.typesetPromise === 'function') MathJax.typesetPromise(added).catch(() => {});
+  }
+  window.injectSimLabs = injectSimLabs;
+})();
+</script>
+<script>window.MosFlow&&MosFlow.mountAll(document);window.MosLab&&MosLab.mountAll(document);window.injectSimLabs&&injectSimLabs(document);</script>
 </body>
 </html>
