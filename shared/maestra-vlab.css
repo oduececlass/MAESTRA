@@ -1,0 +1,66 @@
+/* MAESTRA virtual labs v1.0 - shared look for guided labs in every chapter (pairs with maestra-vlab.js).
+   Colours follow the hub palette from maestra-design.css (--mh-*), with fallbacks. */
+.vl-set{--vl-panel:var(--mh-panel,#102333);--vl-soft:var(--mh-panel2,#132b3b);--vl-rule:var(--mh-stroke,#263f52);--vl-text:var(--mh-text,#f4fbff);--vl-dim:var(--mh-muted,#93aebf);--vl-accent:var(--mh-accent,#38d7ff);--vl-value:var(--mh-accent-text,#38d7ff);--vl-ink:var(--mh-panel3,#173447);box-shadow:var(--mh-shadow,none);font-family:var(--mh-font,Inter,'Segoe UI',Arial,sans-serif)}
+
+/* ===== Virtual labs (shared look across the e-book) ===== */
+.vl-set{margin:22px 0 8px;padding:18px 20px 20px;border-radius:18px;border:1px solid var(--vl-rule);background:var(--vl-panel);color:var(--vl-text);text-align:left}
+.vl-set *{box-sizing:border-box}
+.vl-set-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 12px;margin-bottom:10px}
+.vl-set-head .vl-kicker{font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:var(--vl-accent)}
+.vl-set-head h3{margin:0;font-size:20px;font-weight:850;color:var(--vl-text)}
+.vl-intro{font-size:13.5px;line-height:1.55;background:var(--vl-soft);border-left:3px solid var(--vl-accent);border-radius:8px;padding:10px 13px;margin:0 0 14px;color:var(--vl-text)}
+.vl-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.vl-tab{background:var(--vl-soft)!important;color:var(--vl-text)!important;border:1px solid var(--vl-rule)!important;border-radius:10px!important;padding:8px 13px!important;font-size:13px!important;font-weight:650!important;cursor:pointer;text-align:left;box-shadow:none!important;transform:none!important;min-height:0!important;width:auto!important}
+.vl-tab small{display:block;font-weight:400;color:var(--vl-dim);font-size:11.5px;margin-top:2px}
+.vl-tab:hover{border-color:var(--vl-accent)!important}
+.vl-tab[aria-selected="true"]{border-color:var(--vl-accent)!important;box-shadow:inset 0 -3px 0 var(--vl-accent)!important}
+.vl-page{display:none}
+.vl-page.active{display:block}
+.vl-page h4{font-size:20px;margin:0 0 8px;color:var(--vl-text);font-weight:800}
+.vl-page h5{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--vl-dim);margin:20px 0 8px;font-weight:800}
+.vl-prose{font-size:14.5px;line-height:1.6;max-width:1100px;color:var(--vl-text)}
+.vl-prose p{margin:8px 0}
+.vl-obj{background:var(--vl-soft);border-left:3px solid var(--vl-value);border-radius:8px;padding:10px 13px;margin:6px 0 12px;max-width:1100px;font-size:14.5px;line-height:1.55;color:var(--vl-text)}
+.vl-eq{background:var(--vl-soft);border:1px solid var(--vl-rule);border-radius:8px;padding:4px 12px;margin:10px 0;overflow-x:auto;max-width:1100px}
+.vl-inst{border:1px solid var(--vl-rule);border-radius:12px;padding:13px;margin:16px 0;background:var(--vl-ink);min-width:0}
+.vl-inst-title{font-weight:750;font-size:14.5px;margin-bottom:4px;color:var(--vl-text)}
+.vl-lead{font-size:13px;color:var(--vl-dim);margin-bottom:10px;line-height:1.5}
+.vl-canvas{display:block;width:100%;height:auto;aspect-ratio:1080/440;border-radius:10px;border:1px solid var(--vl-rule)}
+.vl-note{font-size:12px;color:var(--vl-dim);margin:6px 0 10px;line-height:1.45}
+.vl-controls{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));gap:8px 12px}
+.vl-ctrl{background:var(--vl-soft);border:1px solid var(--vl-rule);border-radius:10px;padding:8px 10px;margin:0}
+.vl-ctrl .row{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-bottom:4px;color:var(--vl-text)}
+.vl-ctrl .val{font-family:ui-monospace,"JetBrains Mono",Consolas,monospace;color:var(--vl-value);white-space:nowrap}
+.vl-ctrl input[type=range]{width:100%;accent-color:var(--vl-accent);margin:0}
+.vl-presets{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:11px 0}
+.vl-presets>span{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--vl-dim);margin-right:4px;font-weight:800}
+.vl-btn{border:1px solid var(--vl-rule)!important;background:var(--vl-panel)!important;color:var(--vl-text)!important;border-radius:99px!important;padding:6px 12px!important;font-size:12.5px!important;font-weight:650!important;cursor:pointer;box-shadow:none!important;transform:none!important;min-height:0!important;width:auto!important;line-height:1.3!important}
+.vl-btn:hover{border-color:var(--vl-accent)!important;color:var(--vl-accent)!important}
+.vl-btn.primary{background:#0f766e!important;border-color:#0f766e!important;color:#fff!important}
+.vl-btn.primary:hover{background:#115e59!important;color:#fff!important}
+.vl-btn.flash{box-shadow:0 0 0 4px rgba(15,118,110,.32)!important}
+.vl-presets .vl-btn{font-weight:500!important;font-size:12px!important;padding:4px 10px!important}
+.vl-metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(175px,100%),1fr));gap:8px;margin:11px 0}
+.vl-stat{background:var(--vl-soft);border:1px solid var(--vl-rule);border-radius:10px;padding:8px 10px}
+.vl-stat .k{font-size:11.5px;color:var(--vl-dim)}
+.vl-stat .v{font-family:ui-monospace,"JetBrains Mono",Consolas,monospace;font-size:14px;color:var(--vl-value);margin-top:2px;word-break:break-word}
+.vl-actions{display:flex;flex-wrap:wrap;gap:8px}
+.vl-notebook{margin-top:13px;border:1px solid var(--vl-rule);border-radius:10px;overflow:hidden;background:var(--vl-panel)}
+.vl-notebook-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;background:var(--vl-soft);border-bottom:1px solid var(--vl-rule)}
+.vl-notebook-head b{font-size:13px;color:var(--vl-text)}
+.vl-count{font-size:11.5px;color:var(--vl-dim)}
+.vl-spacer{flex:1}
+.vl-table-wrap{overflow-x:auto;max-height:280px}
+table.vl-table{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums;margin:0;background:transparent}
+.vl-table th,.vl-table td{padding:6px 10px;border:0;border-bottom:1px solid var(--vl-rule);text-align:right;white-space:nowrap;color:var(--vl-text);background:transparent}
+.vl-table th{position:sticky;top:0;background:var(--vl-soft);color:var(--vl-dim);font-weight:650}
+.vl-table th:first-child,.vl-table td:first-child{text-align:center;color:var(--vl-dim)}
+.vl-table .empty td{text-align:center;font-style:italic;color:var(--vl-dim);padding:14px}
+.vl-steps{padding-left:24px;display:grid;gap:7px;font-size:14.5px;line-height:1.55;max-width:1100px;margin:0;color:var(--vl-text)}
+.vl-steps li::marker{font-weight:700;color:var(--vl-value)}
+.vl-quiz{background:var(--vl-soft);border:1px solid var(--vl-rule);border-radius:10px;padding:9px 12px;margin:8px 0;max-width:1100px;font-size:14.5px;line-height:1.55;color:var(--vl-text)}
+.vl-quiz summary{cursor:pointer;font-weight:650}
+.vl-quiz[open] summary{color:var(--vl-value)}
+.vl-quiz p{margin:8px 0 0}
+@media (max-width:700px){.vl-set{padding:14px 12px}.vl-set mjx-container:not([display="true"]){display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle}}
+@media print{.vl-actions,.vl-presets,.vl-notebook-head .vl-btn{display:none!important}.vl-quiz p{display:block!important}}

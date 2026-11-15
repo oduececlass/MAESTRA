@@ -1,0 +1,205 @@
+/*
+ * MAESTRA shared design layer v1.0
+ * Gives every learning page the Learning Hub's look: one font, one palette (dark + bright),
+ * consistent reading text in the chapters. Each page keeps its own layout and simulators.
+ *
+ * How it works: the hub palette is defined once below as --mh-* tokens. Each page declares
+ * <html data-maestra-page="..."> and its own colour variables are pointed at the hub tokens.
+ * Physics colours (electrons, holes, oxide, water, ...) are deliberately left alone.
+ */
+
+/* ───────── 1. Hub palette (same values as index.html) ───────── */
+html[data-maestra-page]{
+  --mh-bg:#0d1b26; --mh-side:#0b1822; --mh-panel:#102333; --mh-panel2:#132b3b; --mh-panel3:#173447;
+  --mh-text:#f4fbff; --mh-body:#b9d5ea; --mh-muted:#93aebf; --mh-stroke:#263f52; --mh-stroke2:#31566f;
+  --mh-accent:#38d7ff; --mh-accent2:#8068ff; --mh-accent-text:#38d7ff; --mh-primary:#0e8fbf; --mh-on-accent:#06131d;
+  --mh-input:#0f2230; --mh-shadow:0 22px 65px rgba(0,0,0,.32);
+  --mh-font:Inter,"Segoe UI",Roboto,Arial,sans-serif;
+  --mh-mono:ui-monospace,"JetBrains Mono",Consolas,monospace;
+}
+/* All learning-page interfaces follow the canonical theme. */
+html[data-maestra-page][data-theme="light"]{
+  --mh-bg:#eef7fc; --mh-side:#f8fcff; --mh-panel:#ffffff; --mh-panel2:#f5fbff; --mh-panel3:#e8f7ff;
+  --mh-text:#102033; --mh-body:#2c465e; --mh-muted:#597286; --mh-stroke:#cfe2ee; --mh-stroke2:#8dcced;
+  --mh-accent:#0a86b8; --mh-accent2:#6f71ff; --mh-accent-text:#0a7fb0; --mh-primary:#0b7fae; --mh-on-accent:#06131d;
+  --mh-input:#ffffff; --mh-shadow:0 18px 45px rgba(23,55,84,.10);
+}
+/* MESFET simulators follow the system setting when opened on their own without a theme */
+@media (prefers-color-scheme: light){
+  html[data-maestra-page^="mesfet-0"]:not([data-theme]){
+    --mh-bg:#eef7fc; --mh-side:#f8fcff; --mh-panel:#ffffff; --mh-panel2:#f5fbff; --mh-panel3:#e8f7ff;
+    --mh-text:#102033; --mh-body:#2c465e; --mh-muted:#597286; --mh-stroke:#cfe2ee; --mh-stroke2:#8dcced;
+    --mh-accent:#0a86b8; --mh-accent2:#6f71ff; --mh-accent-text:#0a7fb0; --mh-primary:#0b7fae;
+    --mh-input:#ffffff; --mh-shadow:0 18px 45px rgba(23,55,84,.10);
+  }
+}
+
+/* ───────── 2. Typography and common details on every learning page ───────── */
+html[data-maestra-page] body{font-family:var(--mh-font)!important;-webkit-font-smoothing:antialiased}
+html[data-maestra-page] :is(h1,h2,h3,h4,h5,h6,button,input,select,textarea,summary,label,th,td,legend){font-family:var(--mh-font)!important}
+html[data-maestra-page] :is(code,kbd,pre,samp){font-family:var(--mh-mono)!important}
+html[data-maestra-page] *{scrollbar-color:var(--mh-stroke2) transparent}
+html[data-maestra-page] ::selection{background:color-mix(in srgb,var(--mh-accent) 32%,transparent)}
+html[data-maestra-page] :focus-visible{outline:2px solid var(--mh-accent);outline-offset:2px}
+html[data-maestra-page] input[type=range]{accent-color:var(--mh-accent)}
+html[data-maestra-page] input[type=checkbox],html[data-maestra-page] input[type=radio]{accent-color:var(--mh-primary)}
+
+/* Chapter (reading) pages: the same body-text size and rhythm everywhere */
+html[data-maestra-reading] body{font-size:16px}
+html[data-maestra-reading] :is(main,article,section) :is(p,li){font-size:16px;line-height:1.65}
+html[data-maestra-reading] :is(h1,h2,h3){letter-spacing:-.02em}
+
+/* ───────── 3. Page colour variables → hub palette ───────── */
+/* 1.1 Basic Semiconductor */
+html[data-maestra-page="basic"],html[data-maestra-page="basic"] body{
+  --app-bg:var(--mh-bg)!important; --sidebar-bg:var(--mh-side)!important; --surface:var(--mh-panel)!important; --surface2:var(--mh-panel2)!important; --surface3:var(--mh-panel3)!important;
+  --text-strong:var(--mh-text)!important; --text-body:var(--mh-body)!important; --text-soft:var(--mh-muted)!important;
+  --stroke:var(--mh-stroke)!important; --stroke2:var(--mh-stroke2)!important; --accent:var(--mh-accent)!important; --accent2:var(--mh-accent2)!important}
+/* 1.2 Fermi–DOS simulator */
+html[data-maestra-page="fermi"],html[data-maestra-page="fermi"] body{
+  --bg:var(--mh-bg)!important; --panel:var(--mh-panel)!important; --panel2:var(--mh-panel2)!important; --line:var(--mh-stroke)!important;
+  --text:var(--mh-text)!important; --muted:var(--mh-muted)!important}
+/* 2.1 PN Diode chapter */
+html[data-maestra-page="pn"],html[data-maestra-page="pn"] body{
+  --page-bg:var(--mh-bg)!important; --app-bg:var(--mh-bg)!important; --panel-bg:var(--mh-panel)!important; --surface:var(--mh-panel)!important;
+  --soft-bg:var(--mh-panel2)!important; --surface-2:var(--mh-panel2)!important; --surface-3:var(--mh-panel3)!important; --side:var(--mh-side)!important; --sidebar-bg:var(--mh-side)!important;
+  --text-main:var(--mh-text)!important; --text-strong:var(--mh-text)!important; --heading-main:var(--mh-text)!important; --ink:var(--mh-text)!important;
+  --text-body:var(--mh-body)!important; --text-muted:var(--mh-muted)!important; --text-soft:var(--mh-muted)!important; --muted:var(--mh-muted)!important;
+  --border-main:var(--mh-stroke)!important; --stroke:var(--mh-stroke)!important; --line:var(--mh-stroke)!important; --stroke-2:var(--mh-stroke2)!important;
+  --accent:var(--mh-accent)!important; --input-bg:var(--mh-input)!important; --code-bg:var(--mh-panel2)!important}
+/* 2.2 Drift–diffusion simulator */
+html[data-maestra-page="drift"],html[data-maestra-page="drift"] body{
+  --bg:var(--mh-bg)!important; --panel:var(--mh-panel)!important; --panel-alt:var(--mh-panel2)!important; --surface:var(--mh-panel)!important; --surface-soft:var(--mh-panel2)!important;
+  --input-bg:var(--mh-input)!important; --line:var(--mh-stroke)!important; --line-strong:var(--mh-stroke2)!important;
+  --text:var(--mh-text)!important; --muted:var(--mh-muted)!important; --muted-2:var(--mh-muted)!important;
+  --primary:var(--mh-primary)!important; --primary-soft:var(--mh-panel3)!important; --button:var(--mh-panel2)!important;
+  --chat-ai:var(--mh-panel)!important; --chat-user:var(--mh-panel3)!important; --scrollbar-thumb:var(--mh-stroke2)!important}
+/* 2.3 Poisson rubber sheet, 4.2 MOS water table (same design family) */
+html:is([data-maestra-page="poisson"],[data-maestra-page="mos-water"]),html:is([data-maestra-page="poisson"],[data-maestra-page="mos-water"]) body{
+  --ink:var(--mh-bg)!important; --ink-2:var(--mh-side)!important; --panel:var(--mh-panel)!important; --panel-2:var(--mh-panel2)!important;
+  --line:var(--mh-stroke)!important; --line-soft:var(--mh-stroke)!important; --text:var(--mh-text)!important; --muted:var(--mh-muted)!important; --dim:var(--mh-muted)!important;
+  --surface:var(--mh-panel)!important; --surface-soft:var(--mh-panel2)!important; --input-bg:var(--mh-input)!important; --button:var(--mh-panel2)!important;
+  --chat-ai:var(--mh-panel)!important; --chat-user:var(--mh-panel3)!important;
+  --body:var(--mh-font)!important; --display:var(--mh-font)!important; --mono:var(--mh-mono)!important}
+/* 2.4 Poisson (AI, high-res), 3.2 BJT metaphor (same design family) */
+html:is([data-maestra-page="poisson-ai"],[data-maestra-page="bjt-metaphor"]),html:is([data-maestra-page="poisson-ai"],[data-maestra-page="bjt-metaphor"]) body{
+  --bg:var(--mh-bg)!important; --panel:var(--mh-panel)!important; --line:var(--mh-stroke)!important; --text:var(--mh-text)!important; --muted:var(--mh-muted)!important;
+  --button:var(--mh-panel2)!important; --primary:var(--mh-primary)!important; --chat-ai:var(--mh-panel)!important; --chat-user:var(--mh-panel3)!important}
+/* 3.1 Bipolar transistors chapter */
+html[data-maestra-page="bjt"],html[data-maestra-page="bjt"] body{
+  --page-bg:var(--mh-bg)!important; --panel-bg:var(--mh-panel)!important; --soft-bg:var(--mh-panel2)!important; --side:var(--mh-side)!important;
+  --text-main:var(--mh-text)!important; --heading-main:var(--mh-text)!important; --ink:var(--mh-text)!important;
+  --text-muted:var(--mh-muted)!important; --muted:var(--mh-muted)!important; --border-main:var(--mh-stroke)!important; --line:var(--mh-stroke)!important;
+  --input-bg:var(--mh-input)!important; --code-bg:var(--mh-panel2)!important; --orange:var(--mh-accent-text)!important}
+/* 4.1 MOS capacitor & MOSFET chapter */
+html[data-maestra-page="mos"],html[data-maestra-page="mos"] body{
+  --app:var(--mh-bg)!important; --side:var(--mh-side)!important; --surface:var(--mh-panel)!important; --surface2:var(--mh-panel2)!important; --surface3:var(--mh-panel3)!important;
+  --text:var(--mh-text)!important; --body:var(--mh-body)!important; --muted:var(--mh-muted)!important;
+  --line:var(--mh-stroke)!important; --line2:var(--mh-stroke2)!important; --accent:var(--mh-accent)!important; --accent2:var(--mh-accent2)!important}
+/* 4.3 MOS surface potential */
+html[data-maestra-page="mos-surface"],html[data-maestra-page="mos-surface"] body{
+  --page:var(--mh-bg)!important; --panel:var(--mh-panel)!important; --soft:var(--mh-panel2)!important; --surface-soft:var(--mh-panel2)!important; --input-bg:var(--mh-input)!important;
+  --ink:var(--mh-text)!important; --muted:var(--mh-muted)!important; --line:var(--mh-stroke)!important; --primary:var(--mh-primary)!important;
+  --chat-ai:var(--mh-panel)!important; --chat-user:var(--mh-panel3)!important}
+/* 4.4 MOS C–V frequency */
+html[data-maestra-page="mos-cv"],html[data-maestra-page="mos-cv"] body{
+  --bg:var(--mh-bg)!important; --panel:var(--mh-panel)!important; --ink:var(--mh-text)!important; --muted:var(--mh-muted)!important; --line:var(--mh-stroke)!important;
+  --surface-soft:var(--mh-panel2)!important; --input-bg:var(--mh-input)!important; --chat-ai:var(--mh-panel)!important; --chat-user:var(--mh-panel3)!important}
+/* 4.5 nMOS device lab */
+html[data-maestra-page="nmos"],html[data-maestra-page="nmos"] body{
+  --bg:var(--mh-bg)!important; --panel:var(--mh-panel)!important; --panel2:var(--mh-panel2)!important; --border:var(--mh-stroke)!important;
+  --text:var(--mh-text)!important; --muted:var(--mh-muted)!important; --input-bg:var(--mh-input)!important;
+  --chat-ai:var(--mh-panel2)!important; --chat-user:var(--mh-panel3)!important}
+/* 5 MESFET ebook start page */
+html[data-maestra-page="mesfet-index"],html[data-maestra-page="mesfet-index"] body{
+  --bg:var(--mh-bg)!important; --panel:var(--mh-panel)!important; --text:var(--mh-text)!important; --muted:var(--mh-muted)!important;
+  --accent:var(--mh-accent)!important; --border:var(--mh-stroke)!important}
+/* 5 MESFET 01 thermionic emission */
+html[data-maestra-page="mesfet-01"],html[data-maestra-page="mesfet-01"] body{
+  --bg:var(--mh-bg)!important; --panel:var(--mh-panel)!important; --panel2:var(--mh-panel2)!important; --line:var(--mh-stroke)!important;
+  --text:var(--mh-text)!important; --muted:var(--mh-muted)!important; --card-a:var(--mh-panel)!important; --card-b:var(--mh-panel)!important;
+  --card-border:var(--mh-stroke)!important; --rule:var(--mh-stroke)!important; --btn:var(--mh-panel2)!important; --field:var(--mh-input)!important;
+  --block:var(--mh-panel2)!important; --metric:var(--mh-panel2)!important; --badge:var(--mh-panel2)!important; --eq:var(--mh-panel3)!important; --cyan:var(--mh-accent-text)!important}
+/* 5 MESFET 02 metal–semiconductor metaphor lab */
+html[data-maestra-page="mesfet-02"],html[data-maestra-page="mesfet-02"] body{
+  --bg:var(--mh-bg)!important; --panel:var(--mh-panel)!important; --panel-2:var(--mh-panel2)!important; --line:var(--mh-stroke)!important;
+  --ink:var(--mh-text)!important; --dim:var(--mh-muted)!important; --accent:var(--mh-accent-text)!important}
+/* 5 MESFET 03 Schottky contact simulator */
+html[data-maestra-page="mesfet-03"],html[data-maestra-page="mesfet-03"] body{
+  --bg-color:var(--mh-bg)!important; --panel-bg:var(--mh-panel)!important; --border-color:var(--mh-stroke)!important; --soft-bg:var(--mh-panel2)!important;
+  --text-main:var(--mh-text)!important; --text-muted:var(--mh-muted)!important; --accent:var(--mh-accent-text)!important}
+/* 5 MESFET 04 frozen sluice */
+html[data-maestra-page="mesfet-04"],html[data-maestra-page="mesfet-04"] body{
+  --ink:var(--mh-bg)!important; --ink-2:var(--mh-side)!important; --panel:var(--mh-panel)!important; --panel-soft:var(--mh-panel2)!important;
+  --rule:var(--mh-stroke)!important; --text:var(--mh-text)!important; --text-dim:var(--mh-muted)!important; --card-1:var(--mh-panel)!important; --card-2:var(--mh-panel)!important}
+/* 5 MESFET 05 2D dynamic channel */
+html[data-maestra-page="mesfet-05"],html[data-maestra-page="mesfet-05"] body{--ink:var(--mh-text)!important; --muted:var(--mh-muted)!important}
+/* 5 MESFET tutor (chapter) */
+html[data-maestra-page="mesfet-tutor"],html[data-maestra-page="mesfet-tutor"] body{
+  --bg:var(--mh-bg)!important; --panel:var(--mh-panel)!important; --panel2:var(--mh-panel2)!important; --card:var(--mh-panel)!important;
+  --text:var(--mh-text)!important; --muted:var(--mh-muted)!important; --accent:var(--mh-accent-text)!important; --border:var(--mh-stroke)!important;
+  --pn-app:var(--mh-bg)!important; --pn-side:var(--mh-side)!important; --pn-surface:var(--mh-panel)!important; --pn-surface-2:var(--mh-panel2)!important; --pn-surface-3:var(--mh-panel3)!important;
+  --pn-text:var(--mh-text)!important; --pn-body:var(--mh-body)!important; --pn-muted:var(--mh-muted)!important; --pn-stroke:var(--mh-stroke)!important; --pn-stroke-2:var(--mh-stroke2)!important;
+  --pn-accent:var(--mh-accent)!important}
+/* 6 Solar cells chapter */
+html[data-maestra-page="solar"],html[data-maestra-page="solar"] body{
+  --app:var(--mh-bg)!important; --sidebar:var(--mh-side)!important; --surface:var(--mh-panel)!important; --surface2:var(--mh-panel2)!important; --surface3:var(--mh-panel3)!important;
+  --text:var(--mh-text)!important; --body:var(--mh-body)!important; --muted:var(--mh-muted)!important;
+  --stroke:var(--mh-stroke)!important; --stroke2:var(--mh-stroke2)!important; --accent:var(--mh-accent)!important; --accent2:var(--mh-accent2)!important}
+/* 6 Solar-cell waterworks simulator */
+html[data-maestra-page="solar-loop"],html[data-maestra-page="solar-loop"] body{--ink:var(--mh-text)!important; --dim:var(--mh-muted)!important; --accent:var(--mh-accent)!important}
+
+/* ───────── 4. Teaching figures (inline SVG, theme-aware) ───────── */
+.mfig{margin:18px 0;padding:14px 16px 12px;border:1px solid var(--mh-stroke,#cfe2ee);border-radius:14px;background:var(--mh-panel,#fff);max-width:900px}
+.mfig svg{display:block;width:100%;height:auto}
+.mfig figcaption{margin-top:8px;font-size:14px;line-height:1.55;color:var(--mh-muted,#597286)}
+.mfig figcaption b{color:var(--mh-text,#102033)}
+.mtext{max-width:900px}
+.mtext h3{margin:22px 0 8px}
+
+/* Responsive controls and focus indicators; wide scientific plots scroll locally. */
+.maestra-theme-control{border:1px solid var(--mh-stroke);border-radius:8px;padding:8px 12px;background:var(--mh-panel);color:var(--mh-text);cursor:pointer;font:inherit}
+html[data-maestra-page] :is(input,select,textarea){color-scheme:light dark}
+html[data-theme="light"]{color-scheme:light}html[data-theme="dark"]{color-scheme:dark}
+html[data-maestra-page] :is(.grid,.main,.workspace,.top-visuals,.case-explanation-grid)>*{min-width:0}
+@media(max-width:620px){
+ html[data-maestra-page="mos-cv"] :is(.case-explanation-grid,.top-visuals,.eq-grid){grid-template-columns:minmax(0,1fr)}
+ html[data-maestra-page="mos-cv"] :is(.metrics,.race-row){min-width:0}
+ html[data-maestra-page] :is(.header-actions,.tabs,.actions){flex-wrap:wrap}
+ html[data-maestra-page] .banner p{min-width:0}
+}
+html[data-maestra-page="solar-loop"] body{background:var(--mh-bg);--panel:var(--mh-panel);--brd:var(--mh-stroke)}
+html[data-maestra-page="solar-loop"] :is(.tin input,.tcfg input,.tcfg select){background:var(--mh-input);color:var(--mh-text)}
+html[data-maestra-page="nmos"] body{background:var(--mh-bg)}
+html[data-maestra-page="nmos"] :is(.chat-messages,.chat-composer,.modal-card,.model-note){background:var(--mh-panel);color:var(--mh-text)}
+html[data-maestra-page="nmos"] :is(.msg,.msg .role,.attach-label,.modal-note,.field-hint,.chat-composer textarea,.modal-card input,.modal-card select,.modal-card textarea){color:var(--mh-text)}
+html[data-maestra-page="nmos"] :is(.chip,.ai-btn,.modal-btn){background:var(--mh-panel2);color:var(--mh-text)}
+html[data-maestra-page="mos-water"][data-theme="light"]{--water:#096889;--water-hi:#096889;--water-lo:#247b95}
+html:is([data-maestra-page="poisson-ai"],[data-maestra-page="bjt-metaphor"]) :is(.panel-title,.instructions,.plot-header,.legend,.status-line){background:var(--mh-panel);color:var(--mh-text);border-color:var(--mh-stroke)}
+html:is([data-maestra-page="poisson-ai"],[data-maestra-page="bjt-metaphor"]) :is(.instructions p,.tick-row,.slider-label strong,.plot-header span){color:var(--mh-muted)}
+html:is([data-maestra-page="poisson-ai"],[data-maestra-page="bjt-metaphor"]) :is(.mode-btn.positive,.mode-btn.inspect,.mode-btn.remove,.preset-btn.warn,.preset-btn.danger){color:#102033}
+@media(prefers-reduced-motion:reduce){html[data-maestra-page] *,html[data-maestra-page] *::before,html[data-maestra-page] *::after{scroll-behavior:auto!important;transition:none!important}}
+
+@media(max-width:650px){
+ html[data-maestra-page="basic"] .layout{grid-template-columns:minmax(0,1fr)}
+ html[data-maestra-page="basic"] :is(.sidebar,.content,.sim,.card,.heroInner){min-width:0;max-width:100%;box-sizing:border-box}
+ html[data-maestra-page="basic"] .topbar{height:auto;min-height:58px;grid-template-columns:48px minmax(0,1fr)}
+ html[data-maestra-page="basic"] .topActions{grid-column:1/-1;justify-content:flex-end;padding:4px 12px}
+ html[data-maestra-page="basic"] :is(table,.eqBox,.eq,.equation){display:block;max-width:100%;overflow-x:auto}
+ html[data-maestra-page="mesfet-tutor"] .readingStatusPN{min-width:0;width:100%;overflow-wrap:anywhere}
+ html[data-maestra-page="mesfet-tutor"] :is(.readingBtn,.readingBarPN){min-width:0;max-width:100%;flex-wrap:wrap}
+}
+html[data-maestra-page] :is(.grid2,.grid3,.meaningGrid,.deriveGrid)>*{min-width:0}
+html[data-maestra-page="nmos"] :is(.shell,.metric,.note,.ai-head,.ai-state){background:var(--mh-panel);color:var(--mh-text)}
+html[data-maestra-page="nmos"] :is(.symbol,.metric small,.note b,.ai-head-title,.ai-head-sub,.ai-state strong){color:var(--mh-text)}
+html[data-maestra-page="nmos"] .value{color:var(--mh-accent-text)}
+html[data-maestra-page="nmos"] :is(.btn,.tab){background:var(--mh-panel2);color:var(--mh-text);border-color:var(--mh-stroke2)}
+html[data-maestra-page="nmos"] :is(.stage,.canvas-wrap){background:#102b3d;color:#f4fbff}
+html[data-maestra-page="nmos"] .legend{color:#f4fbff}
+html[data-maestra-page="nmos"] .model-note{position:static;display:inline-block;margin-top:8px}
+@media(max-width:650px){html[data-maestra-page="solar"] .topbar{height:auto;grid-template-columns:48px minmax(0,1fr)}html[data-maestra-page="solar"] .siteTitle{min-width:0;white-space:normal;overflow-wrap:anywhere}html[data-maestra-page="solar"] .searchBox{width:100%;min-width:0;box-sizing:border-box;grid-column:1/-1}}
+@media(max-width:650px){html[data-maestra-page="solar"] .searchBox{width:calc(100% - 24px)}html[data-maestra-page="solar"] .topActions{grid-column:1/-1;justify-content:flex-end}}
+html[data-maestra-page="nmos"] .stage{background:var(--mh-panel2);color:var(--mh-text)}
+html[data-maestra-page="nmos"] #mosSvg>line[stroke="#111"]{stroke:var(--mh-text)}
+html[data-maestra-page="nmos"] #mosSvg>circle[fill="#111"],html[data-maestra-page="nmos"] #mosSvg>text[fill="#a6172b"],html[data-maestra-page="nmos"] :is(#sourceLabel,#drainLabel,#biasText){fill:var(--mh-text)}
+html[data-maestra-page="nmos"] #electronLabel{fill:#096889}html[data-maestra-page="nmos"] #currentLabel{fill:#94234d}

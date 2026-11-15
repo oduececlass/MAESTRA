@@ -259,18 +259,51 @@ h1{font-size:58px;line-height:1.02;margin:0 0 14px;color:var(--text);letter-spac
 @media(max-width:850px){.suiteGrid{grid-template-columns:1fr 1fr}.topNav .navOptional{display:none}}
 @media(max-width:560px){.suiteGrid{grid-template-columns:1fr}}
 
+
+/* ===== topic illustrations ===== */
+:root{--art-bg:#0f2738;--art-n:#4ea8ff;--art-n-soft:rgba(78,168,255,.22);--art-p:#ff7aa2;--art-p-soft:rgba(255,122,162,.20);
+  --art-dep:rgba(255,255,255,.07);--art-metal:#a9b8c6;--art-oxide:#f2c94c;--art-e:#38d7ff;--art-h:#ff8fb1;--art-ef:#ff6b6b;--art-sub:rgba(169,184,198,.16);--art-sun:#ffc54d}
+html[data-theme="light"]{--art-bg:#eaf6fc;--art-n:#2563eb;--art-n-soft:rgba(37,99,235,.13);--art-p:#db2777;--art-p-soft:rgba(219,39,119,.11);
+  --art-dep:rgba(16,32,51,.05);--art-metal:#8394a6;--art-oxide:#d9a520;--art-e:#0a86b8;--art-h:#db2777;--art-ef:#dc2626;--art-sub:rgba(100,116,139,.14);--art-sun:#f59e0b}
+.cardArt{margin:-22px -22px 16px;height:132px;background:var(--art-bg);border-bottom:1px solid var(--stroke)}
+.cardArt svg{display:block;width:100%;height:100%}
+.cardArt text{font:700 11px Inter,Segoe UI,Arial,sans-serif;fill:var(--text)}
+.cardArt .t-dim{fill:var(--muted);font-weight:600;font-size:10px}
+.cardArt .ax{stroke:var(--muted);stroke-width:1.4;fill:none}
+.cardArt .curve{stroke:var(--accent);stroke-width:3;fill:none;stroke-linecap:round}
+.cardArt .ef{stroke:var(--art-ef);stroke-width:1.6;stroke-dasharray:5 4;fill:none}
+.cardArt .nreg{fill:var(--art-n-soft);stroke:var(--art-n);stroke-width:1.4}
+.cardArt .preg{fill:var(--art-p-soft);stroke:var(--art-p);stroke-width:1.4}
+.cardArt .dep{fill:var(--art-dep);stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+.cardArt .sub{fill:var(--art-sub);stroke:var(--muted);stroke-width:1}
+.cardArt .metal{fill:var(--art-metal)}
+.cardArt .oxide{fill:var(--art-oxide)}
+.cardArt .e{fill:var(--art-e)}
+.cardArt .h{fill:none;stroke:var(--art-h);stroke-width:1.8}
+.cardArt .ionp{fill:var(--art-n);font-size:12px}
+.cardArt .ionm{fill:var(--art-p);font-size:13px}
+.cardArt .flow{stroke:var(--accent);stroke-width:2.2;fill:none;stroke-dasharray:6 4}
+.cardArt .head{fill:var(--accent)}
+.cardArt .lead{stroke:var(--muted);stroke-width:1.6}
+.cardArt .sun{fill:var(--art-sun)}
+.cardArt .ray{stroke:var(--art-sun);stroke-width:2;stroke-linecap:round}
+.cardArt .photon{stroke:var(--art-sun);stroke-width:2;fill:none}
+.cardArt .chan{stroke:var(--art-e);stroke-width:3}
+.icon{font-size:24px}
+.card:before{z-index:1}
+.card{min-height:0}
 </style>
 </head>
 <body>
 <header class="topbar">
   <div class="logo">Si</div>
   <div class="brand">Semiconductor Learning Hub<small>Officially NSF-Funded MAESTRA Project</small></div>
-  <input id="search" class="search" placeholder="Search modules, devices, simulations..." />
+  <input id="search" class="search" placeholder="Search modules, devices, simulations..." / aria-label="Search learning topics">
   <div class="actions topNav">
     <a class="btn navOptional" href="#learning">Learn</a>
     <a class="btn navOptional" href="#tools">MAESTRA Tools</a>
     <button class="btn" id="themeBtn" type="button">Bright</button>
-    <a class="btn" href="DEPLOY_TO_GITHUB_PAGES.md">Deploy</a>
+    <a class="btn" href="docs/DEPLOY_TO_GITHUB_PAGES.md">Deploy</a>
   </div>
 </header>
 
@@ -314,7 +347,7 @@ h1{font-size:58px;line-height:1.02;margin:0 0 14px;color:var(--text);letter-spac
 
   <section class="roadmap maestraSuite" id="tools">
     <h2 class="sectionTitle" style="margin-top:0">MAESTRA Learning Tools</h2>
-    <p class="suiteIntro">Open the full-screen tools as standalone pages. Every semiconductor lesson now includes a floating MAESTRA toolbar that records the active module and topic, launches the selected tool, and provides a return path to the lesson.</p>
+    <p class="suiteIntro">Open the full-screen tools as standalone pages. Use the links below to open the tools. The lesson launcher is currently disabled; opening a tool from this hub does not capture your current lesson section.</p>
     <div class="suiteGrid">
       <article class="suiteCard">
         <span class="suiteRole">Student + Instructor</span><h3>EE Canvas</h3><p>Build device structures, equations, plots, annotations, and visual explanations.</p>
@@ -365,35 +398,110 @@ h1{font-size:58px;line-height:1.02;margin:0 0 14px;color:var(--text);letter-spac
     document.documentElement.setAttribute("data-theme",saved||preferred);
   }catch(e){document.documentElement.setAttribute("data-theme","dark");}
 })();
+
+const ART={
+basic:`<svg viewBox="0 0 320 132" role="img" aria-label="Energy bands with electrons and holes, and the Fermi-Dirac curve">
+ <rect class="nreg" x="26" y="16" width="128" height="30" rx="5"/><rect class="preg" x="26" y="86" width="128" height="30" rx="5"/>
+ <text x="160" y="35">E<tspan dy="3" font-size="8">C</tspan></text><text x="160" y="105">E<tspan dy="3" font-size="8">V</tspan></text>
+ <line class="ef" x1="20" y1="66" x2="172" y2="66"/><text x="160" y="62" style="fill:var(--art-ef)">E<tspan dy="3" font-size="8">F</tspan></text>
+ <circle class="e" cx="50" cy="31" r="5"/><circle class="e" cx="92" cy="26" r="5"/><circle class="e" cx="128" cy="35" r="5"/>
+ <circle class="h" cx="66" cy="99" r="5"/><circle class="h" cx="112" cy="104" r="5"/>
+ <circle class="e" cx="44" cy="104" r="4" opacity=".55"/><circle class="e" cx="88" cy="98" r="4" opacity=".55"/><circle class="e" cx="138" cy="102" r="4" opacity=".55"/>
+ <line class="ax" x1="196" y1="112" x2="304" y2="112"/><line class="ax" x1="196" y1="112" x2="196" y2="18"/>
+ <path class="curve" d="M198 30 C 232 30, 238 32, 248 66 S 266 104, 302 104"/>
+ <text class="t-dim" x="204" y="16">f(E)</text><text class="t-dim" x="282" y="126">E</text>
+</svg>`,
+pn:`<svg viewBox="0 0 320 132" role="img" aria-label="p-n junction with depletion region">
+ <rect class="preg" x="22" y="30" width="118" height="70" rx="6"/><rect class="nreg" x="180" y="30" width="118" height="70" rx="6"/>
+ <rect class="dep" x="140" y="30" width="40" height="70"/>
+ <text class="ionm" x="146" y="52">−</text><text class="ionm" x="146" y="72">−</text><text class="ionm" x="146" y="92">−</text>
+ <text class="ionp" x="165" y="52">+</text><text class="ionp" x="165" y="72">+</text><text class="ionp" x="165" y="92">+</text>
+ <circle class="h" cx="44" cy="50" r="5"/><circle class="h" cx="78" cy="78" r="5"/><circle class="h" cx="108" cy="48" r="5"/><circle class="h" cx="58" cy="88" r="5"/><circle class="h" cx="118" cy="86" r="5"/>
+ <circle class="e" cx="204" cy="52" r="5"/><circle class="e" cx="238" cy="80" r="5"/><circle class="e" cx="270" cy="48" r="5"/><circle class="e" cx="214" cy="88" r="5"/><circle class="e" cx="282" cy="86" r="5"/>
+ <text x="76" y="22" text-anchor="middle">p</text><text x="239" y="22" text-anchor="middle">n</text><text class="t-dim" x="160" y="118" text-anchor="middle">depletion region</text>
+</svg>`,
+bjt:`<svg viewBox="0 0 320 132" role="img" aria-label="npn bipolar transistor with electron flow from emitter to collector">
+ <rect class="nreg" x="30" y="34" width="86" height="60" rx="6"/><rect class="preg" x="116" y="34" width="42" height="60"/><rect class="nreg" x="158" y="34" width="132" height="60" rx="6"/>
+ <line class="lead" x1="73" y1="94" x2="73" y2="112"/><line class="lead" x1="137" y1="94" x2="137" y2="112"/><line class="lead" x1="224" y1="94" x2="224" y2="112"/>
+ <text x="73" y="124" text-anchor="middle">E</text><text x="137" y="124" text-anchor="middle">B</text><text x="224" y="124" text-anchor="middle">C</text>
+ <text class="t-dim" x="73" y="26" text-anchor="middle">n⁺</text><text class="t-dim" x="137" y="26" text-anchor="middle">p</text><text class="t-dim" x="224" y="26" text-anchor="middle">n</text>
+ <path class="flow" d="M48 64 L262 64"/><polygon class="head" points="276,64 262,57 262,71"/>
+ <circle class="e" cx="60" cy="64" r="5"/><circle class="e" cx="104" cy="64" r="5"/><circle class="e" cx="146" cy="64" r="5"/><circle class="e" cx="196" cy="64" r="5"/><circle class="e" cx="238" cy="64" r="5"/>
+ <circle class="h" cx="137" cy="84" r="4"/>
+</svg>`,
+mos:`<svg viewBox="0 0 320 132" role="img" aria-label="MOSFET cross-section with gate, oxide and inversion channel">
+ <rect class="preg" x="22" y="70" width="276" height="50" rx="4"/>
+ <rect class="nreg" x="34" y="70" width="70" height="24" rx="8"/><rect class="nreg" x="216" y="70" width="70" height="24" rx="8"/>
+ <rect class="oxide" x="98" y="61" width="124" height="9"/><rect class="metal" x="98" y="38" width="124" height="23" rx="2"/>
+ <line class="chan" x1="104" y1="73" x2="216" y2="73"/>
+ <circle class="e" cx="122" cy="73" r="3.5"/><circle class="e" cx="146" cy="73" r="3.5"/><circle class="e" cx="170" cy="73" r="3.5"/><circle class="e" cx="194" cy="73" r="3.5"/>
+ <line class="lead" x1="69" y1="70" x2="69" y2="24"/><line class="lead" x1="160" y1="38" x2="160" y2="24"/><line class="lead" x1="251" y1="70" x2="251" y2="24"/>
+ <text x="69" y="18" text-anchor="middle">S</text><text x="160" y="18" text-anchor="middle">G</text><text x="251" y="18" text-anchor="middle">D</text>
+ <text class="t-dim" x="160" y="112" text-anchor="middle">p-substrate · inversion channel</text>
+</svg>`,
+mesfet:`<svg viewBox="0 0 320 132" role="img" aria-label="MESFET with Schottky gate and depletion region in the n-channel">
+ <rect class="sub" x="22" y="92" width="276" height="28" rx="4"/>
+ <rect class="nreg" x="22" y="62" width="276" height="30"/>
+ <path class="dep" d="M128 62 L192 62 L192 70 C 192 92, 128 92, 128 70 Z"/>
+ <rect class="metal" x="128" y="44" width="64" height="18" rx="2"/><rect class="metal" x="40" y="50" width="56" height="12" rx="2"/><rect class="metal" x="224" y="50" width="56" height="12" rx="2"/>
+ <circle class="e" cx="56" cy="78" r="4"/><circle class="e" cx="94" cy="80" r="4"/><circle class="e" cx="226" cy="78" r="4"/><circle class="e" cx="264" cy="80" r="4"/>
+ <line class="lead" x1="68" y1="50" x2="68" y2="26"/><line class="lead" x1="160" y1="44" x2="160" y2="26"/><line class="lead" x1="252" y1="50" x2="252" y2="26"/>
+ <text x="68" y="20" text-anchor="middle">S</text><text x="160" y="20" text-anchor="middle">G</text><text x="252" y="20" text-anchor="middle">D</text>
+ <text class="t-dim" x="160" y="111" text-anchor="middle">Schottky gate · n-channel · substrate</text>
+</svg>`,
+solar:`<svg viewBox="0 0 320 132" role="img" aria-label="Sunlight striking a solar cell and creating an electron-hole pair">
+ <circle class="sun" cx="46" cy="34" r="15"/>
+ <line class="ray" x1="46" y1="10" x2="46" y2="14"/><line class="ray" x1="22" y1="34" x2="26" y2="34"/><line class="ray" x1="29" y1="17" x2="32" y2="20"/><line class="ray" x1="63" y1="17" x2="60" y2="20"/><line class="ray" x1="29" y1="51" x2="32" y2="48"/>
+ <path class="photon" d="M70 40 q6 -6 12 0 t12 0 t12 0 t12 0 t12 0"/><polygon class="sun" points="134,40 124,35 124,45"/>
+ <path class="photon" d="M70 58 q6 -6 12 0 t12 0 t12 0 t12 0 t12 0 t12 0"/><polygon class="sun" points="146,58 136,53 136,63"/>
+ <rect class="nreg" x="150" y="30" width="146" height="16" rx="3"/><rect class="preg" x="150" y="46" width="146" height="62" rx="3"/>
+ <rect class="metal" x="168" y="24" width="10" height="6"/><rect class="metal" x="214" y="24" width="10" height="6"/><rect class="metal" x="260" y="24" width="10" height="6"/>
+ <rect class="metal" x="150" y="108" width="146" height="6"/>
+ <circle class="e" cx="214" cy="74" r="5"/><circle class="h" cx="232" cy="84" r="5"/>
+ <path class="flow" d="M214 66 L214 50"/><polygon class="head" points="214,44 209,53 219,53"/>
+ <path class="flow" d="M232 92 L232 100"/><polygon class="head" points="232,106 227,97 237,97"/>
+ <text class="t-dim" x="144" y="42" text-anchor="end">n</text><text class="t-dim" x="144" y="100" text-anchor="end">p</text>
+</svg>`
+};
 const MODULES = [
   {
     title:"Basic Semiconductor",
     icon:"B",
+    num:1,
+    art:"basic",
     category:"Foundations",
     status:"ready",
-    href:"modules/Basic_Semiconductor_Enhanced.html",
-    fallback:"modules/Basic_Semiconductor.html",
-    desc:"Probability-centered foundation: Boltzmann factor, Fermi-Dirac function, DOS, carrier concentration, intrinsic/doped material, and Fermi level.",
-    tags:["Fermi-Dirac","DOS","Carrier concentration","Doping"]
+    href:"modules/1_Semiconductor_Basics/1.1_Basic_Semiconductor.html",
+    desc:"Probability, Fermi–Dirac statistics, density of states, carrier concentration and the Fermi level.",
+    tags:["Fermi-Dirac","DOS","Carrier concentration","Doping"],
+    subLabel:"Basics interactive resources",
+    submodules:[
+      {
+        title:"1.2 Fermi–DOS Concentration Simulator",
+        href:"modules/1_Semiconductor_Basics/1.2_Fermi_DOS_Concentration_Simulator.html",
+        desc:"Fermi-Dirac statistics, density of states, carrier concentration and temperature animation"
+      }
+    ]
   },
   {
     title:"PN Diode Chapter",
     icon:"PN",
+    num:2,
+    art:"pn",
     category:"PN Diode",
     status:"ready",
-    href:"modules/PNDiode_Chapter_Enhanced.html",
-    fallback:"modules/PNDiode.html",
-    desc:"Main PN diode learning path: PN-junction formation, depletion electrostatics, bias, minority carrier injection, and diode equation. The Poisson rubber-sheet lab and drift-diffusion simulator are linked as PN diode submodules.",
+    href:"modules/2_PN_Diode/2.1_PN_Diode_Chapter.html",
+    desc:"Junction formation, depletion, bias, carrier injection and the diode equation.",
     tags:["PN junction","Depletion","Bias","Diode equation"],
     submodules:[
       {
-        title:"Drift-Diffusion Simulator",
-        href:"modules/PNDiode_DriftDiffusion_Simulator_Standalone.html",
+        title:"2.2 Drift-Diffusion Simulator",
+        href:"modules/2_PN_Diode/2.2_PN_Diode_Drift_Diffusion_Simulator.html",
         desc:"Transport, carriers, bias, and I–V simulation"
       },
       {
-        title:"Poisson Rubber-Sheet",
-        href:"modules/Poisson_RubberSheet_PoissonEquation.html",
+        title:"2.3 Poisson Rubber-Sheet",
+        href:"modules/2_PN_Diode/2.3_Poisson_Rubber_Sheet.html",
         desc:"Poisson equation, potential, field, and charge visualization"
       }
     ]
@@ -401,16 +509,18 @@ const MODULES = [
   {
     title:"Bipolar Junction Transistors",
     icon:"BJT",
+    num:3,
+    art:"bjt",
     category:"Transistors",
     status:"ready",
-    href:"modules/Bipolar_Transistors_Related_Devices.html",
-    desc:"Complete interactive Chapter 3 covering BJT structure and symbols, thermal equilibrium, active-mode transistor action, current gain, bias configurations, switching, nonideal effects, graded-base transport, HBT comparison, and thyristor concepts.",
+    href:"modules/3_BJT/3.1_Bipolar_Transistors.html",
+    desc:"Transistor action, current gain, operating modes, switching, HBTs and thyristors.",
     tags:["BJT","NPN","PNP","Current gain","Switching","Early effect","HBT","Thyristor"],
     subLabel:"BJT interactive resources",
     submodules:[
       {
-        title:"BJT Carrier-Landscape Metaphor",
-        href:"modules/bjt_metaphor.html",
+        title:"3.2 BJT Carrier-Landscape Metaphor",
+        href:"modules/3_BJT/3.2_BJT_Metaphor.html",
         desc:"Interactive carrier flow, energy landscape, operating modes, data readouts, guided lessons, and AI tutor interface"
       }
     ]
@@ -418,31 +528,33 @@ const MODULES = [
   {
     title:"MOS Capacitor & MOSFET",
     icon:"MOS",
+    num:4,
+    art:"mos",
     category:"Transistors",
     status:"ready",
-    href:"modules/MOSFET.html",
-    desc:"Complete interactive MOS chapter covering MOS-capacitor electrostatics, surface potential, threshold voltage, C–V behavior, inversion-channel formation, MOSFET I–V characteristics, body effect, capacitances, and small-signal models.",
+    href:"modules/4_MOSFET/4.1_MOS_Capacitor_and_MOSFET.html",
+    desc:"MOS electrostatics, threshold voltage, C–V behaviour and MOSFET I–V characteristics.",
     tags:["MOS capacitor","MOSFET","Threshold voltage","Surface potential","C-V","Inversion","I-V","Body effect","Small signal"],
     subLabel:"MOSFET interactive resources",
     submodules:[
       {
-        title:"MOS Water-Table Metaphor + AI",
-        href:"modules/MOSFET_Metaphor_AI.html",
+        title:"4.2 MOS Water-Table Metaphor + AI",
+        href:"modules/4_MOSFET/4.2_MOS_Water_Table_Metaphor.html",
         desc:"Metaphor-based MOS electrostatics, C–V, channel visualization, and state-aware AI tutor"
       },
       {
-        title:"Surface-Potential Simulator + AI",
-        href:"modules/MOSFET_Surface_Potential_AI.html",
+        title:"4.3 Surface-Potential Simulator + AI",
+        href:"modules/4_MOSFET/4.3_MOS_Surface_Potential.html",
         desc:"Band bending, depletion width, field, charge, and AI-guided electrostatics"
       },
       {
-        title:"MOS C–V Frequency Simulator + AI",
-        href:"modules/MOSFET_CV_Frequency_AI.html",
+        title:"4.4 MOS C–V Frequency Simulator + AI",
+        href:"modules/4_MOSFET/4.4_MOS_CV_Frequency.html",
         desc:"Low- and high-frequency MOS C–V behavior with state-aware AI tutor"
       },
       {
-        title:"Interactive nMOS Device Lab + AI",
-        href:"modules/MOSFET_nMOS_Device_Lab_AI.html",
+        title:"4.5 Interactive nMOS Device Lab + AI",
+        href:"modules/4_MOSFET/4.5_nMOS_Device_Lab.html",
         desc:"Channel formation, I–V curves, profiles, body effect, geometry, and AI tutor"
       }
     ]
@@ -450,31 +562,33 @@ const MODULES = [
   {
     title:"MESFET Interactive Ebook",
     icon:"ME",
+    num:5,
+    art:"mesfet",
     category:"Transistors",
     status:"ready",
-    href:"modules/MESFET/index.html",
-    desc:"Complete interactive MESFET chapter beginning with the frozen-sluice metaphor and simulation, followed by metal–semiconductor contacts, Schottky and ohmic behavior, thermionic emission, MESFET channel control, I–V characteristics, high-frequency response, and MODFET/HEMT concepts.",
+    href:"modules/5_MESFET/5.1_MESFET_Chapter.html",
+    desc:"Metal–semiconductor contacts, channel control, I–V, high-frequency response and HEMTs.",
     tags:["MESFET","Frozen-sluice metaphor","Schottky gate","Ohmic contact","Pinch-off","I-V","High frequency","MODFET","HEMT"],
     subLabel:"MESFET interactive resources",
     submodules:[
       {
         title:"Frozen-Sluice Start Page",
-        href:"modules/MESFET/modules/06_complete_mesfet_tutor.html#overview",
+        href:"modules/5_MESFET/5.1_MESFET_Chapter.html#overview",
         desc:"Uploaded visual metaphor with the corresponding frozen-sluice simulator"
       },
       {
         title:"Metal–Semiconductor Contacts",
-        href:"modules/MESFET/modules/06_complete_mesfet_tutor.html#contacts",
+        href:"modules/5_MESFET/5.1_MESFET_Chapter.html#contacts",
         desc:"Schottky barrier, contact metaphor, thermionic emission, and ohmic contacts"
       },
       {
         title:"MESFET Device Physics",
-        href:"modules/MESFET/modules/06_complete_mesfet_tutor.html#mesfet",
+        href:"modules/5_MESFET/5.1_MESFET_Chapter.html#mesfet",
         desc:"Channel control, pinch-off, I–V curves, and high-frequency behavior"
       },
       {
         title:"MODFET / HEMT",
-        href:"modules/MESFET/modules/06_complete_mesfet_tutor.html#modfet",
+        href:"modules/5_MESFET/5.1_MESFET_Chapter.html#modfet",
         desc:"Modulation doping, 2DEG formation, mobility, and sheet resistance"
       }
     ]
@@ -482,31 +596,33 @@ const MODULES = [
   {
     title:"Solar Cells for Solid-State Electronics",
     icon:"PV",
+    num:6,
+    art:"solar",
     category:"Energy Devices",
     status:"ready",
-    href:"modules/Solar_Cells/index.html",
-    desc:"Complete interactive solar-cell ebook connecting photon energy and bandgap to p–n junction operation, optical generation, carrier collection, illuminated J–V behavior, maximum power, losses, and optical-device design.",
+    href:"modules/6_Solar_Cells/6.1_Solar_Cells_Chapter.html",
+    desc:"Photon energy and bandgap, generation, illuminated J–V, maximum power and optics.",
     tags:["Photovoltaics","Photon energy","Bandgap","Generation","J-V curve","Maximum power","Efficiency","Optical design"],
     subLabel:"Solar-cell interactive resources",
     submodules:[
       {
         title:"Hydraulic Head–Flow Metaphor",
-        href:"modules/Solar_Cells/index.html#overview",
+        href:"modules/6_Solar_Cells/6.1_Solar_Cells_Chapter.html#overview",
         desc:"High-resolution visual metaphor plus the load, illumination, temperature, J–V, and power simulator"
       },
       {
         title:"Photon Energy & Bandgap",
-        href:"modules/Solar_Cells/index.html#light",
+        href:"modules/6_Solar_Cells/6.1_Solar_Cells_Chapter.html#light",
         desc:"Spectrum, photon-energy conversion, absorption cases, and bandgap interpretation"
       },
       {
         title:"Illuminated J–V & Power",
-        href:"modules/Solar_Cells/index.html#ivcurve",
+        href:"modules/6_Solar_Cells/6.1_Solar_Cells_Chapter.html#ivcurve",
         desc:"Short circuit, open circuit, fill factor, maximum-power point, and loss diagnosis"
       },
       {
         title:"Optical Stack / TMM Lab",
-        href:"modules/Solar_Cells/index.html#optics",
+        href:"modules/6_Solar_Cells/6.1_Solar_Cells_Chapter.html#optics",
         desc:"Layer stack, absorption, field distribution, and simplified transfer-matrix exploration"
       }
     ]
@@ -531,7 +647,6 @@ function moduleCard(m){
   const ready=m.status==="ready";
   const tags=m.tags.map(t=>`<span class="tag">${t}</span>`).join("");
   const openLabel=ready?"Open module":"Preview placeholder";
-  const secondary=m.fallback?`<a class="openBtn secondary" href="${m.fallback}">Open original</a>`:"";
   const submodules=(m.submodules&&m.submodules.length)
     ? `<div class="subModules"><b>${m.subLabel||"Related interactive resources"}</b><div class="subModuleLinks">`+
       m.submodules.map(s=>`<a href="${s.href}" title="${s.desc}">${s.title} →</a>`).join("")+
@@ -539,17 +654,15 @@ function moduleCard(m){
     : "";
   const searchable=[m.title,m.desc,m.category,...m.tags,...(m.submodules||[]).flatMap(s=>[s.title,s.desc])].join(" ").toLowerCase();
   return `<article class="card" data-title="${m.title.toLowerCase()}" data-tags="${searchable}" data-category="${m.category.toLowerCase()}">
+    <div class="cardArt" aria-hidden="true">${ART[m.art]||''}</div>
     <div class="cardHeader">
-      <div class="icon">${m.icon}</div>
+      <div class="icon" title="Topic ${m.num}">${m.num}</div>
       <span class="status ${m.status}">${ready?'Ready':'Coming soon'}</span>
     </div>
-    <h3>${m.title}</h3>
+    <h3>${m.num}. ${m.title}</h3>
     <p>${m.desc}</p>
-    <div class="tags">${tags}</div>
-    ${submodules}
     <div class="cardActions">
       <a class="openBtn ${ready?'':'secondary'}" href="${m.href}">${openLabel} →</a>
-      ${secondary}
     </div>
   </article>`;
 }
@@ -580,7 +693,8 @@ createFilters();
 renderModules();
 updateThemeButton();
 </script>
-<script defer src="shared/theme-sync-v2.js"></script>
+<script defer src="shared/theme-sync-v2.js?v=20261115f"></script>
 <script defer src="shared/maestra-bridge.js" data-maestra-role="hub" data-maestra-module-id="course-map" data-maestra-module-title="Semiconductor Learning Hub"></script>
+<script defer src="shared/maestra-accessibility.js?v=20261115f"></script>
 </body>
 </html>
