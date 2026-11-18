@@ -8852,29 +8852,27 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
   }
 
-  function inkResample(points, spacing) {
-    const pts = inkDedupe(points);
+  function inkResample(pts, spacing) {
     if (pts.length < 3 || !(spacing > 0)) return pts;
     const out = [{ ...pts[0] }];
-    let carried = 0;
+    let toNext = spacing;
     for (let i = 1; i < pts.length; i++) {
       const a = pts[i - 1], b = pts[i];
-      const d = Math.hypot(b.x - a.x, b.y - a.y);
-      if (carried + d >= spacing) {
-        const t = (spacing - carried) / d;
-        const sample = {
+      const distance = Math.hypot(b.x - a.x, b.y - a.y);
+      if (distance === 0) continue;
+      for (; toNext <= distance; toNext += spacing) {
+        const t = toNext / distance;
+        out.push({
           x: a.x + t * (b.x - a.x),
           y: a.y + t * (b.y - a.y),
           pressure: Number.isFinite(a.pressure) && Number.isFinite(b.pressure) ? a.pressure + t * (b.pressure - a.pressure) : (b.pressure ?? a.pressure),
           pointerType: b.pointerType, time: b.time
-        };
-        out.push(sample);
-        pts.splice(i, 0, sample); // continue measuring from the emitted point
-        carried = 0;
-      } else carried += d;
+        });
+      }
+      toNext -= distance;
     }
-    const last = pts[pts.length - 1], tail = out[out.length - 1];
-    if (Math.hypot(last.x - tail.x, last.y - tail.y) > spacing * 0.3) out.push({ ...last });
+    const last = pts.at(-1), tail = out.at(-1);
+    if (Math.hypot(last.x - tail.x, last.y - tail.y) > 1e-6) out.push({ ...last });
     return out;
   }
 
@@ -8915,7 +8913,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     return mask;
   }
 
-  function inkSmooth(points, passes, weight) {
+  function inkSmooth(points, passes, weight, smoothPressure = true) {
     const st = inkStrength();
     passes = passes ?? st.passes; weight = weight ?? st.weight;
     let current = points.map(p => ({ ...p }));
@@ -8928,7 +8926,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
         const a = current[i - 1], b = current[i], c = current[i + 1];
         next[i].x = b.x + weight * ((a.x + c.x) / 2 - b.x);
         next[i].y = b.y + weight * ((a.y + c.y) / 2 - b.y);
-        if (Number.isFinite(b.pressure)) {
+        if (smoothPressure && Number.isFinite(b.pressure)) {
           const pa = Number.isFinite(a.pressure) ? a.pressure : b.pressure;
           const pc = Number.isFinite(c.pressure) ? c.pressure : b.pressure;
           next[i].pressure = b.pressure + 0.5 * ((pa + pc) / 2 - b.pressure);
@@ -8939,7 +8937,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     return current;
   }
 
-  function inkSimplify(points, tolerance) {
+  function inkSimplify(points, tolerance, pressureTolerance = Infinity) {
     if (points.length < 3 || !(tolerance > 0)) return points.map(p => ({ ...p }));
     const keep = new Array(points.length).fill(false);
     keep[0] = keep[points.length - 1] = true;
@@ -8947,25 +8945,38 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     while (stack.length) {
       const [s, e] = stack.pop();
       if (e - s < 2) continue;
-      let index = -1, best = tolerance;
+      let index = -1, best = 1;
+      const a = points[s], b = points[e];
+      const dx = b.x - a.x, dy = b.y - a.y, squaredLength = dx * dx + dy * dy;
+      const preservePressure = Number.isFinite(pressureTolerance) && Number.isFinite(a.pressure) && Number.isFinite(b.pressure);
       for (let i = s + 1; i < e; i++) {
-        const d = distanceSegment(points[i].x, points[i].y, points[s].x, points[s].y, points[e].x, points[e].y);
-        if (d > best) { best = d; index = i; }
+        const p = points[i];
+        const t = squaredLength ? clamp(((p.x - a.x) * dx + (p.y - a.y) * dy) / squaredLength, 0, 1) : 0;
+        const distance = Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy);
+        let error = distance / tolerance;
+        if (preservePressure && Number.isFinite(p.pressure)) {
+          const interpolated = a.pressure + t * (b.pressure - a.pressure);
+          error = Math.max(error, Math.abs(p.pressure - interpolated) / pressureTolerance);
+        }
+        if (error > best) { best = error; index = i; }
       }
       if (index > 0) { keep[index] = true; stack.push([s, index], [index, e]); }
     }
     return points.filter((_, i) => keep[i]).map(p => ({ ...p }));
   }
 
-  function cleanFreehandStroke(points) {
+  function cleanFreehandStroke(points, responsivePen = false) {
     const raw = inkDedupe(points);
     if (raw.length < 4) return raw;
     const length = inkLength(raw);
     if (length < 2) return raw;
     const st = inkStrength();
-    const spacing = clamp(length / st.spacingDiv, 1.4, st.spacingMax);
-    let out = inkSmooth(inkResample(raw, spacing));
-    out = inkSimplify(out, Math.max(0.4, spacing * st.simplify));
+    const zoom = state.zoom || 1;
+    const spacing = responsivePen ? clamp(length / 240, 0.5 / zoom, 2 / zoom) : clamp(length / st.spacingDiv, 1.4, st.spacingMax);
+    const passes = responsivePen ? Math.ceil(st.passes / 2) : st.passes;
+    let out = inkSmooth(inkResample(raw, spacing), passes, st.weight, !responsivePen);
+    const tolerance = Math.max(responsivePen ? 0.12 / zoom : 0.4, spacing * st.simplify);
+    out = inkSimplify(out, tolerance, responsivePen ? 0.025 : Infinity);
     if (out.length < 2) return raw;
     out[0] = { ...raw[0], pressure: out[0].pressure };
     out[out.length - 1] = { ...raw[raw.length - 1], pressure: out[out.length - 1].pressure };
@@ -9128,7 +9139,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
   function finalizeFreehandStroke(draft) {
     const mode = inkAssistMode();
     if (mode === "off" || !draft || draft.type !== "path") return draft;
-    const cleaned = cleanFreehandStroke(draft.points);
+    const cleaned = cleanFreehandStroke(draft.points, tabletWorkspace && draft.inputType === "pen");
     if (cleaned.length > 1) draft.points = cleaned;
     if (mode !== "shape" || draft.noInkShape || draft.rulerEdge) return draft;
     const shape = recognizeInkShape(draft.points);
@@ -10964,13 +10975,13 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     return { ...layout, size, startY, inset, innerWidth, innerHeight };
   }
 
-  function applyObjectContext(o) {
-    ctx.globalAlpha = o.opacity ?? 1; ctx.globalCompositeOperation = o.blend || "source-over";
-    ctx.lineWidth = o.strokeWidth || 0; ctx.strokeStyle = o.stroke || "transparent";
-    ctx.setLineDash(Array.isArray(o.dash) ? o.dash : []);
-    ctx.fillStyle = o.fill || "transparent"; ctx.lineCap = o.lineCap || "round"; ctx.lineJoin = "round";
-    if (o.shadow?.enabled) { ctx.shadowBlur = o.shadow.blur || 0; ctx.shadowColor = o.shadow.color || "#000"; ctx.shadowOffsetX = o.shadow.x || 0; ctx.shadowOffsetY = o.shadow.y || 0; }
-    if (o.type === "image") { const f = o.filters || {}; ctx.filter = `brightness(${f.brightness ?? 100}%) contrast(${f.contrast ?? 100}%) grayscale(${f.grayscale ?? 0}%) saturate(${f.saturate ?? 100}%)`; }
+  function applyObjectContext(o, c = ctx) {
+    c.globalAlpha = o.opacity ?? 1; c.globalCompositeOperation = o.blend || "source-over";
+    c.lineWidth = o.strokeWidth || 0; c.strokeStyle = o.stroke || "transparent";
+    c.setLineDash(Array.isArray(o.dash) ? o.dash : []);
+    c.fillStyle = o.fill || "transparent"; c.lineCap = o.lineCap || "round"; c.lineJoin = "round";
+    if (o.shadow?.enabled) { c.shadowBlur = o.shadow.blur || 0; c.shadowColor = o.shadow.color || "#000"; c.shadowOffsetX = o.shadow.x || 0; c.shadowOffsetY = o.shadow.y || 0; }
+    if (o.type === "image") { const f = o.filters || {}; c.filter = `brightness(${f.brightness ?? 100}%) contrast(${f.contrast ?? 100}%) grayscale(${f.grayscale ?? 0}%) saturate(${f.saturate ?? 100}%)`; }
   }
 
   function drawFreehandPath(c, o) {
@@ -10993,6 +11004,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
         const p0 = pts[i - 1], p1 = pts[i], mx = (p0.x + p1.x) / 2, my = (p0.y + p1.y) / 2;
         c.quadraticCurveTo(p0.x, p0.y, mx, my);
       }
+      c.lineTo(pts.at(-1).x, pts.at(-1).y);
       c.stroke();
       return;
     }
@@ -11298,7 +11310,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     if (options.editor && state.showGrid) drawGrid();
     (options.replayObjects || state.objects).forEach(o => drawObject(o));
     if (options.replayObjects) return;
-    if (pointer.draft) drawObject(pointer.draft, true);
+    if (pointer.draft && penPreview?.draft !== pointer.draft) drawObject(pointer.draft, true);
     if (options.editor) { drawGuides(); drawSelection(); drawDirectCurveRangeOverlay(); drawDirectRangeGizmo(); drawConnectedEndpointBadges(); drawConnectionAnchors(); drawMarquee(); updateCanvasAccessibilitySummary(); }
   }
 
@@ -11320,9 +11332,13 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
   }
   
   function normalizedPointerPressure(e) {
-    if ((e.pointerType || "mouse") !== "pen") return 0.5;
+    if (e.pointerType !== "pen") return 0.5;
     const raw = Number(e.pressure);
-    return raw > 0 ? clamp(raw, 0.05, 1) : 0.5;
+    if (!(raw > 0) || raw === 0.5) return 0.5;
+    if (!tabletWorkspace) return clamp(raw, 0.05, 1);
+    const pressure = clamp(raw, 0, 1);
+    // Expand light contact without clipping the increasingly firm part of the range.
+    return pressure + 0.65 * Math.sqrt(pressure) * Math.max(0, 1 - 2 * pressure) ** 2;
   }
 
   /* Offset of the canvas shell inside the stage's scrollable content.
@@ -11404,8 +11420,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     return currentInsertAnchor();
   }
 
-  function pointFromEvent(e) {
-    const r = canvas.getBoundingClientRect();
+  function pointFromEvent(e, r = canvas.getBoundingClientRect()) {
     return {
       x: (e.clientX - r.left) * canvas.width / r.width,
       y: (e.clientY - r.top) * canvas.height / r.height,
@@ -11428,27 +11443,146 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     });
   }
 
-  function appendFreehandSample(e, final = false) {
+  let penPreview = null;
+  let penPreviewFrame = 0;
+
+  function startPenPreview(draft) {
+    if (!tabletWorkspace || draft.inputType !== "pen" || draft.blend !== "source-over" || draft.shadow?.enabled) return false;
+    if (!penPreview) {
+      const layer = document.createElement("canvas");
+      layer.className = "live-pen-preview";
+      layer.style.cssText = "position:absolute;z-index:1;pointer-events:none;";
+      layer.setAttribute("aria-hidden", "true");
+      layer.hidden = true;
+      const context = layer.getContext("2d");
+      if (!context) return false;
+      shell.append(layer);
+      penPreview = { layer, context, draft: null, bounds: null, dirty: null };
+    }
+    penPreview.draft = draft;
+    penPreview.bounds = null;
+    penPreview.dirty = null;
+    paintPenPreview();
+    return true;
+  }
+
+  function endPenPreview() {
+    if (!penPreview?.draft) return;
+    cancelAnimationFrame(penPreviewFrame);
+    penPreviewFrame = 0;
+    penPreview.draft = null;
+    penPreview.layer.hidden = true;
+  }
+
+  function paintPenPreview() {
+    const preview = penPreview;
+    if (!preview?.draft) return;
+    const { layer, context: c, draft } = preview;
+    if (!preview.bounds) {
+      const view = stage.getBoundingClientRect(), page = canvas.getBoundingClientRect();
+      const left = Math.max(0, Math.floor(view.left - page.left));
+      const top = Math.max(0, Math.floor(view.top - page.top));
+      const width = Math.min(Math.ceil(page.width) - left, Math.ceil(view.right - page.left) - left);
+      const height = Math.min(Math.ceil(page.height) - top, Math.ceil(view.bottom - page.top) - top);
+      if (width <= 0 || height <= 0 || !page.width || !page.height) {
+        layer.hidden = true;
+        return;
+      }
+      // Limit the backing buffer to the part of the artboard on screen.
+      const density = Math.min(devicePixelRatio || 1, 2, Math.sqrt(2500000 / (width * height)));
+      const backingWidth = Math.max(1, Math.ceil(width * density));
+      const backingHeight = Math.max(1, Math.ceil(height * density));
+      if (layer.width !== backingWidth) layer.width = backingWidth;
+      if (layer.height !== backingHeight) layer.height = backingHeight;
+      Object.assign(layer.style, {
+        left: (canvas.offsetLeft + left) + "px", top: (canvas.offsetTop + top) + "px",
+        width: width + "px", height: height + "px"
+      });
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.clearRect(0, 0, backingWidth, backingHeight);
+      preview.bounds = {
+        xScale: page.width / canvas.width * backingWidth / width,
+        yScale: page.height / canvas.height * backingHeight / height,
+        xOffset: -left * backingWidth / width, yOffset: -top * backingHeight / height
+      };
+      preview.dirty = null;
+      layer.hidden = false;
+    }
+    const { xScale, yScale, xOffset, yOffset } = preview.bounds;
+    const points = draft.points;
+    c.setTransform(xScale, 0, 0, yScale, xOffset, yOffset);
+    if (preview.dirty) c.clearRect(...preview.dirty);
+    applyObjectContext(draft, c);
+    if (points.length > 1) {
+      drawFreehandPath(c, draft);
+    } else {
+      const p = points[0];
+      c.fillStyle = draft.stroke || "transparent";
+      c.beginPath();
+      c.arc(p.x, p.y, (pathUsesPressure(draft) ? pointPressureWidth(draft, p) : (draft.strokeWidth || 1)) / 2, 0, Math.PI * 2);
+      c.fill();
+    }
+    const pad = 2 / Math.min(xScale, yScale) + (draft.strokeWidth || 1);
+    let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
+    for (const p of points) {
+      left = Math.min(left, p.x); right = Math.max(right, p.x);
+      top = Math.min(top, p.y); bottom = Math.max(bottom, p.y);
+    }
+    preview.dirty = [left - pad, top - pad, right - left + 2 * pad, bottom - top + 2 * pad];
+  }
+
+  function schedulePenPreview() {
+    if (!penPreviewFrame) penPreviewFrame = requestAnimationFrame(() => {
+      penPreviewFrame = 0;
+      paintPenPreview();
+    });
+  }
+
+  function repositionPenPreview() {
+    if (!penPreview?.draft) return;
+    penPreview.bounds = null;
+    schedulePenPreview();
+  }
+
+  stage.addEventListener("scroll", repositionPenPreview, { passive: true });
+  window.addEventListener("resize", repositionPenPreview);
+
+  function appendFreehandSample(e, final = false, rect) {
     const d = pointer.draft;
-    if (!d || d.type !== "path") return;
-    const p = pointFromEvent(e), last = d.points.at(-1);
+    if (!d || d.type !== "path") return false;
+    const p = pointFromEvent(e, rect), last = d.points.at(-1);
+    const responsivePen = tabletWorkspace && d.inputType === "pen";
     drawRulerSnap(p, d);
-    if (last && final && e.pressure === 0) p.pressure = last.pressure;
-    if (last) { const pb = inkAssistMode() === "off" ? 0.38 : 1 - inkStrength().pressureBlend * 0.6; p.pressure = last.pressure * (1 - pb) + p.pressure * pb; }
-    if (last && !final && inkAssistMode() !== "off") {
-      // Speed adaptive low pass: slow, wobbly motion is damped hard while
-      // fast motion passes through, so corners and quick strokes stay sharp.
-      const st = inkStrength();
-      const step = Math.hypot(p.x - last.x, p.y - last.y);
-      const alpha = Math.min(1, st.liveBase + step / (step + st.liveLag));
+    if (final && !(e.pressure > 0)) p.pressure = last.pressure;
+    const mode = inkAssistMode();
+    const strength = inkStrength();
+    const pressureWeight = responsivePen ? 0.78 : mode === "off" ? 0.38 : 1 - strength.pressureBlend * 0.6;
+    p.pressure = last.pressure + (p.pressure - last.pressure) * pressureWeight;
+    const screenZoom = state.zoom || 1;
+    if (!final && mode !== "off") {
+      const distance = Math.hypot(p.x - last.x, p.y - last.y);
+      const motion = responsivePen ? distance * screenZoom : distance;
+      const base = responsivePen ? 0.68 + strength.liveBase * 0.22 : strength.liveBase;
+      const lag = responsivePen ? 0.85 : strength.liveLag;
+      const alpha = Math.min(1, base + motion / (motion + lag));
       p.x = last.x + (p.x - last.x) * alpha;
       p.y = last.y + (p.y - last.y) * alpha;
     }
-    const minDistance = (e.pointerType === "pen" ? 0.55 : 1.25) / Math.max(0.35, state.zoom || 1);
-    const distance = last ? Math.hypot(p.x - last.x, p.y - last.y) : Infinity;
-    if (distance >= minDistance || (final && distance > 0.01)) d.points.push(p);
     pointer.x = p.x; pointer.y = p.y;
+    const distance = Math.hypot(p.x - last.x, p.y - last.y);
+    const pressureChange = d.pressureSensitive && Math.abs(p.pressure - last.pressure) >= 0.025;
+    const minimum = responsivePen ? 0.22 / screenZoom : (d.inputType === "pen" ? 0.55 : 1.25) / Math.max(0.35, screenZoom);
+    if (distance >= minimum || (responsivePen && pressureChange && distance * screenZoom >= 0.06) || (final && distance > 0.01)) {
+      d.points.push(p);
+      return true;
+    }
+    if (responsivePen && pressureChange) {
+      last.pressure = p.pressure;
+      return true;
+    }
+    return false;
   }
+
 
   function pointerInputAllowed(e) {
     if (pointer.down && pointer.activeId !== e.pointerId) return false;
@@ -12332,6 +12466,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
       drawApplyPen(pointer.draft);
       pointer.draft.points[0] = { ...pointer.draft.points[0] };
       drawRulerSnap(pointer.draft.points[0], pointer.draft);
+      if (startPenPreview(pointer.draft)) return;
     }
     else if (state.tool === "line" || state.tool === "arrow") { pointer.mode = "create"; pointer.draft = { ...s, id: -1, type: state.tool, name: state.tool === "line" ? "Line" : "Arrow", x1: cp.x, y1: cp.y, x2: cp.x, y2: cp.y, stroke: s.stroke, strokeWidth: s.strokeWidth, opacity: s.opacity, visible: true, locked: false, rotation: 0, blend: "source-over", shadow: s.shadow }; if (state.tool === "arrow") pointer.draft.arrowKind = state.arrowKind || "end"; }
     else if (state.tool === "bezier") {
@@ -12364,6 +12499,19 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
   }
   canvas.addEventListener("pointermove", e => {
     if (pointer.down && e.pointerId !== pointer.activeId) return;
+    if (pointer.down && pointer.mode === "draw" && pointer.draft) {
+      e.preventDefault();
+      if (e.pointerType === "pen") pointer.recentPenAt = performance.now();
+      const rect = canvas.getBoundingClientRect();
+      let changed = false;
+      for (const sample of canvasPointerSamples(e)) changed = appendFreehandSample(sample, false, rect) || changed;
+      pointer.lastCanvasX = pointer.x; pointer.lastCanvasY = pointer.y; pointer.hasCanvasPosition = true;
+      if (changed) {
+        if (penPreview?.draft === pointer.draft) schedulePenPreview();
+        else scheduleInkRender();
+      }
+      return;
+    }
     const hoverPoint = pointFromEvent(e);
     pointer.lastCanvasX = hoverPoint.x; pointer.lastCanvasY = hoverPoint.y; pointer.hasCanvasPosition = true;
     if (state.tool === "bezier" && pointer.draft && ["bezier-control-ready","create-bezier-control"].includes(pointer.mode)) {
@@ -12401,12 +12549,6 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
 
     if (pointer.mode === "erase") {
       canvasPointerSamples(e).forEach(sample => sweepStrokeEraser(pointFromEvent(sample)));
-      scheduleInkRender();
-      return;
-    }
-
-    if (pointer.mode === "draw" && pointer.draft) {
-      canvasPointerSamples(e).forEach(sample => appendFreehandSample(sample));
       scheduleInkRender();
       return;
     }
@@ -12494,7 +12636,10 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
   canvas.addEventListener("pointerup", e => {
     if (!pointer.down || (pointer.activeId != null && e.pointerId !== pointer.activeId)) return;
     e.preventDefault();
-    if (pointer.mode === "draw" && pointer.draft) appendFreehandSample(e, true);
+    if (pointer.mode === "draw" && pointer.draft) {
+      appendFreehandSample(e, true);
+      endPenPreview();
+    }
     if (pointer.mode === "erase") sweepStrokeEraser(pointFromEvent(e));
     if (pointer.mode === "marquee" && state.marquee) {
       const end = pointFromEvent(e);
@@ -12593,7 +12738,6 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
           $("lineToolBtn")?.classList.toggle("active", createdWhileTool === "line" || createdWhileTool === "bezier");
           $("arrowToolBtn")?.classList.toggle("active", createdWhileTool === "arrow");
           updateCursor(createdWhileTool);
-          renderLayers(); syncControls(); render();
           const createdName = d.type === "bezier" ? "Bézier curve" : d.type === "path" ? "Freehand stroke" : objectName(d);
           const connectedText = (pointer.startConnectionAnchor || pointer.endConnectionAnchor) ? " and connected" : "";
           setStatus(`${createdName} created${connectedText}. The ${createdWhileTool === "bezier" ? "Bézier" : createdWhileTool === "draw" ? "Freehand" : objectName({type:createdWhileTool})} tool remains active—draw the next object, choose another tool, or press Esc to return to Select.`);
@@ -12619,6 +12763,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
       }));
       return;
     }
+    endPenPreview();
     pointer.down = false;
     pointer.mode = null;
     pointer.draft = null;
@@ -16422,6 +16567,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     if (tabletFitMode) tabletFitZoom();
     canvas.style.width = `${canvas.width * state.zoom}px`; canvas.style.height = `${canvas.height * state.zoom}px`;
     shell.style.width = `${canvas.width * state.zoom}px`; shell.style.height = `${canvas.height * state.zoom}px`;
+    repositionPenPreview();
     $("zoomValue").textContent = `${Math.round(state.zoom * 100)}%`;
     if (teSession) { teApplySessionStyle(); teLayoutOverlay(); }
     drawLayoutRuler();
@@ -16514,7 +16660,10 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
   }
   function tabletSetHandle(type) {
     const size = type === "touch" ? 16 : type === "pen" ? 12 : 9;
-    if (size !== HANDLE) { HANDLE = size; render(); }
+    if (size !== HANDLE) {
+      HANDLE = size;
+      if (state.tool === "select" && state.selectedIds.length) render();
+    }
   }
 
   /* Cancel a tool action an earlier finger started, undoing anything it moved. */
