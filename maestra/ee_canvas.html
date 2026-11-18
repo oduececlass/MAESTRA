@@ -12609,6 +12609,16 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
   function cancelCanvasGesture(e) {
     if (!pointer.down || pointer.activeId !== e.pointerId) return;
     const mode = pointer.mode;
+    // A stylus stroke the browser cancels part-way (iPad Safari does this) keeps the ink
+    // already drawn: finish it as if the pen had lifted, instead of throwing it away.
+    if (mode === "draw" && pointer.pointerType === "pen" && pointer.draft?.points?.length >= 2 && !tablet?.cancelling) {
+      const last = pointer.draft.points.at(-1), r = canvas.getBoundingClientRect();
+      canvas.dispatchEvent(new PointerEvent("pointerup", {
+        pointerId: e.pointerId, pointerType: "pen", isPrimary: true, bubbles: true, cancelable: true, button: 0, buttons: 0,
+        clientX: r.left + last.x * r.width / canvas.width, clientY: r.top + last.y * r.height / canvas.height, pressure: 0
+      }));
+      return;
+    }
     pointer.down = false;
     pointer.mode = null;
     pointer.draft = null;
@@ -16468,6 +16478,12 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
   };
   const TABLET_HIDE_KEY = "eeCanvas.tabletBarHidden", TABLET_PEN_KEY = "eeCanvas.stylusSeen";
   const TABLET_ANDROID = /Android/i.test(navigator.userAgent || "");
+  const TABLET_PEN_ONLY_KEY = "eeCanvas.penOnlyAuto";
+  /* iPad Safari can claim a fast Apple Pencil stroke for scrolling, text selection, or
+     Scribble and cancel it. Cancelling the Pencil's touch events keeps every stroke on the canvas. */
+  ["touchstart", "touchmove"].forEach(t => canvas.addEventListener(t, e => {
+    if ([...e.changedTouches].some(touch => touch.touchType === "stylus") && e.cancelable) e.preventDefault();
+  }, { passive: false }));
   const TABLET_ICONS = {
     undo: "<svg aria-hidden=\"true\" focusable=\"false\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M4.75 2C5.1297 2 5.44349 2.28215 5.49315 2.64823L5.5 2.75V8.44L10.0743 3.88014C12.5163 1.43819 16.4385 1.37863 18.9526 3.70146L19.1385 3.88014C21.6415 6.38313 21.6415 10.4413 19.1385 12.9443L10.2933 21.7835C10.0003 22.0762 9.52558 22.0759 9.23269 21.783C8.93979 21.4901 8.94013 21.0151 9.23315 20.7223L18.0778 11.8836C19.995 9.96641 19.995 6.85801 18.0778 4.9408C16.2187 3.08169 13.2395 3.02535 11.3118 4.77248L11.1342 4.94156L6.562 9.5L12.25 9.50018C12.6297 9.50018 12.9435 9.78234 12.9932 10.1484L13 10.2502C13 10.6299 12.7178 10.9437 12.3518 10.9933L12.25 11.0002H4.75C4.3703 11.0002 4.05651 10.718 4.00685 10.352L4 10.2502V2.75C4 2.33579 4.33579 2 4.75 2Z\" fill=\"currentColor\"/></svg>",
     redo: "<svg aria-hidden=\"true\" focusable=\"false\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M19.2501 2C18.8704 2 18.5566 2.28215 18.507 2.64823L18.5001 2.75V8.44L13.9258 3.88014C11.4838 1.43819 7.56165 1.37863 5.0475 3.70146L4.86162 3.88014C2.35863 6.38313 2.35863 10.4413 4.86162 12.9443L13.7068 21.7835C13.9998 22.0762 14.4745 22.0759 14.7674 21.783C15.0603 21.4901 15.06 21.0151 14.767 20.7223L5.92228 11.8836C4.00507 9.96641 4.00507 6.85801 5.92228 4.9408C7.78139 3.08169 10.7606 3.02535 12.6883 4.77248L12.8659 4.94156L17.4381 9.5L11.7501 9.50018C11.3704 9.50018 11.0566 9.78234 11.007 10.1484L11.0001 10.2502C11.0001 10.6299 11.2823 10.9437 11.6483 10.9933L11.7501 11.0002H19.2501C19.6298 11.0002 19.9436 10.718 19.9933 10.352L20.0001 10.2502V2.75C20.0001 2.33579 19.6643 2 19.2501 2Z\" fill=\"currentColor\"/></svg>",
@@ -16581,6 +16597,18 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     const type = e.pointerType || "mouse", id = e.pointerId;
     if (type !== "mouse") tabletShowBarOnce();
     if (type === "pen" && !tabletPenSeen()) { try { localStorage.setItem(TABLET_PEN_KEY, "1"); } catch (_) {} tablet.penSeen = true; }
+    // The first time a stylus is used, stop fingers (and resting palms) from drawing,
+    // like Word's Draw with Touch. Done once, so turning it back on is respected.
+    if (type === "pen" && controls.touchInputMode.value !== "pen-only") {
+      let done = false; try { done = localStorage.getItem(TABLET_PEN_ONLY_KEY) === "1"; } catch (_) {}
+      if (!done) {
+        try { localStorage.setItem(TABLET_PEN_ONLY_KEY, "1"); } catch (_) {}
+        controls.touchInputMode.value = "pen-only";
+        controls.touchInputMode.dispatchEvent(new Event("change"));
+        setStatus("Pen detected: only the pen draws now, so a resting hand can't make marks. One finger pans. Turn on Draw with Touch to draw with a finger.");
+      }
+    }
+    tablet.lastType = type;
     tabletSetHandle(type);
     tabletApplyLatch(e);
     if (!tabletOnCanvas(e) || tabletEditable(e.target)) return;
@@ -16589,6 +16617,13 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     if (type === "pen") {
       tabletClearLongPress();
       if (tablet.gesture) { tablet.gesture = null; tablet.touches.forEach((_, tid) => tablet.swallow.add(tid)); tablet.touches.clear(); }
+      // A palm or finger that touched just before the pen must not block the pen:
+      // cancel whatever that touch started and let the pen draw.
+      if (pointer.down && pointer.pointerType === "touch" && pointer.activeId !== id) {
+        const tid = pointer.activeId;
+        tabletAbortCanvasAction(tid);
+        tablet.swallow.add(tid); tablet.touches.delete(tid); tabletClearLongPress();
+      }
       // Eraser end of a Windows pen (button 5), or the S Pen side button held on Android (button 2), like Samsung Notes.
       const sPenButton = TABLET_ANDROID && (e.button === 2 || (e.buttons & 2));
       if ((e.button === 5 || (e.buttons & 32) || sPenButton) && state.tool !== "eraser" && !teSession) {
@@ -16658,7 +16693,13 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
   window.addEventListener("pointerup", tabletPointerEnd, true);
   window.addEventListener("pointercancel", tabletPointerEnd, true);
 
-  window.addEventListener("dblclick", e => { if (e.isTrusted) tablet.lastNativeDbl = performance.now(); tabletApplyLatch(e); }, true);
+  window.addEventListener("dblclick", e => {
+    if (e.isTrusted) tablet.lastNativeDbl = performance.now();
+    // Two quick pen/finger strokes in one spot (":", "=", "i") are writing, not a double-click.
+    if (e.target === canvas && (tablet.lastType === "pen" || tablet.lastType === "touch") &&
+        (STROKE_CREATION_TOOLS.has(state.tool) || state.tool === "eraser")) { tabletConsume(e); return; }
+    tabletApplyLatch(e);
+  }, true);
   window.addEventListener("click", tabletApplyLatch, true);
   window.addEventListener("contextmenu", e => {
     if (!tabletOnCanvas(e)) return;
