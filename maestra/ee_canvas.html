@@ -676,6 +676,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     .dr-colors { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
     .dr-colors button { aspect-ratio: 1; min-width: 24px; border-radius: 50%; border: 1px solid rgba(0,0,0,.2); cursor: pointer; }
     .dr-more-color, .dr-check { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12.5px; cursor: pointer; }
+    .dr-pen-response { display: grid; gap: 4px; margin-top: 10px; }
+    .dr-pen-response select {
+      width: 100%; min-height: 44px; padding: 5px 8px;
+      border: 1px solid var(--line); border-radius: 8px; background: var(--control); color: var(--text);
+    }
     .dr-more-color input { width: 34px; height: 24px; padding: 0; border: 0; background: none; }
     .dr-remove { margin-top: 10px; width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #f5c2c7; background: #fff5f5; color: #b42318; cursor: pointer; }
     .dr-menu-item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; margin-top: 4px; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line, #d7e0e8); background: var(--surface, #fff); color: inherit; cursor: pointer; text-align: left; }
@@ -5169,6 +5174,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
   const canvas = $("canvas"), ctx = canvas.getContext("2d");
   const shell = $("canvasShell"), stage = $("stageWrap");
   const tabletWorkspace = document.documentElement.classList.contains("ee-tablet-ui");
+  const tabletPenGain = /Android/i.test(navigator.userAgent) ? 0.72 : 0.84;
   let tabletFitMode = tabletWorkspace;
   let HANDLE = 9; const ROTATE_OFFSET = 34, GUIDE_TOLERANCE = 7;
   const DEFAULT_STROKE_WIDTH = 2;
@@ -8582,7 +8588,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     });
   }
 
-  function saveHistory() {
+  function saveHistory({ paintFirst = false } = {}) {
     if (aipUI) aipDrawBehindHook();
     const snap = snapshot();
     if (state.history[state.historyIndex] === snap) return;
@@ -8591,7 +8597,8 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     if (state.history.length > 100) state.history.shift();
     state.historyIndex = state.history.length - 1;
     updateUndoRedo();
-    autosave(snap);
+    if (paintFirst) autosaveAfterPaint(snap);
+    else autosave(snap);
   }
 
   function applySnapshotState(s, { keepSelection = true } = {}) {
@@ -8681,7 +8688,33 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     return [];
   }
 
-  function autosave(prebuilt = null) {
+  let pendingPaintAutosave = null;
+  let paintAutosaveFrame = 0;
+
+  function flushPaintAutosave() {
+    const pending = pendingPaintAutosave;
+    if (pending) autosave(pending.snapshot, pending);
+  }
+
+  function autosaveAfterPaint(snap) {
+    pendingPaintAutosave = { snapshot: snap, objectCount: state.objects.length, width: canvas.width, height: canvas.height };
+    if (paintAutosaveFrame) return;
+    // Let the frame with the removed ink reach the screen before writing
+    // synchronous recovery data. Keep the newest snapshot if edits overlap.
+    paintAutosaveFrame = requestAnimationFrame(() => {
+      paintAutosaveFrame = requestAnimationFrame(flushPaintAutosave);
+    });
+  }
+
+  window.addEventListener("pagehide", flushPaintAutosave);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushPaintAutosave();
+  });
+
+  function autosave(prebuilt = null, documentSize = null) {
+    if (paintAutosaveFrame) cancelAnimationFrame(paintAutosaveFrame);
+    paintAutosaveFrame = 0;
+    pendingPaintAutosave = null;
     const snap = prebuilt || snapshot();
     const now = Date.now();
     updateAutosaveUi(now, true);
@@ -8692,7 +8725,11 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
       return false;
     }
     let versions = readRecoveryVersions();
-    const entry = { savedAt: now, snapshot: snap, objectCount: state.objects.length, width: canvas.width, height: canvas.height };
+    const entry = {
+      savedAt: now, snapshot: snap,
+      objectCount: documentSize?.objectCount ?? state.objects.length,
+      width: documentSize?.width ?? canvas.width, height: documentSize?.height ?? canvas.height
+    };
     const needsNewCheckpoint = !versions[0] || now - Number(versions[0].savedAt || 0) >= 15000;
     const refreshLatest = now - lastRecoveryWriteAt >= 2500;
     if (needsNewCheckpoint) versions.unshift(entry);
@@ -8976,7 +9013,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     const passes = responsivePen ? Math.ceil(st.passes / 2) : st.passes;
     let out = inkSmooth(inkResample(raw, spacing), passes, st.weight, !responsivePen);
     const tolerance = Math.max(responsivePen ? 0.12 / zoom : 0.4, spacing * st.simplify);
-    out = inkSimplify(out, tolerance, responsivePen ? 0.025 : Infinity);
+    out = inkSimplify(out, tolerance, responsivePen ? 0.018 : Infinity);
     if (out.length < 2) return raw;
     out[0] = { ...raw[0], pressure: out[0].pressure };
     out[out.length - 1] = { ...raw[raw.length - 1], pressure: out[out.length - 1].pressure };
@@ -10998,31 +11035,40 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
       return;
     }
 
-    if (!pathUsesPressure(o)) {
-      c.beginPath(); c.moveTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < pts.length; i++) {
-        const p0 = pts[i - 1], p1 = pts[i], mx = (p0.x + p1.x) / 2, my = (p0.y + p1.y) / 2;
-        c.quadraticCurveTo(p0.x, p0.y, mx, my);
-      }
-      c.lineTo(pts.at(-1).x, pts.at(-1).y);
-      c.stroke();
-      return;
-    }
+    strokeInkSegments(c, o, 1, pts.length, pathUsesPressure(o), true);
+  }
 
-    let previousMid = { x: pts[0].x, y: pts[0].y };
-    for (let i = 1; i < pts.length; i++) {
-      const a = pts[i - 1], b = pts[i];
-      const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  function strokeInkSegments(c, o, start, end, pressure, includeTip = false) {
+    if (start >= end) return;
+    const pts = o.points;
+    const first = pts[start - 1], before = pts[start - 2] || first;
+    let x = (before.x + first.x) / 2, y = (before.y + first.y) / 2;
+    if (!pressure) {
       c.beginPath();
-      c.moveTo(previousMid.x, previousMid.y);
-      c.quadraticCurveTo(a.x, a.y, mid.x, mid.y);
-      c.lineWidth = (pointPressureWidth(o, a) + pointPressureWidth(o, b)) / 2;
-      c.stroke();
-      previousMid = mid;
+      c.moveTo(x, y);
     }
-    const last = pts[pts.length - 1];
-    c.beginPath(); c.moveTo(previousMid.x, previousMid.y); c.lineTo(last.x, last.y);
-    c.lineWidth = pointPressureWidth(o, last); c.stroke();
+    for (let i = start; i < end; i++) {
+      const a = pts[i - 1], b = pts[i];
+      const midX = (a.x + b.x) / 2, midY = (a.y + b.y) / 2;
+      if (pressure) {
+        c.beginPath();
+        c.moveTo(x, y);
+        c.lineWidth = (pointPressureWidth(o, a) + pointPressureWidth(o, b)) / 2;
+      }
+      c.quadraticCurveTo(a.x, a.y, midX, midY);
+      if (pressure) c.stroke();
+      x = midX; y = midY;
+    }
+    if (includeTip) {
+      const last = pts[end - 1];
+      if (pressure) {
+        c.beginPath();
+        c.moveTo(x, y);
+        c.lineWidth = pointPressureWidth(o, last);
+      }
+      c.lineTo(last.x, last.y);
+    }
+    if (!pressure || includeTip) c.stroke();
   }
 
   function drawObject(o, selectionPass = false) {
@@ -11338,7 +11384,12 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     if (!tabletWorkspace) return clamp(raw, 0.05, 1);
     const pressure = clamp(raw, 0, 1);
     // Expand light contact without clipping the increasingly firm part of the range.
-    return pressure + 0.65 * Math.sqrt(pressure) * Math.max(0, 1 - 2 * pressure) ** 2;
+    const response = pointer.penResponse || "auto";
+    if (response === "firm") {
+      return pressure < 0.5 ? 0.5 * (2 * pressure) ** 1.28 : pressure;
+    }
+    const lowForceGain = response === "light" ? 0.94 : tabletPenGain;
+    return pressure + lowForceGain * Math.sqrt(pressure) * Math.max(0, 1 - 2 * pressure) ** 2;
   }
 
   /* Offset of the canvas shell inside the stage's scrollable content.
@@ -11445,90 +11496,122 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
 
   let penPreview = null;
   let penPreviewFrame = 0;
+  let penPredictionTimer = 0;
 
   function startPenPreview(draft) {
-    if (!tabletWorkspace || draft.inputType !== "pen" || draft.blend !== "source-over" || draft.shadow?.enabled) return false;
+    if (!tabletWorkspace || draft.inputType !== "pen" || draft.blend !== "source-over" ||
+        draft.shadow?.enabled || (draft.opacity ?? 1) !== 1 || draft.dash?.length) return false;
     if (!penPreview) {
-      const layer = document.createElement("canvas");
-      layer.className = "live-pen-preview";
-      layer.style.cssText = "position:absolute;z-index:1;pointer-events:none;";
-      layer.setAttribute("aria-hidden", "true");
-      layer.hidden = true;
-      const context = layer.getContext("2d");
-      if (!context) return false;
-      shell.append(layer);
-      penPreview = { layer, context, draft: null, bounds: null, dirty: null };
+      const layers = ["body", "tip"].map(part => {
+        const layer = document.createElement("canvas");
+        layer.className = "live-pen-preview";
+        layer.dataset.penPart = part;
+        layer.style.cssText = "position:absolute;z-index:1;pointer-events:none;";
+        layer.setAttribute("aria-hidden", "true");
+        layer.hidden = true;
+        return { layer, context: layer.getContext("2d") };
+      });
+      if (layers.some(entry => !entry.context)) return false;
+      shell.append(...layers.map(entry => entry.layer));
+      penPreview = { layers };
     }
-    penPreview.draft = draft;
-    penPreview.bounds = null;
-    penPreview.dirty = null;
+    Object.assign(penPreview, { draft, bounds: null, dirtyTip: null, nextSegment: 1, prediction: null });
     paintPenPreview();
     return true;
+  }
+
+  function clearPenLayer({ context, layer }) {
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.clearRect(0, 0, layer.width, layer.height);
   }
 
   function endPenPreview() {
     if (!penPreview?.draft) return;
     cancelAnimationFrame(penPreviewFrame);
-    penPreviewFrame = 0;
+    clearTimeout(penPredictionTimer);
+    penPreviewFrame = penPredictionTimer = 0;
+    for (const entry of penPreview.layers) {
+      // Erase the backing pixels before hiding the layers, including the tip.
+      clearPenLayer(entry);
+      entry.layer.hidden = true;
+    }
     penPreview.draft = null;
-    penPreview.layer.hidden = true;
+    penPreview.prediction = null;
+  }
+
+  function sizePenPreview(preview) {
+    const view = stage.getBoundingClientRect(), page = canvas.getBoundingClientRect();
+    const left = Math.max(0, Math.floor(view.left - page.left));
+    const top = Math.max(0, Math.floor(view.top - page.top));
+    const width = Math.min(Math.ceil(page.width), Math.ceil(view.right - page.left)) - left;
+    const height = Math.min(Math.ceil(page.height), Math.ceil(view.bottom - page.top)) - top;
+    if (width <= 0 || height <= 0 || !page.width || !page.height) {
+      preview.layers.forEach(entry => { entry.layer.hidden = true; });
+      return false;
+    }
+    // Keep both layers within one combined backing-store budget.
+    const density = Math.min(devicePixelRatio || 1, 2, Math.sqrt(1250000 / (width * height)));
+    const pixelWidth = Math.max(1, Math.round(width * density));
+    const pixelHeight = Math.max(1, Math.round(height * density));
+    const xDensity = pixelWidth / width, yDensity = pixelHeight / height;
+    preview.bounds = [
+      page.width / canvas.width * xDensity, 0, 0, page.height / canvas.height * yDensity,
+      -left * xDensity, -top * yDensity
+    ];
+    for (const entry of preview.layers) {
+      const { layer, context } = entry;
+      if (layer.width !== pixelWidth) layer.width = pixelWidth;
+      if (layer.height !== pixelHeight) layer.height = pixelHeight;
+      Object.assign(layer.style, {
+        left: canvas.offsetLeft + left + "px", top: canvas.offsetTop + top + "px",
+        width: width + "px", height: height + "px"
+      });
+      clearPenLayer(entry);
+      context.setTransform(...preview.bounds);
+      applyObjectContext(preview.draft, context);
+      layer.hidden = false;
+    }
+    preview.nextSegment = 1;
+    preview.dirtyTip = null;
+    return true;
   }
 
   function paintPenPreview() {
     const preview = penPreview;
-    if (!preview?.draft) return;
-    const { layer, context: c, draft } = preview;
-    if (!preview.bounds) {
-      const view = stage.getBoundingClientRect(), page = canvas.getBoundingClientRect();
-      const left = Math.max(0, Math.floor(view.left - page.left));
-      const top = Math.max(0, Math.floor(view.top - page.top));
-      const width = Math.min(Math.ceil(page.width) - left, Math.ceil(view.right - page.left) - left);
-      const height = Math.min(Math.ceil(page.height) - top, Math.ceil(view.bottom - page.top) - top);
-      if (width <= 0 || height <= 0 || !page.width || !page.height) {
-        layer.hidden = true;
-        return;
-      }
-      // Limit the backing buffer to the part of the artboard on screen.
-      const density = Math.min(devicePixelRatio || 1, 2, Math.sqrt(2500000 / (width * height)));
-      const backingWidth = Math.max(1, Math.ceil(width * density));
-      const backingHeight = Math.max(1, Math.ceil(height * density));
-      if (layer.width !== backingWidth) layer.width = backingWidth;
-      if (layer.height !== backingHeight) layer.height = backingHeight;
-      Object.assign(layer.style, {
-        left: (canvas.offsetLeft + left) + "px", top: (canvas.offsetTop + top) + "px",
-        width: width + "px", height: height + "px"
-      });
-      c.setTransform(1, 0, 0, 1, 0, 0);
-      c.clearRect(0, 0, backingWidth, backingHeight);
-      preview.bounds = {
-        xScale: page.width / canvas.width * backingWidth / width,
-        yScale: page.height / canvas.height * backingHeight / height,
-        xOffset: -left * backingWidth / width, yOffset: -top * backingHeight / height
-      };
-      preview.dirty = null;
-      layer.hidden = false;
+    if (!preview?.draft || (!preview.bounds && !sizePenPreview(preview))) return;
+    const { draft, layers, bounds } = preview;
+    const body = layers[0].context, tip = layers[1].context;
+    const pts = draft.points, last = pts.at(-1), previous = pts.at(-2) || last, third = pts.at(-3) || previous;
+    const pressure = draft.pressureSensitive;
+    // The last sample can still be adjusted by a pressure-only event.
+    const settledEnd = Math.max(1, pts.length - 1);
+    if (preview.nextSegment < settledEnd) {
+      strokeInkSegments(body, draft, preview.nextSegment, settledEnd, pressure);
+      preview.nextSegment = settledEnd;
     }
-    const { xScale, yScale, xOffset, yOffset } = preview.bounds;
-    const points = draft.points;
-    c.setTransform(xScale, 0, 0, yScale, xOffset, yOffset);
-    if (preview.dirty) c.clearRect(...preview.dirty);
-    applyObjectContext(draft, c);
-    if (points.length > 1) {
-      drawFreehandPath(c, draft);
+    if (preview.dirtyTip) tip.clearRect(...preview.dirtyTip);
+    strokeInkSegments(tip, draft, settledEnd, pts.length, pressure);
+    const fromX = (last.x + previous.x) / 2, fromY = (last.y + previous.y) / 2;
+    const prediction = preview.prediction || last;
+    tip.lineWidth = pressure ? pointPressureWidth(draft, last) : draft.strokeWidth || 1;
+    tip.lineCap = "round";
+    tip.beginPath();
+    if (pts.length === 1) {
+      tip.fillStyle = draft.stroke || "transparent";
+      tip.arc(last.x, last.y, tip.lineWidth / 2, 0, Math.PI * 2);
+      tip.fill();
     } else {
-      const p = points[0];
-      c.fillStyle = draft.stroke || "transparent";
-      c.beginPath();
-      c.arc(p.x, p.y, (pathUsesPressure(draft) ? pointPressureWidth(draft, p) : (draft.strokeWidth || 1)) / 2, 0, Math.PI * 2);
-      c.fill();
+      tip.moveTo(fromX, fromY);
+      tip.lineTo(last.x, last.y);
+      if (preview.prediction) tip.lineTo(prediction.x, prediction.y);
+      tip.stroke();
     }
-    const pad = 2 / Math.min(xScale, yScale) + (draft.strokeWidth || 1);
-    let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
-    for (const p of points) {
-      left = Math.min(left, p.x); right = Math.max(right, p.x);
-      top = Math.min(top, p.y); bottom = Math.max(bottom, p.y);
-    }
-    preview.dirty = [left - pad, top - pad, right - left + 2 * pad, bottom - top + 2 * pad];
+    const pad = 2 / Math.min(bounds[0], bounds[3]) + (draft.strokeWidth || 1);
+    const left = Math.min(third.x, previous.x, last.x, prediction.x);
+    const top = Math.min(third.y, previous.y, last.y, prediction.y);
+    const right = Math.max(third.x, previous.x, last.x, prediction.x);
+    const bottom = Math.max(third.y, previous.y, last.y, prediction.y);
+    preview.dirtyTip = [left - pad, top - pad, right - left + 2 * pad, bottom - top + 2 * pad];
   }
 
   function schedulePenPreview() {
@@ -11538,9 +11621,40 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     });
   }
 
+  function updatePenPrediction(e, rect) {
+    const preview = penPreview;
+    const hadPrediction = !!preview.prediction;
+    preview.prediction = null;
+    clearTimeout(penPredictionTimer);
+    penPredictionTimer = 0;
+    const pts = preview.draft.points, last = pts.at(-1), a = pts.at(-2), b = pts.at(-3);
+    if (!b || preview.draft.rulerEdge || typeof e.getPredictedEvents !== "function") return hadPrediction;
+    const dx = last.x - a.x, dy = last.y - a.y, length = Math.hypot(dx, dy);
+    const before = Math.hypot(a.x - b.x, a.y - b.y);
+    const zoom = state.zoom || 1, screenDistance = length * zoom;
+    const elapsed = Math.max(1, last.time - a.time);
+    if (screenDistance < 1.2 || screenDistance / elapsed < 0.18 || !before ||
+        dx * (a.x - b.x) + dy * (a.y - b.y) < 0.86 * length * before) return hadPrediction;
+    for (const sample of e.getPredictedEvents() || []) {
+      if (sample.timeStamp < e.timeStamp || sample.timeStamp - e.timeStamp > 18) continue;
+      const p = pointFromEvent(sample, rect);
+      const ex = p.x - last.x, ey = p.y - last.y, distance = Math.hypot(ex, ey);
+      if (!distance || dx * ex + dy * ey < 0.92 * length * distance) continue;
+      const capped = Math.min(1, Math.min(6, screenDistance * 0.85) / (distance * zoom));
+      preview.prediction = { x: last.x + ex * capped, y: last.y + ey * capped };
+    }
+    if (preview.prediction) penPredictionTimer = setTimeout(() => {
+      penPredictionTimer = 0;
+      preview.prediction = null;
+      schedulePenPreview();
+    }, 28);
+    return hadPrediction || !!preview.prediction;
+  }
+
   function repositionPenPreview() {
     if (!penPreview?.draft) return;
     penPreview.bounds = null;
+    penPreview.prediction = null;
     schedulePenPreview();
   }
 
@@ -11553,10 +11667,15 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     const p = pointFromEvent(e, rect), last = d.points.at(-1);
     const responsivePen = tabletWorkspace && d.inputType === "pen";
     drawRulerSnap(p, d);
-    if (final && !(e.pressure > 0)) p.pressure = last.pressure;
+    if ((final || responsivePen) && !(e.pressure > 0)) p.pressure = last.pressure;
+    const firstPressure = responsivePen && !pointer.penHasPressure && e.pressure > 0;
+    if (firstPressure) {
+      pointer.penHasPressure = true;
+      if (d.points.length === 1) last.pressure = p.pressure;
+    }
     const mode = inkAssistMode();
     const strength = inkStrength();
-    const pressureWeight = responsivePen ? 0.78 : mode === "off" ? 0.38 : 1 - strength.pressureBlend * 0.6;
+    const pressureWeight = responsivePen ? clamp(0.68 + Math.abs(p.pressure - last.pressure) * 1.2, 0.68, 0.96) : mode === "off" ? 0.38 : 1 - strength.pressureBlend * 0.6;
     p.pressure = last.pressure + (p.pressure - last.pressure) * pressureWeight;
     const screenZoom = state.zoom || 1;
     if (!final && mode !== "off") {
@@ -11564,14 +11683,19 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
       const motion = responsivePen ? distance * screenZoom : distance;
       const base = responsivePen ? 0.68 + strength.liveBase * 0.22 : strength.liveBase;
       const lag = responsivePen ? 0.85 : strength.liveLag;
-      const alpha = Math.min(1, base + motion / (motion + lag));
+      let alpha = Math.min(1, base + motion / (motion + lag));
+      const previous = d.points.at(-2);
+      if (responsivePen && previous &&
+          (last.x - previous.x) * (p.x - last.x) + (last.y - previous.y) * (p.y - last.y) < 0) {
+        alpha = 1;
+      }
       p.x = last.x + (p.x - last.x) * alpha;
       p.y = last.y + (p.y - last.y) * alpha;
     }
     pointer.x = p.x; pointer.y = p.y;
     const distance = Math.hypot(p.x - last.x, p.y - last.y);
-    const pressureChange = d.pressureSensitive && Math.abs(p.pressure - last.pressure) >= 0.025;
-    const minimum = responsivePen ? 0.22 / screenZoom : (d.inputType === "pen" ? 0.55 : 1.25) / Math.max(0.35, screenZoom);
+    const pressureChange = d.pressureSensitive && Math.abs(p.pressure - last.pressure) >= (responsivePen ? 0.016 : 0.025);
+    const minimum = responsivePen ? 0.16 / screenZoom : (d.inputType === "pen" ? 0.55 : 1.25) / Math.max(0.35, screenZoom);
     if (distance >= minimum || (responsivePen && pressureChange && distance * screenZoom >= 0.06) || (final && distance > 0.01)) {
       d.points.push(p);
       return true;
@@ -11580,7 +11704,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
       last.pressure = p.pressure;
       return true;
     }
-    return false;
+    return firstPressure;
   }
 
 
@@ -12285,6 +12409,8 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     e.preventDefault();
     try { canvas.focus({ preventScroll: true }); } catch (_) { canvas.focus(); }
     try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+    pointer.penResponse = state.tool === "draw" ? drawPen(draw?.activePen)?.response : null;
+    pointer.penHasPressure = e.pressure > 0;
     const p = pointFromEvent(e); pointer.down = true; pointer.activeId = e.pointerId; pointer.pointerType = e.pointerType || "mouse";
     pointer.lastCanvasX = p.x; pointer.lastCanvasY = p.y; pointer.hasCanvasPosition = true;
     pointer.moved = false; pointer.startX = pointer.x = p.x; pointer.startY = pointer.y = p.y;
@@ -12506,10 +12632,10 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
       let changed = false;
       for (const sample of canvasPointerSamples(e)) changed = appendFreehandSample(sample, false, rect) || changed;
       pointer.lastCanvasX = pointer.x; pointer.lastCanvasY = pointer.y; pointer.hasCanvasPosition = true;
-      if (changed) {
-        if (penPreview?.draft === pointer.draft) schedulePenPreview();
-        else scheduleInkRender();
-      }
+      if (penPreview?.draft === pointer.draft) {
+        const tipChanged = updatePenPrediction(e, rect);
+        if (changed || tipChanged) schedulePenPreview();
+      } else if (changed) scheduleInkRender();
       return;
     }
     const hoverPoint = pointFromEvent(e);
@@ -12664,7 +12790,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     if (pointer.mode === "erase") {
       if (pointer.eraseChanged) {
         cleanDanglingEndpointConnections();
-        saveHistory();
+        saveHistory({ paintFirst: true });
         render(); renderLayers(); syncControls();
         setStatus("Objects erased. Undo restores the complete erasing stroke.");
       }
@@ -14969,13 +15095,15 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
     state.objects.filter(o => ids.includes(o.id)).forEach(clearRuntimeImage);
     state.objects = state.objects.filter(o => !ids.includes(o.id)); state.selectedIds = []; activeEditPointSelection = null;
     if(ids.includes(directCurveRangeSelection.objectId))clearDirectCurveRangeSelection(false);
-    saveHistory(); render(); renderLayers(); syncControls();
+    cleanDanglingEndpointConnections();
+    saveHistory({ paintFirst: true }); render(); renderLayers(); syncControls();
   }
 
   function deleteActiveEditPointOrSelection() {
-    const pointObject = activeEditPointSelection ? state.objects.find(o => o.id === activeEditPointSelection.objectId) : null;
+    const pointId = activeEditPointSelection?.objectId;
+    const pointObject = state.selectedIds.includes(pointId) ? state.objects.find(o => o.id === pointId) : null;
     if (pointObject && deleteEditableStrokePoint(pointObject, activeEditPointSelection.pointName)) {
-      saveHistory(); render(); renderLayers(); syncControls();
+      saveHistory({ paintFirst: true }); render(); renderLayers(); syncControls();
       setStatus("Editable point deleted. The line or curve remains selected.");
       return true;
     }
@@ -17113,7 +17241,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
       tabletConsume(e); try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
       const before = captureInkErase();
       draw.erasing = { id: e.pointerId, last: p, before, changed: drawPointErase(p, p) };
-      scheduleInkRender();
+      if (draw.erasing.changed) render();
     }
   }, true);
   window.addEventListener("pointermove", e => {
@@ -17167,7 +17295,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
       draw.erasing = null;
       if (changed) {
         cleanDanglingEndpointConnections();
-        saveHistory();
+        saveHistory({ paintFirst: true });
         render(); renderLayers(); syncControls();
         setStatus("Ink erased. Undo restores this eraser pass.");
       }
@@ -17359,6 +17487,7 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
   }
   function drawPenPop(btn, pen) {
     const sizes = DRAW_SIZES[pen.kind];
+    const penResponse = pen.response || "auto";
     drawOpenPop(btn, `
       <div class="dr-pop-title">${DRAW_KIND_LABEL[pen.kind]}</div>
       <div class="dr-pop-sub">Thickness</div>
@@ -17367,13 +17496,26 @@ global.MathBox={ mount, autoMount, toLatex, toLatexDoc, toHtml, segment, version
       <div class="dr-colors">${DRAW_COLORS.map(c => `<button type="button" data-color="${c}" class="${c.toLowerCase() === pen.color.toLowerCase() ? "on" : ""}" style="background:${c}" title="${c}"></button>`).join("")}</div>
       <label class="dr-more-color">More colours… <input type="color" value="${pen.color}"></label>
       ${pen.kind !== "highlighter" ? `<label class="dr-check"><input type="checkbox" ${pen.pressure === false ? "" : "checked"}> Stylus pressure</label>` : ""}
+      ${tabletWorkspace && pen.kind !== "highlighter" ? `<label class="dr-pen-response">Pressure response
+        <select data-pen-response ${pen.pressure === false ? "disabled" : ""}>
+          <option value="auto" ${penResponse === "auto" ? "selected" : ""}>Balanced</option>
+          <option value="light" ${penResponse === "light" ? "selected" : ""}>Light touch</option>
+          <option value="firm" ${penResponse === "firm" ? "selected" : ""}>Firm pressure</option>
+        </select></label>` : ""}
       ${draw.pens.length > 1 ? `<button type="button" class="dr-remove">Remove this ${DRAW_KIND_LABEL[pen.kind].toLowerCase()}</button>` : ""}`,
       pop => {
         const commit = () => { drawSavePens(); drawRenderRibbon(); };
         pop.querySelectorAll("[data-size]").forEach(b => b.onclick = () => { pen.size = Number(b.dataset.size); commit(); drawClosePop(true); });
         pop.querySelectorAll("[data-color]").forEach(b => b.onclick = () => { pen.color = b.dataset.color; commit(); drawClosePop(true); });
         pop.querySelector('input[type="color"]').oninput = e => { pen.color = e.target.value; commit(); };
-        const pr = pop.querySelector(".dr-check input"); if (pr) pr.onchange = () => { pen.pressure = pr.checked; commit(); };
+        const pr = pop.querySelector(".dr-check input");
+        const response = pop.querySelector("[data-pen-response]");
+        if (response) response.onchange = () => { pen.response = response.value; drawSavePens(); };
+        if (pr) pr.onchange = () => {
+          pen.pressure = pr.checked;
+          if (response) response.disabled = !pr.checked;
+          commit();
+        };
         const rm = pop.querySelector(".dr-remove");
         if (rm) rm.onclick = () => { draw.pens = draw.pens.filter(p => p !== pen); if (draw.activePen === pen.id) setTool("select"); commit(); drawClosePop(); };
       });
